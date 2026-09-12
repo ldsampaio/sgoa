@@ -1,0 +1,232 @@
+Exploring User Intent
+
+I am currently focusing on understanding the core of what the user desires. My immediate task is to precisely define the parameters of their request to ensure accurate and relevant output.
+
+Com base nos documentos fornecidos, vou criar esboços de interfaces (wireframes) para as telas principais do Sistema de Gerenciamento de Orientações Acadêmicas (SGOA).
+
+1. Tela de Login
+
+Esta tela será o ponto de entrada para todos os usuários.
+
++-------------------------------------------------+
+| SGOA - Sistema de Gerenciamento de Orientações  |
+|                                                 |
+|                   [LOGO AQUI]                   |
+|                                                 |
+|   Email:                                        |
+|   [_________________________________________]   |
+|                                                 |
+|   Senha:                                        |
+|   [_________________________________________]   |
+|                                                 |
+|   [ Botão Entrar ]                              |
+|                                                 |
+|   [ Esqueceu sua senha? ]                       |
+|                                                 |
++-------------------------------------------------+
+
+2. Dashboard do Professor
+
+Esta tela oferece uma visão geral das orientações e tarefas para o professor.
+
++--------------------------------------------------------------------------------+
+| SGOA                                                                           |
+| [Menu]  Olá, Prof. Carlos!                                        [Sair]     |
++--------------------------------------------------------------------------------+
+|                                                                                |
+| Dashboard do Professor                                                         |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Minhas Orientações Ativas                                [ + Nova Orientação ] |
+| ----------------------------------------------------------------------------   |
+| [ ] TCC - João Silva - "Análise de Dados..." (Status: Em Andamento)            |
+|     - Próxima Reunião: 20/10/2026                                              |
+|     - Tarefas Pendentes: 2                                                     |
+| [ ] Mestrado - Ana Paula - "Impacto da IA..." (Status: Em Andamento)           |
+|     - Próxima Reunião: N/A                                                     |
+|     - Tarefas Pendentes: 1                                                     |
+| [ ] Doutorado - Pedro Costa - "Modelagem de Sistemas..." (Status: Em Andamento)|
+|     - Próxima Reunião: 25/10/2026                                              |
+|     - Tarefas Pendentes: 3                                                     |
+| [ Ver Todas as Orientações ]                                                   |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Tarefas e Prazos Próximos                                                      |
+| ----------------------------------------------------------------------------   |
+| [ ] Revisar Cap. 3 - Ana Paula (Mestrado) - Prazo: 18/10/2026                   |
+| [ ] Agendar Reunião - João Silva (TCC) - Prazo: 20/10/2026                     |
+| [ ] Feedback Artigo - Pedro Costa (Doutorado) - Prazo: 22/10/2026              |
+| [ Ver Todas as Tarefas ]                                                       |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Notificações Recentes                                                          |
+| ----------------------------------------------------------------------------   |
+| [ ] Nova mensagem de Ana Paula na orientação "Impacto da IA..."                |
+| [ ] João Silva marcou tarefa "Pesquisar Referências" como concluída.           |
+| [ Ver Todas as Notificações ]                                                  |
+|                                                                                |
++--------------------------------------------------------------------------------+
+
+3. Tela de Cadastro/Edição de Orientação (Professor)
+
+Esta tela permite ao professor criar uma nova orientação ou editar os detalhes de uma existente.
+
++--------------------------------------------------------------------------------+
+| SGOA                                                                           |
+| [Menu]  Olá, Prof. Carlos!                                        [Sair]     |
++--------------------------------------------------------------------------------+
+|                                                                                |
+| < Voltar para Dashboard                                                        |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Criar Nova Orientação                                                          |
+| ----------------------------------------------------------------------------   |
+|                                                                                |
+| Aluno:                                                                         |
+| [ Selecionar Aluno ▼ ] (Ex: Ana Paula - mat: 12345)                            |
+|                                                                                |
+| Tipo de Orientação:                                                            |
+| [ ] TCC   [ ] Mestrado   [ ] Doutorado                                         |
+|                                                                                |
+| Título Provisório do Trabalho:                                                 |
+| [_________________________________________________________________________]    |
+|                                                                                |
+| Data de Início (opcional):                                                     |
+| [ DD/MM/AAAA ▼ ]                                                               |
+|                                                                                |
+| Co-orientador(es) (opcional):                                                  |
+| [ Adicionar Co-orientador ▼ ]                                                  |
+|   - [ Prof. Maria Silva [X] ]                                                  |
+|                                                                                |
+| Status da Orientação:                                                          |
+| [ Em Andamento ▼ ]                                                             |
+|                                                                                |
+| [ Botão Salvar Orientação ]    [ Botão Cancelar ]                              |
+|                                                                                |
++--------------------------------------------------------------------------------+
+
+4. Tela de Detalhes da Orientação / Acompanhamento de Prazos (Professor/Aluno)
+
+Esta tela centraliza todas as informações e atividades de uma orientação específica.
+
++--------------------------------------------------------------------------------+
+| SGOA                                                                           |
+| [Menu]  Olá, Prof. Carlos!                                        [Sair]     |
++--------------------------------------------------------------------------------+
+|                                                                                |
+| < Voltar para Dashboard                                                        |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Orientação: Mestrado - Ana Paula - "Impacto da IA na Educação Superior"        |
+| Orientador: Prof. Carlos | Co-orientador: Prof. Maria Silva | Status: Em Andamento |
+| ----------------------------------------------------------------------------   |
+|                                                                                |
+| [ Visão Geral ] [ Tarefas ] [ Reuniões ] [ Documentos ] [ Mensagens ]          |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Tarefas e Prazos                                        [ + Nova Tarefa ]      |
+| ----------------------------------------------------------------------------   |
+| [ ] Revisar Cap. 3 (Responsável: Ana Paula) - Prazo: 18/10/2026 (Atrasada)      |
+| [X] Pesquisar Referências (Responsável: Ana Paula) - Concluída em: 05/10/2026  |
+| [ ] Preparar Apresentação (Responsável: Ana Paula) - Prazo: 30/11/2026         |
+| [ ] Agendar Defesa (Responsável: Prof. Carlos) - Prazo: 15/12/2026             |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Próximas Reuniões                                       [ + Registrar Reunião ]|
+| ----------------------------------------------------------------------------   |
+| Nenhuma reunião agendada.                                                      |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Últimos Documentos                                      [ + Upload Documento ] |
+| ----------------------------------------------------------------------------   |
+| [ ] Capítulo 2 - Metodologia.docx (v2) - Upload: 01/10/2026 por Ana Paula      |
+| [ ] Artigo Base - IA na Educação.pdf (v1) - Upload: 20/09/2026 por Prof. Carlos|
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Últimas Mensagens                                       [ + Nova Mensagem ]    |
+| ----------------------------------------------------------------------------   |
+| Ana Paula (10/10/2026 14:30): "Professor, enviei o capítulo 2 para revisão."   |
+| Prof. Carlos (10/10/2026 15:00): "Ok Ana, vou revisar até o final da semana."  |
+|                                                                                |
++--------------------------------------------------------------------------------+
+
+5. Dashboard do Aluno
+
+Esta tela oferece uma visão geral da sua orientação e tarefas.
+
++--------------------------------------------------------------------------------+
+| SGOA                                                                           |
+| [Menu]  Olá, Ana Paula!                                           [Sair]     |
++--------------------------------------------------------------------------------+
+|                                                                                |
+| Dashboard do Aluno                                                             |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Minha Orientação Atual                                                         |
+| ----------------------------------------------------------------------------   |
+| Título: "Impacto da IA na Educação Superior"                                   |
+| Tipo: Mestrado                                                                 |
+| Orientador: Prof. Carlos                                                       |
+| Co-orientador: Prof. Maria Silva                                               |
+| Status: Em Andamento                                                           |
+| [ Ver Detalhes da Orientação ]                                                 |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Minhas Tarefas e Prazos                                                        |
+| ----------------------------------------------------------------------------   |
+| [ ] Revisar Cap. 3 - Prazo: 18/10/2026 (Atrasada)                              |
+| [X] Pesquisar Referências - Concluída em: 05/10/2026                           |
+| [ ] Preparar Apresentação - Prazo: 30/11/2026                                  |
+| [ Ver Todas as Tarefas ]                                                       |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Notificações Recentes                                                          |
+| ----------------------------------------------------------------------------   |
+| [ ] Nova mensagem do Prof. Carlos na sua orientação.                           |
+| [ ] Prazo de "Revisar Cap. 3" está se aproximando (ou vencido).                |
+| [ Ver Todas as Notificações ]                                                  |
+|                                                                                |
++--------------------------------------------------------------------------------+
+
+6. Dashboard do Coordenador
+
+Esta tela oferece uma visão geral das orientações do programa/curso.
+
++--------------------------------------------------------------------------------+
+| SGOA                                                                           |
+| [Menu]  Olá, Dra. Silvia!                                         [Sair]     |
++--------------------------------------------------------------------------------+
+|                                                                                |
+| Dashboard do Coordenador                                                       |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Visão Geral do Programa de Pós-Graduação                                       |
+| ----------------------------------------------------------------------------   |
+| Total de Orientações: 50                                                       |
+|   - Em Andamento: 40                                                           |
+|   - Concluídas: 8                                                              |
+|   - Suspensas: 2                                                               |
+|                                                                                |
+| Orientações por Tipo:                                                          |
+|   - Mestrado: 30                                                               |
+|   - Doutorado: 20                                                              |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Orientações com Prazos Críticos Próximos (Ex: Defesa)                          |
+| ----------------------------------------------------------------------------   |
+| [ ] Mestrado - João Silva (Prof. Carlos) - Previsão Defesa: 30/11/2026         |
+| [ ] Doutorado - Maria Santos (Prof. Ana) - Previsão Defesa: 15/12/2026         |
+| [ Ver Todas as Orientações ]                                                   |
+|                                                                                |
+| ----------------------------------------------------------------------------   |
+| Carga de Orientação por Professor (Top 3)                                      |
+| ----------------------------------------------------------------------------   |
+| Prof. Carlos: 10 orientações                                                   |
+| Prof. Ana: 8 orientações                                                       |
+| Prof. José: 7 orientações                                                      |
+| [ Ver Carga Completa ]                                                         |
+|                                                                                |
++--------------------------------------------------------------------------------+
+
+
+Esses wireframes fornecem uma representação visual básica das telas principais, focando na organização dos elementos e no fluxo de navegação. Eles podem ser usados como ponto de partida para discussões e refinamentos futuros.
