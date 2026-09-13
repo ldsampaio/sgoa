@@ -126,6 +126,12 @@ GET  /api/dashboard/:papel         Dashboard por papel
 
 ## Notas
 
-- O banco é recriado/limpo a cada `npm run seed`; arquivos enviados vão para `backend/uploads/`.
-- **Produção**: substituir o SQLite por PostgreSQL/MySQL mantendo o schema, trocar `JWT_SECRET` por valor forte, usar HTTPS (NFR.SEG.003) e ajustar `CORS_ORIGIN`/`MAX_UPLOAD_SIZE`.
-- Frontend em produção: `npm run build` gera `frontend/dist/` para servir via Nginx/CDN (SPA history mode exige configuração de fallback para `index.html`).
+- O banco de dev é recriado/limpo a cada `npm run seed` (travado em produção); arquivos enviados vão para `backend/uploads/`.
+- **Banco de dados**: SQLite em dev (`DB_PATH`); **PostgreSQL em produção** (`DB_DRIVER=postgres` + `DATABASE_URL`). O CI testa os dois.
+- **Produção**: ver `deploy/README.md` (container único + Postgres + Kafka, nginx + Cloudflared no servidor). Trocar `JWT_SECRET` por valor forte, usar HTTPS (NFR.SEG.003) e ajustar `CORS_ORIGIN`/`MAX_UPLOAD_SIZE`.
+
+## Branches e releases
+
+- `develop`: trabalho do dia a dia (ou `feat/*` → PR para `develop`).
+- `main`: estável/produção, **protegida** (só entra via PR, sem push direto nem force-push).
+- Ritual de release: PR `develop` → `main` → merge → `git tag vX.Y.Z` → `gh release create vX.Y.Z` → workflow publica `ghcr.io/ldsampaio/sgoa:vX.Y.Z` (+ `:latest`).

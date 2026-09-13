@@ -1,0 +1,134 @@
+# SGOA v0.1 — produção (servidor da universidade).
+# Uso: copiar este arquivo + .env (a partir de .env.prod.example) para o
+# servidor e rodar ./deploy.sh. O nginx + Cloudflared do servidor fazem
+# proxy para http://127.0.0.1:3000 (ver deploy/README.md).
+#
+# Serviços:
+#   postgres  banco de dados (volume pgdata)
+#   app       API + frontend buildado, container único (volume sgoa-uploads)
+#   agent     avaliação IA interna (OpenRouter :free) — mesmo imagem do app
+#   worker    consome resultados de avaliação — mesma imagem
+#   lembretes avisos automáticos de prazo — mesma imagem
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: sgoa-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sgoa}
+      POSTGRES_USER: ${POSTGRES_USER:-sgoa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sgoa}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    image: ${SGOA_IMAGE:-ghcr.io/ldsampaio/sgoa:latest}
+    container_name: sgoa-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      SERVE_FRONTEND: "true"
+      DB_DRIVER: postgres
+      DATABASE_URL: postgres://${POSTGRES_USER:-sgoa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sgoa}
+      UPLOAD_DIR: /app/uploads
+      KAFKA_BROKERS: kafka:29092
+    volumes:
+      - sgoa-uploads:/app/uploads
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: sgoa-kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,DOCKER://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,DOCKER://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CLUSTER_ID: sgoa-kafka-cluster-01
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    restart: unless-stopped
+
+  agent:
+    image: ${SGOA_IMAGE:-ghcr.io/ldsampaio/sgoa:latest}
+    container_name: sgoa-agent
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DB_DRIVER: postgres
+      DATABASE_URL: postgres://${POSTGRES_USER:-sgoa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sgoa}
+      UPLOAD_DIR: /app/uploads
+      KAFKA_BROKERS: kafka:29092
+    volumes:
+      - sgoa-uploads:/app/uploads
+    command: ["npm", "run", "agent"]
+    restart: unless-stopped
+
+  worker:
+    image: ${SGOA_IMAGE:-ghcr.io/ldsampaio/sgoa:latest}
+    container_name: sgoa-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DB_DRIVER: postgres
+      DATABASE_URL: postgres://${POSTGRES_USER:-sgoa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sgoa}
+      UPLOAD_DIR: /app/uploads
+      KAFKA_BROKERS: kafka:29092
+    volumes:
+      - sgoa-uploads:/app/uploads
+    command: ["npm", "run", "worker"]
+    restart: unless-stopped
+
+  lembretes:
+    image: ${SGOA_IMAGE:-ghcr.io/ldsampaio/sgoa:latest}
+    container_name: sgoa-lembretes
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DB_DRIVER: postgres
+      DATABASE_URL: postgres://${POSTGRES_USER:-sgoa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sgoa}
+      UPLOAD_DIR: /app/uploads
+      KAFKA_BROKERS: kafka:29092
+    volumes:
+      - sgoa-uploads:/app/uploads
+    command: ["npm", "run", "lembretes"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  sgoa-uploads:
+  kafka-data:
