@@ -67,12 +67,11 @@ async function enviarAviso(o, etapa, prazo, dias) {
   );
   const perfil = o.aluno?.id_usuario ? await publicProfile(o.aluno.id_usuario) : null;
   if (perfil?.email) {
-    // Remetente = e-mail institucional do orientador (credenciais dele).
+    // Remetente = conta institucional única do projeto (SMTP_USER/SMTP_FROM).
     await enviarEmail({
       para: perfil.email,
       assunto: `SGOA: prazo de ${rotulo}`,
       texto,
-      deUsuarioId: o.orientador?.id_usuario,
     });
   }
   LembreteModel.registrar(o.id_orientacao, etapa);

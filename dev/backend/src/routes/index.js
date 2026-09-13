@@ -12,7 +12,7 @@ import avaliacaoRoutes from './avaliacao.routes.js';
 import tipoDocumentoRoutes from './tipoDocumento.routes.js';
 import parametrosRoutes from './parametros.routes.js';
 import lembretesRoutes from './lembretes.routes.js';
-import emailIntegracaoRoutes from './emailIntegracao.routes.js';
+import emailRoutes from './email.routes.js';
 
 const router = Router();
 
@@ -29,6 +29,6 @@ router.use('/avaliacoes', avaliacaoRoutes);
 router.use('/tipos-documento', tipoDocumentoRoutes);
 router.use('/parametros-prazos', parametrosRoutes);
 router.use('/lembretes', lembretesRoutes);
-router.use('/email-integracao', emailIntegracaoRoutes);
+router.use('/email', emailRoutes);
 
 export default router;

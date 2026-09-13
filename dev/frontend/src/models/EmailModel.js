@@ -1,16 +1,9 @@
 import { api } from './api.js';
 
+// Conta institucional única do projeto (configurada via env no backend).
+// Só o administrador pode disparar o e-mail de teste.
 export default {
-  async minha() {
-    return api.get('/email-integracao/minha');
-  },
-  async salvar(dados) {
-    return api.post('/email-integracao/minha', dados);
-  },
   async testar(para) {
-    return api.post('/email-integracao/minha/testar', para ? { para } : {});
-  },
-  async remover() {
-    return api.del('/email-integracao/minha');
+    return api.post('/email/testar', para ? { para } : {});
   },
 };

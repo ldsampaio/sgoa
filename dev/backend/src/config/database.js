@@ -128,16 +128,9 @@ CREATE TABLE IF NOT EXISTS integracoes_google (
   data_conexao      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
--- Credenciais SMTP institucional por professor (avisos por e-mail em nome próprio).
--- Senha sempre cifrada (SMTP_TOKEN_KEY); nunca exposta em respostas da API.
-CREATE TABLE IF NOT EXISTS email_integracoes (
-  id_usuario         TEXT PRIMARY KEY REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
-  email_remetente    TEXT NOT NULL,
-  smtp_user          TEXT NOT NULL,
-  smtp_pass_enc      TEXT NOT NULL,
-  requer_reconexao   INTEGER NOT NULL DEFAULT 0,
-  data_atualizacao   TEXT
-);
+-- Credenciais SMTP por usuário (removido: conta única do projeto via env).
+-- Migração: apaga a tabela legada se existir.
+DROP TABLE IF EXISTS email_integracoes;
 
 CREATE TABLE IF NOT EXISTS tarefas (
   id_tarefa        TEXT PRIMARY KEY,
