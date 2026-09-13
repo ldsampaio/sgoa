@@ -46,7 +46,7 @@ export const dashboardAluno = asyncHandler(async (req, res) => {
 });
 
 export const dashboardCoordenador = asyncHandler(async (req, res) => {
-  const orientacoes = anexarPrazos(await OrientacaoModel.listAll());
+  const orientacoes = await anexarPrazos(await OrientacaoModel.listAll());
 
   const porStatus = orientacoes.reduce((acc, o) => {
     acc[o.status] = (acc[o.status] || 0) + 1;
@@ -84,7 +84,7 @@ export const dashboardCoordenador = asyncHandler(async (req, res) => {
     .sort((a, b) => a.dias_restantes - b.dias_restantes)
     .slice(0, 10);
 
-  const carga = all(
+  const carga = await all(
     `SELECT pr.id_professor, u.nome AS nome, COUNT(o.id_orientacao) AS total
      FROM professores pr
      JOIN usuarios u ON u.id_usuario = pr.id_usuario

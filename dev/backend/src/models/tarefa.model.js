@@ -6,12 +6,12 @@ const STATUS = ['Pendente', 'Em Andamento', 'Concluída', 'Atrasada'];
 
 export async function create({ idOrientacao, idResponsavel, descricao, dataLimite }) {
   const id = uuid();
-  run(
+  await run(
     `INSERT INTO tarefas (id_tarefa, id_orientacao, id_responsavel, descricao, data_limite)
      VALUES (?, ?, ?, ?, ?)`,
     [id, idOrientacao, idResponsavel, descricao, dataLimite ?? null],
   );
-  return get(
+  return await get(
     `SELECT t.*, u.nome AS nome_responsavel FROM tarefas t
      JOIN usuarios u ON u.id_usuario = t.id_responsavel
      WHERE t.id_tarefa = ?`,
@@ -20,7 +20,7 @@ export async function create({ idOrientacao, idResponsavel, descricao, dataLimit
 }
 
 export async function findById(id) {
-  return get(
+  return await get(
     `SELECT t.*, u.nome AS nome_responsavel FROM tarefas t
      JOIN usuarios u ON u.id_usuario = t.id_responsavel
      WHERE t.id_tarefa = ?`,
@@ -29,7 +29,7 @@ export async function findById(id) {
 }
 
 export async function listByOrientacao(idOrientacao) {
-  return all(
+  return await all(
     `SELECT t.*, u.nome AS nome_responsavel FROM tarefas t
      JOIN usuarios u ON u.id_usuario = t.id_responsavel
      WHERE t.id_orientacao = ? ORDER BY t.data_limite ASC, t.data_cadastro DESC`,
@@ -40,7 +40,7 @@ export async function listByOrientacao(idOrientacao) {
 export async function updateStatus(id, status) {
   if (!STATUS.includes(status)) status = STATUS[0];
   const concluidaEm = status === 'Concluída' ? now() : null;
-  run(
+  await run(
     'UPDATE tarefas SET status = ?, concluida_em = ?, data_atualizacao = ? WHERE id_tarefa = ?',
     [status, concluidaEm, now(), id],
   );
@@ -50,7 +50,7 @@ export async function updateStatus(id, status) {
 export async function listPendentesPorOrientacoes(orientacoesIds) {
   if (!orientacoesIds?.length) return [];
   const params = orientacoesIds;
-  return all(
+  return await all(
     `SELECT t.*, u_resp.nome AS nome_responsavel, u_aluno.nome AS nome_aluno,
             o.titulo_provisorio, o.tipo
      FROM tarefas t
@@ -73,7 +73,7 @@ export async function listParaDashboard(idUsuario, { orientacoesIds = null } = {
     extra = `AND t.id_orientacao IN (${orientacoesIds.map(() => '?').join(',')})`;
     params.push(...orientacoesIds);
   }
-  return all(
+  return await all(
     `SELECT t.*, o.titulo_provisorio, u_aluno.nome AS nome_aluno, a.curso
      FROM tarefas t
      JOIN orientacoes o ON o.id_orientacao = t.id_orientacao

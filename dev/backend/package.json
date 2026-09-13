@@ -8,6 +8,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node src/seeders/seed.js",
+    "smoke": "node scripts/smoke.js",
+    "create-admin": "node scripts/create-admin.js",
     "worker": "node src/workers/avaliacaoResultados.consumer.js",
     "agent": "node src/workers/avaliacaoAgente.consumer.js",
     "lembretes": "node src/workers/lembretes.worker.js",
@@ -25,6 +27,7 @@
     "kafkajs": "^2.2.4",
     "multer": "^2.0.2",
     "nodemailer": "^10.0.9",
+    "pg": "^8.23.0",
     "unpdf": "^1.8.1"
   }
 }

@@ -7,7 +7,7 @@ import 'dotenv/config';
 import { initDatabase } from '../config/database.js';
 import { verificarTodas } from '../services/lembretes.service.js';
 
-initDatabase();
+await initDatabase();
 
 const INTERVALO_MS = Number(process.env.LEMBRETES_INTERVALO_MS) || 6 * 60 * 60 * 1000;
 const UMA_VEZ = String(process.env.LEMBRETES_UMA_VEZ ?? 'false').toLowerCase() === 'true';

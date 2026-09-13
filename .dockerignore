@@ -1,0 +1,10 @@
+node_modules/
+dev/backend/node_modules/
+dev/frontend/node_modules/
+dev/backend/data/
+dev/backend/uploads/
+dev/backend/.env
+dev/frontend/dist/
+.git/
+*.log
+:memory:*

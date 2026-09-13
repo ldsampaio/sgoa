@@ -51,7 +51,7 @@ async function attachCoOrientadores(orientacoes) {
   const ids = orientacoes.map((o) => o.id_orientacao);
   if (ids.length === 0) return orientacoes;
   const placeholders = ids.map(() => '?').join(',');
-  const cos = all(
+  const cos = await all(
     `SELECT co.id_orientacao, p.id_professor, p.matricula, u.id_usuario, u.nome AS nome
      FROM co_orientadores co
      JOIN professores p ON p.id_professor = co.id_professor
@@ -69,7 +69,7 @@ async function attachCoOrientadores(orientacoes) {
 
 export async function create({ idOrientador, idAluno, tipo, titulo, status, dataInicio, dataPrevisaoFim }) {
   const id = uuid();
-  run(
+  await run(
     `INSERT INTO orientacoes (id_orientacao, id_orientador, id_aluno, tipo, titulo_provisorio, status, data_inicio, data_previsao_fim)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, idOrientador, idAluno, tipo, titulo ?? null, status ?? 'Em Andamento', dataInicio ?? null, dataPrevisaoFim ?? null],
@@ -78,7 +78,7 @@ export async function create({ idOrientador, idAluno, tipo, titulo, status, data
 }
 
 export async function findById(id) {
-  const row = get(`${SELECT_BASE} WHERE o.id_orientacao = ?`, [id]);
+  const row = await get(`${SELECT_BASE} WHERE o.id_orientacao = ?`, [id]);
   const mapped = mapOrientacao(row);
   if (!mapped) return null;
   const [withCos] = await attachCoOrientadores([mapped]);
@@ -86,17 +86,17 @@ export async function findById(id) {
 }
 
 export async function listByProfessor(idProfessor) {
-  const rows = all(`${SELECT_BASE} WHERE o.id_orientador = ? ORDER BY o.data_cadastro DESC`, [idProfessor]);
+  const rows = await all(`${SELECT_BASE} WHERE o.id_orientador = ? ORDER BY o.data_cadastro DESC`, [idProfessor]);
   return attachCoOrientadores(rows.map(mapOrientacao));
 }
 
 export async function listByAluno(idAluno) {
-  const rows = all(`${SELECT_BASE} WHERE o.id_aluno = ? ORDER BY o.data_cadastro DESC`, [idAluno]);
+  const rows = await all(`${SELECT_BASE} WHERE o.id_aluno = ? ORDER BY o.data_cadastro DESC`, [idAluno]);
   return attachCoOrientadores(rows.map(mapOrientacao));
 }
 
 export async function listByCoOrientador(idProfessor) {
-  const rows = all(
+  const rows = await all(
     `${SELECT_BASE}
      JOIN co_orientadores co ON co.id_orientacao = o.id_orientacao
      WHERE co.id_professor = ? ORDER BY o.data_cadastro DESC`,
@@ -106,12 +106,12 @@ export async function listByCoOrientador(idProfessor) {
 }
 
 export async function listAll() {
-  const rows = all(`${SELECT_BASE} ORDER BY o.data_cadastro DESC`);
+  const rows = await all(`${SELECT_BASE} ORDER BY o.data_cadastro DESC`);
   return attachCoOrientadores(rows.map(mapOrientacao));
 }
 
 export async function update(id, { titulo, status, dataPrevisaoFim }) {
-  run(
+  await run(
     `UPDATE orientacoes
      SET titulo_provisorio = ?, status = ?, data_previsao_fim = ?, data_atualizacao = ?
      WHERE id_orientacao = ?`,
@@ -124,7 +124,7 @@ export async function update(id, { titulo, status, dataPrevisaoFim }) {
 export async function updateEtapas(id, { qualificacaoConcluidaEm, defesaConcluidaEm, origem }) {
   const atual = await findById(id);
   if (!atual) return null;
-  run(
+  await run(
     `UPDATE orientacoes
      SET qualificacao_concluida_em = ?, defesa_concluida_em = ?, origem_marcacao = ?, data_atualizacao = ?
      WHERE id_orientacao = ?`,
@@ -141,11 +141,11 @@ export async function updateEtapas(id, { qualificacaoConcluidaEm, defesaConcluid
 
 export async function addCoOrientador(idOrientacao, idProfessor) {
   const id = uuid();
-  run(
+  await run(
     'INSERT INTO co_orientadores (id_co_orientador, id_orientacao, id_professor) VALUES (?, ?, ?)',
     [id, idOrientacao, idProfessor],
   );
-  return get(
+  return await get(
     `SELECT p.id_professor, u.id_usuario, u.nome AS nome FROM co_orientadores co
      JOIN professores p ON p.id_professor = co.id_professor
      JOIN usuarios u ON u.id_usuario = p.id_usuario
@@ -155,12 +155,12 @@ export async function addCoOrientador(idOrientacao, idProfessor) {
 }
 
 export async function removeCoOrientador(idOrientacao, idProfessor) {
-  run('DELETE FROM co_orientadores WHERE id_orientacao = ? AND id_professor = ?', [idOrientacao, idProfessor]);
+  await run('DELETE FROM co_orientadores WHERE id_orientacao = ? AND id_professor = ?', [idOrientacao, idProfessor]);
 }
 
 export async function isCoOrientador(idOrientacao, idProfessor) {
-  return !!get(
+  return !!(await get(
     'SELECT 1 FROM co_orientadores WHERE id_orientacao = ? AND id_professor = ?',
     [idOrientacao, idProfessor],
-  );
+  ));
 }

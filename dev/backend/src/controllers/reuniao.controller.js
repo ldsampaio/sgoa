@@ -135,7 +135,7 @@ export const create = asyncHandler(async (req, res) => {
       googleEventId = ev.eventId;
     } catch (err) {
       if (isInvalidGrant(err)) {
-        IntegracaoModel.removeByUsuario(req.user.id_usuario);
+        await IntegracaoModel.removeByUsuario(req.user.id_usuario);
         return res
           .status(409)
           .json({ erro: 'Conexão Google expirada ou revogada. Reconecte sua conta.', code: 'GOOGLE_RECONECTAR' });
@@ -186,7 +186,7 @@ export const remove = asyncHandler(async (req, res) => {
         await excluirEvento(sessao.client, reuniao.google_event_id);
       } catch (err) {
         if (isInvalidGrant(err)) {
-          IntegracaoModel.removeByUsuario(req.user.id_usuario);
+          await IntegracaoModel.removeByUsuario(req.user.id_usuario);
           return res
             .status(409)
             .json({ erro: 'Conexão Google expirada. Reconecte e tente excluir novamente.', code: 'GOOGLE_RECONECTAR' });

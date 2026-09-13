@@ -60,7 +60,7 @@ export const esqueciSenha = asyncHandler(async (req, res) => {
     return res.json({ mensagem: MENSAGEM_GENERICA_RECUPERACAO });
   }
   try {
-    const codigo = PasswordResetService.solicitarCodigo(user.id_usuario);
+    const codigo = await PasswordResetService.solicitarCodigo(user.id_usuario);
     await enviarEmailRecuperacao({ para: user.email, codigo });
   } catch (err) {
     if (err.status === 429) {
@@ -81,7 +81,7 @@ export const verificarCodigo = asyncHandler(async (req, res) => {
   if (!user || !user.ativo) {
     return res.status(400).json({ erro: 'Código inválido ou expirado.' });
   }
-  const resultado = PasswordResetService.conferirCodigo(user.id_usuario, codigo);
+  const resultado = await PasswordResetService.conferirCodigo(user.id_usuario, codigo);
   if (!resultado.ok) {
     return res.status(400).json({ erro: resultado.motivo });
   }
@@ -104,7 +104,7 @@ export const redefinirSenha = asyncHandler(async (req, res) => {
   if (!user || !user.ativo) {
     return res.status(400).json({ erro: 'Código inválido ou expirado.' });
   }
-  const resultado = PasswordResetService.consumirCodigo(user.id_usuario, codigo);
+  const resultado = await PasswordResetService.consumirCodigo(user.id_usuario, codigo);
   if (!resultado.ok) {
     return res.status(400).json({ erro: resultado.motivo });
   }

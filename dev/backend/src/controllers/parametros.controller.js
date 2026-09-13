@@ -2,7 +2,7 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 import * as ParametrosModel from '../models/parametros.model.js';
 
 export const list = asyncHandler(async (_req, res) => {
-  return res.json(ParametrosModel.listAll());
+  return res.json(await ParametrosModel.listAll());
 });
 
 // Alteração exclusiva do Coordenador (regulamento do programa).
@@ -28,7 +28,7 @@ export const update = asyncHandler(async (req, res) => {
     return res.status(400).json({ erro: 'O prazo de qualificação não pode exceder o prazo de conclusão.' });
   }
   return res.json(
-    ParametrosModel.update(nivel, {
+    await ParametrosModel.update(nivel, {
       prazoConclusaoMeses: prazo_conclusao_meses ?? null,
       prazoQualificacaoMeses: prazo_qualificacao_meses ?? null,
     }),

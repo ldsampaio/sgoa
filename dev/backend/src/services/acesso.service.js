@@ -16,7 +16,7 @@ export async function perfilDoUsuario(user) {
 }
 
 export async function canAcessarOrientacao(user, idOrientacao) {
-  const orientacao = get(
+  const orientacao = await get(
     `SELECT o.id_orientacao, o.id_orientador, o.id_aluno FROM orientacoes o WHERE o.id_orientacao = ?`,
     [idOrientacao],
   );
@@ -29,7 +29,7 @@ export async function canAcessarOrientacao(user, idOrientacao) {
     const p = await findProfessorByUsuario(user.id_usuario);
     if (p && orientacao.id_orientador === p.id_professor) return orientacao;
     if (p) {
-      const co = get(
+      const co = await get(
         'SELECT 1 FROM co_orientadores WHERE id_orientacao = ? AND id_professor = ?',
         [idOrientacao, p.id_professor],
       );

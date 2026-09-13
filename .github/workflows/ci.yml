@@ -1,0 +1,56 @@
+# CI: smoke nos dois drivers (SQLite dev + Postgres prod) + build do frontend.
+# Roda em push para main/develop e em PRs.
+name: ci
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - driver: sqlite
+          - driver: postgres
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sgoa_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dev/backend/package-lock.json
+
+      - name: Backend deps
+        working-directory: dev/backend
+        run: npm ci
+
+      - name: Smoke (SQLite)
+        if: matrix.driver == 'sqlite'
+        working-directory: dev/backend
+        run: DB_PATH=':memory:' npm run smoke
+
+      - name: Smoke (Postgres)
+        if: matrix.driver == 'postgres'
+        working-directory: dev/backend
+        run: DB_DRIVER=postgres DATABASE_URL='postgres://postgres:postgres@localhost:5432/sgoa_test' npm run smoke
+
+      - name: Frontend build
+        working-directory: dev/frontend
+        run: npm ci && npm run build

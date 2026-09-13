@@ -2,8 +2,8 @@ import { all, get, run } from '../utils/query.js';
 import { uuid } from '../utils/id.js';
 import { now } from '../config/database.js';
 
-export function listarPorProfessor(idProfessor) {
-  return all(
+export async function listarPorProfessor(idProfessor) {
+  return await all(
     `SELECT p.*, t.nome AS tipo, t.ativo AS tipo_ativo
      FROM prompts_avaliacao p JOIN tipos_documento t ON t.id_tipo = p.id_tipo
      WHERE p.id_professor = ? ORDER BY t.nome`,
@@ -11,12 +11,12 @@ export function listarPorProfessor(idProfessor) {
   );
 }
 
-export function getParaProfessor(idProfessor, idTipo) {
-  return get('SELECT * FROM prompts_avaliacao WHERE id_professor = ? AND id_tipo = ?', [idProfessor, idTipo]);
+export async function getParaProfessor(idProfessor, idTipo) {
+  return await get('SELECT * FROM prompts_avaliacao WHERE id_professor = ? AND id_tipo = ?', [idProfessor, idTipo]);
 }
 
-function getEnriquecido(idProfessor, idTipo) {
-  return get(
+async function getEnriquecido(idProfessor, idTipo) {
+  return await get(
     `SELECT p.*, t.nome AS tipo, t.ativo AS tipo_ativo
      FROM prompts_avaliacao p JOIN tipos_documento t ON t.id_tipo = p.id_tipo
      WHERE p.id_professor = ? AND p.id_tipo = ?`,
@@ -24,17 +24,17 @@ function getEnriquecido(idProfessor, idTipo) {
   );
 }
 
-export function upsert(idProfessor, idTipo, prompt) {
-  const existente = getParaProfessor(idProfessor, idTipo);
+export async function upsert(idProfessor, idTipo, prompt) {
+  const existente = await getParaProfessor(idProfessor, idTipo);
   if (existente) {
-    run('UPDATE prompts_avaliacao SET prompt = ?, data_atualizacao = ? WHERE id_prompt = ?', [
+    await run('UPDATE prompts_avaliacao SET prompt = ?, data_atualizacao = ? WHERE id_prompt = ?', [
       prompt,
       now(),
       existente.id_prompt,
     ]);
   } else {
     const id = uuid();
-    run('INSERT INTO prompts_avaliacao (id_prompt, id_professor, id_tipo, prompt) VALUES (?, ?, ?, ?)', [
+    await run('INSERT INTO prompts_avaliacao (id_prompt, id_professor, id_tipo, prompt) VALUES (?, ?, ?, ?)', [
       id,
       idProfessor,
       idTipo,
@@ -46,14 +46,14 @@ export function upsert(idProfessor, idTipo, prompt) {
 
 // Garante uma linha por tipo ativo (idempotente, nunca sobrescreve customs).
 // Chamada no seed, ao criar professor e ao criar novo tipo.
-export function garantirParaProfessor(idProfessor, tipos) {
-  const lista = tipos || all('SELECT id_tipo FROM tipos_documento WHERE ativo = 1');
+export async function garantirParaProfessor(idProfessor, tipos) {
+  const lista = tipos || (await all('SELECT id_tipo FROM tipos_documento WHERE ativo = 1'));
   for (const t of lista) {
-    if (!getParaProfessor(idProfessor, t.id_tipo)) {
-      const tipo = get('SELECT prompt_padrao, nome FROM tipos_documento WHERE id_tipo = ?', [t.id_tipo]);
+    if (!(await getParaProfessor(idProfessor, t.id_tipo))) {
+      const tipo = await get('SELECT prompt_padrao, nome FROM tipos_documento WHERE id_tipo = ?', [t.id_tipo]);
       if (tipo) {
         const id = uuid();
-        run('INSERT INTO prompts_avaliacao (id_prompt, id_professor, id_tipo, prompt) VALUES (?, ?, ?, ?)', [
+        await run('INSERT INTO prompts_avaliacao (id_prompt, id_professor, id_tipo, prompt) VALUES (?, ?, ?, ?)', [
           id,
           idProfessor,
           t.id_tipo,
@@ -66,15 +66,14 @@ export function garantirParaProfessor(idProfessor, tipos) {
 }
 
 // Compat: garante os padrões (todos os tipos ativos) — usado no seed.
-export function garantirPadroes(idProfessor) {
+export async function garantirPadroes(idProfessor) {
   return garantirParaProfessor(idProfessor);
 }
 
 // Resolve o prompt vigente com fallback para o padrão do tipo.
-export function resolverPrompt(idProfessor, idTipo) {
-  return (
-    getParaProfessor(idProfessor, idTipo)?.prompt ||
-    get('SELECT prompt_padrao FROM tipos_documento WHERE id_tipo = ?', [idTipo])?.prompt_padrao ||
-    null
-  );
+export async function resolverPrompt(idProfessor, idTipo) {
+  const custom = await getParaProfessor(idProfessor, idTipo);
+  if (custom?.prompt) return custom.prompt;
+  const tipo = await get('SELECT prompt_padrao FROM tipos_documento WHERE id_tipo = ?', [idTipo]);
+  return tipo?.prompt_padrao || null;
 }

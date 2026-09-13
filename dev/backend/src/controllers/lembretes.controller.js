@@ -60,14 +60,14 @@ export const marcarEtapas = asyncHandler(async (req, res) => {
     defesaConcluidaEm: defesa_concluida_em ?? undefined,
     origem: origem ?? 'manual',
   });
-  return res.json(anexarPrazos(atualizada));
+  return res.json(await anexarPrazos(atualizada));
 });
 
 export const getConfig = asyncHandler(async (req, res) => {
   const orientacao = await OrientacaoModel.findById(req.params.id);
   if (!orientacao) return res.status(404).json({ erro: 'Orientação não encontrada.' });
   if (!(await requireAcesso(req, res, req.params.id))) return;
-  return res.json(ConfigAvisosModel.getOrDefault(req.params.id));
+  return res.json(await ConfigAvisosModel.getOrDefault(req.params.id));
 });
 
 export const updateConfig = asyncHandler(async (req, res) => {
@@ -89,7 +89,7 @@ export const updateConfig = asyncHandler(async (req, res) => {
     return res.status(400).json({ erro: `frequencia deve ser uma de: ${ConfigAvisosModel.FREQUENCIAS.join(', ')}.` });
   }
   return res.json(
-    ConfigAvisosModel.update(req.params.id, {
+    await ConfigAvisosModel.update(req.params.id, {
       diasAntesQualificacao: dias_antes_qualificacao,
       diasAntesDefesa: dias_antes_defesa,
       frequencia,
@@ -101,5 +101,5 @@ export const listarEnvios = asyncHandler(async (req, res) => {
   const orientacao = await OrientacaoModel.findById(req.params.id);
   if (!orientacao) return res.status(404).json({ erro: 'Orientação não encontrada.' });
   if (!(await requireAcesso(req, res, req.params.id))) return;
-  return res.json(LembreteModel.listarPorOrientacao(req.params.id));
+  return res.json(await LembreteModel.listarPorOrientacao(req.params.id));
 });

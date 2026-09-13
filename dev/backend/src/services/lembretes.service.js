@@ -17,8 +17,8 @@ const ROTULO_ETAPA = { qualificacao: 'exame de qualificação', defesa: 'defesa'
 export async function verificarOrientacao(orientacao, { parametros } = {}) {
   const o = orientacao;
   if (!o || o.status !== 'Em Andamento') return [];
-  const cfg = ConfigAvisosModel.getOrDefault(o.id_orientacao);
-  const prazos = calcularPrazos(o.aluno?.data_matricula, o.tipo, parametros?.get?.(o.tipo));
+  const cfg = await ConfigAvisosModel.getOrDefault(o.id_orientacao);
+  const prazos = await calcularPrazos(o.aluno?.data_matricula, o.tipo, parametros?.get?.(o.tipo));
   const hoje = new Date().toISOString().slice(0, 10);
   const avisadas = [];
 
@@ -32,7 +32,7 @@ export async function verificarOrientacao(orientacao, { parametros } = {}) {
     const diasAntes = etapa === 'qualificacao' ? cfg.dias_antes_qualificacao : cfg.dias_antes_defesa;
     if (dias == null || dias > diasAntes) continue; // fora da janela (inclui atrasados).
 
-    const ultimo = LembreteModel.ultimoEnvio(o.id_orientacao, etapa);
+    const ultimo = await LembreteModel.ultimoEnvio(o.id_orientacao, etapa);
     const intervalo = INTERVALO_DIAS[cfg.frequencia] ?? 7;
     if (ultimo) {
       const diasDesde = Math.floor((new Date(`${hoje}T00:00:00`) - new Date(ultimo.data_envio)) / 86400000);
@@ -74,12 +74,12 @@ async function enviarAviso(o, etapa, prazo, dias) {
       texto,
     });
   }
-  LembreteModel.registrar(o.id_orientacao, etapa);
+  await LembreteModel.registrar(o.id_orientacao, etapa);
 }
 
 // Varre todas as orientações em andamento. Idempotente (tabela de envios).
 export async function verificarTodas() {
-  const params = new Map(ParametrosModel.listAll().map((p) => [p.nivel, p]));
+  const params = new Map((await ParametrosModel.listAll()).map((p) => [p.nivel, p]));
   const todas = (await OrientacaoModel.listAll()).filter((o) => o.status === 'Em Andamento');
   const resultado = [];
   for (const o of todas) {

@@ -12,12 +12,13 @@ const STATUS = ['Em Andamento', 'Concluída', 'Suspensa', 'Cancelada'];
 
 // Anexa os prazos regulatórios (conclusão + qualificação) calculados da
 // data de matrícula do aluno + parâmetros vigentes. TCC não tem prazos.
-export function anexarPrazos(orientacoes, parametros) {
-  const params = new Map((parametros || ParametrosModel.listAll()).map((p) => [p.nivel, p]));
+export async function anexarPrazos(orientacoes, parametros) {
+  const params = new Map(((await (parametros || ParametrosModel.listAll()))).map((p) => [p.nivel, p]));
   const lista = Array.isArray(orientacoes) ? orientacoes : [orientacoes];
-  const out = lista.map((o) => {
-    const calc = calcularPrazos(o?.aluno?.data_matricula, o?.tipo, params.get(o?.tipo));
-    return {
+  const out = [];
+  for (const o of lista) {
+    const calc = await calcularPrazos(o?.aluno?.data_matricula, o?.tipo, params.get(o?.tipo));
+    out.push({
       ...o,
       prazos: {
         conclusao: calc.prazo_conclusao,
@@ -25,8 +26,8 @@ export function anexarPrazos(orientacoes, parametros) {
         dias_para_conclusao: diasRestantes(calc.prazo_conclusao),
         dias_para_qualificacao: diasRestantes(calc.prazo_qualificacao),
       },
-    };
-  });
+    });
+  }
   return Array.isArray(orientacoes) ? out : out[0];
 }
 
@@ -34,7 +35,7 @@ export const list = asyncHandler(async (req, res) => {
   const { tipo_usuario } = req.user;
 
   if (tipo_usuario === 'Coordenador' || tipo_usuario === 'Administrador') {
-    return res.json(anexarPrazos(await OrientacaoModel.listAll()));
+    return res.json(await anexarPrazos(await OrientacaoModel.listAll()));
   }
   if (tipo_usuario === 'Professor') {
     const prof = await ProfessorModel.findByUsuario(req.user.id_usuario);
@@ -45,12 +46,12 @@ export const list = asyncHandler(async (req, res) => {
     ]);
     const mapa = new Map();
     for (const o of [...comoOrientador, ...comoCoOrientador]) mapa.set(o.id_orientacao, o);
-    return res.json(anexarPrazos([...mapa.values()]));
+    return res.json(await anexarPrazos([...mapa.values()]));
   }
   if (tipo_usuario === 'Aluno') {
     const aluno = await AlunoModel.findByUsuario(req.user.id_usuario);
     if (!aluno) return res.status(404).json({ erro: 'Perfil de aluno não encontrado.' });
-    return res.json(anexarPrazos(await OrientacaoModel.listByAluno(aluno.id_aluno)));
+    return res.json(await anexarPrazos(await OrientacaoModel.listByAluno(aluno.id_aluno)));
   }
   return res.json([]);
 });
@@ -63,7 +64,7 @@ export const detail = asyncHandler(async (req, res) => {
       erro: acesso === null ? 'Orientação não encontrada.' : 'Você não tem acesso a esta orientação.',
     });
   }
-  return res.json(anexarPrazos(await OrientacaoModel.findById(id)));
+  return res.json(await anexarPrazos(await OrientacaoModel.findById(id)));
 });
 
 export const create = asyncHandler(async (req, res) => {
@@ -110,7 +111,7 @@ export const create = asyncHandler(async (req, res) => {
     req.user.id_usuario,
   );
 
-  return res.status(201).json(anexarPrazos(orientacao));
+  return res.status(201).json(await anexarPrazos(orientacao));
 });
 
 export const update = asyncHandler(async (req, res) => {
@@ -137,7 +138,7 @@ export const update = asyncHandler(async (req, res) => {
     return res.status(400).json({ erro: `Status inválido. Use um de: ${STATUS.join(', ')}.` });
   }
   const atualizada = await OrientacaoModel.update(id, { titulo_provisorio, status, dataPrevisaoFim });
-  return res.json(anexarPrazos(atualizada));
+  return res.json(await anexarPrazos(atualizada));
 });
 
 export const addCoOrientador = asyncHandler(async (req, res) => {

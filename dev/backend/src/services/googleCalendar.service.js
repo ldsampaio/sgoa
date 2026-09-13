@@ -75,7 +75,7 @@ export async function trocarCodePorTokens(code) {
 }
 
 export async function getClientParaUsuario(idUsuario) {
-  const integracao = IntegracaoModel.findByUsuario(idUsuario);
+  const integracao = await IntegracaoModel.findByUsuario(idUsuario);
   if (!integracao?.refresh_token_enc) return null;
   const refreshToken = decryptRefreshToken(integracao.refresh_token_enc);
   const client = newOAuthClient();
@@ -84,11 +84,11 @@ export async function getClientParaUsuario(idUsuario) {
     access_token: integracao.access_token || undefined,
   });
   // Persiste automaticamente cada refresh de access_token.
-  client.on('tokens', (tokens) => {
+  client.on('tokens', async (tokens) => {
     try {
       if (tokens?.access_token) {
         const expiraEm = tokens?.expiry_date ? new Date(tokens.expiry_date).toISOString() : null;
-        IntegracaoModel.updateAccessToken(idUsuario, tokens.access_token, expiraEm);
+        await IntegracaoModel.updateAccessToken(idUsuario, tokens.access_token, expiraEm);
       }
     } catch {
       // Persistência do token não pode quebrar o fluxo principal.

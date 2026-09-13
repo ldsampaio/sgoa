@@ -3,18 +3,18 @@ import { uuid } from '../utils/id.js';
 
 export const ETAPAS = ['qualificacao', 'defesa'];
 
-export function registrar(idOrientacao, etapa) {
+export async function registrar(idOrientacao, etapa) {
   const id = uuid();
-  run('INSERT INTO lembretes_enviados (id_lembrete, id_orientacao, etapa) VALUES (?, ?, ?)', [
+  await run('INSERT INTO lembretes_enviados (id_lembrete, id_orientacao, etapa) VALUES (?, ?, ?)', [
     id,
     idOrientacao,
     etapa,
   ]);
-  return get('SELECT * FROM lembretes_enviados WHERE id_lembrete = ?', [id]);
+  return await get('SELECT * FROM lembretes_enviados WHERE id_lembrete = ?', [id]);
 }
 
-export function ultimoEnvio(idOrientacao, etapa) {
-  return get(
+export async function ultimoEnvio(idOrientacao, etapa) {
+  return await get(
     `SELECT * FROM lembretes_enviados
      WHERE id_orientacao = ? AND etapa = ?
      ORDER BY data_envio DESC LIMIT 1`,
@@ -22,8 +22,8 @@ export function ultimoEnvio(idOrientacao, etapa) {
   );
 }
 
-export function listarPorOrientacao(idOrientacao) {
-  return all(
+export async function listarPorOrientacao(idOrientacao) {
+  return await all(
     'SELECT * FROM lembretes_enviados WHERE id_orientacao = ? ORDER BY data_envio DESC',
     [idOrientacao],
   );

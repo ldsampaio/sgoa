@@ -42,16 +42,16 @@ export function codigoBloqueado(registro) {
   return (registro?.tentativas ?? 0) >= CODIGO_MAX_TENTATIVAS;
 }
 
-export function solicitarCodigo(idUsuario) {
+export async function solicitarCodigo(idUsuario) {
   const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  if (PasswordResetModel.contarRecentes(idUsuario, umaHoraAtras) >= MAX_PEDIDOS_POR_HORA) {
+  if ((await PasswordResetModel.contarRecentes(idUsuario, umaHoraAtras)) >= MAX_PEDIDOS_POR_HORA) {
     const err = new Error('Muitas solicitações. Aguarde uma hora antes de tentar novamente.');
     err.status = 429;
     throw err;
   }
-  PasswordResetModel.invalidarAnteriores(idUsuario);
+  await PasswordResetModel.invalidarAnteriores(idUsuario);
   const codigo = gerarCodigo();
-  PasswordResetModel.criar({
+  await PasswordResetModel.criar({
     idUsuario,
     codigoHash: hashCodigo(codigo),
     expiraEm: expiracaoCodigo(),
@@ -61,13 +61,13 @@ export function solicitarCodigo(idUsuario) {
 
 // Valida sem consumir: usada na etapa "verificar código".
 // Retorna { ok, motivo } sem revelar detalhes além do necessário.
-export function conferirCodigo(idUsuario, codigo) {
-  const registro = PasswordResetModel.buscarAtivo(idUsuario);
+export async function conferirCodigo(idUsuario, codigo) {
+  const registro = await PasswordResetModel.buscarAtivo(idUsuario);
   if (!registro) return { ok: false, motivo: 'Código inválido ou expirado.' };
   if (codigoExpirado(registro)) return { ok: false, motivo: 'Código expirado. Solicite um novo código.' };
   if (codigoBloqueado(registro)) return { ok: false, motivo: 'Muitas tentativas. Solicite um novo código.' };
   if (!codigoConfere(codigo, registro.codigo_hash)) {
-    const atualizado = PasswordResetModel.incrementarTentativa(registro.id);
+    const atualizado = await PasswordResetModel.incrementarTentativa(registro.id);
     if (codigoBloqueado(atualizado)) {
       return { ok: false, motivo: 'Muitas tentativas. Solicite um novo código.' };
     }
@@ -77,10 +77,10 @@ export function conferirCodigo(idUsuario, codigo) {
 }
 
 // Valida e consome (uso único) — usado na redefinição final.
-export function consumirCodigo(idUsuario, codigo) {
-  const resultado = conferirCodigo(idUsuario, codigo);
+export async function consumirCodigo(idUsuario, codigo) {
+  const resultado = await conferirCodigo(idUsuario, codigo);
   if (!resultado.ok) return resultado;
-  PasswordResetModel.marcarUsado(resultado.registro.id);
-  PasswordResetModel.invalidarAnteriores(idUsuario);
+  await PasswordResetModel.marcarUsado(resultado.registro.id);
+  await PasswordResetModel.invalidarAnteriores(idUsuario);
   return { ok: true, registro: resultado.registro };
 }
