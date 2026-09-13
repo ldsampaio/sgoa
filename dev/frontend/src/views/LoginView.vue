@@ -31,6 +31,10 @@
           {{ carregando ? 'Entrando...' : 'Entrar' }}
         </button>
 
+        <p style="margin-top: 0.75rem; font-size: 0.85rem; text-align: center">
+          <RouterLink to="/recuperar-senha">Esqueci minha senha</RouterLink>
+        </p>
+
         <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--cor-texto-suave)">
           <strong>Acessos de demonstração:</strong><br />
           Professor: carlos@sgoa.dev / Prof@1234<br />

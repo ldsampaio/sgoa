@@ -14,6 +14,7 @@ initDatabase();
 
 db.exec(`
   DELETE FROM notificacoes;
+  DELETE FROM recuperacoes_senha;
   DELETE FROM mensagens;
   DELETE FROM documentos;
   DELETE FROM tarefas;

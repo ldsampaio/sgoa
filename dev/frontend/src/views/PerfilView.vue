@@ -12,8 +12,8 @@
             <input id="nome" v-model="form.nome" type="text" required />
           </div>
           <div class="campo">
-            <label for="email">E-mail</label>
-            <input id="email" v-model="form.email" type="email" required />
+            <label for="email">E-mail institucional</label>
+            <input id="email" v-model="form.email" type="email" required placeholder="nome@utfpr.edu.br" />
           </div>
           <div class="campo">
             <label for="senha">Nova senha (deixe vazio para manter)</label>

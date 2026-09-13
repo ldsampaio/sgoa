@@ -20,12 +20,33 @@ export async function create({ nome, email, senhaHash, tipoUsuario }) {
   return findById(id);
 }
 
-export async function update(id, { nome, email, senhaHash }) {
-  run(
-    `UPDATE usuarios SET nome = ?, email = ?, senha_hash = ?, data_atualizacao = ?
-     WHERE id_usuario = ?`,
-    [nome ?? null, email ?? null, senhaHash ?? null, now(), id],
-  );
+export async function update(id, { nome, email, senhaHash, tipoUsuario, ativo }) {
+  const sets = [];
+  const params = [];
+  if (nome !== undefined) {
+    sets.push('nome = ?');
+    params.push(nome);
+  }
+  if (email !== undefined) {
+    sets.push('email = ?');
+    params.push(email);
+  }
+  if (senhaHash !== undefined) {
+    sets.push('senha_hash = ?');
+    params.push(senhaHash);
+  }
+  if (tipoUsuario !== undefined) {
+    sets.push('tipo_usuario = ?');
+    params.push(tipoUsuario);
+  }
+  if (ativo !== undefined) {
+    sets.push('ativo = ?');
+    params.push(ativo ? 1 : 0);
+  }
+  if (sets.length === 0) return findById(id);
+  sets.push('data_atualizacao = ?');
+  params.push(now(), id);
+  run(`UPDATE usuarios SET ${sets.join(', ')} WHERE id_usuario = ?`, params);
   return findById(id);
 }
 
@@ -59,7 +80,7 @@ export async function publicProfile(id) {
     user.tipo_usuario === 'Professor'
       ? get('SELECT id_professor, matricula, departamento FROM professores WHERE id_usuario = ?', [id])
       : user.tipo_usuario === 'Aluno'
-        ? get('SELECT id_aluno, matricula, curso, programa_pos FROM alunos WHERE id_usuario = ?', [id])
+        ? get('SELECT id_aluno, matricula, curso, programa_pos, data_matricula FROM alunos WHERE id_usuario = ?', [id])
         : null;
   return { ...withRole(user), perfil: roleInfo };
 }

@@ -7,6 +7,9 @@ export default {
   async create(data) {
     return api.post('/usuarios', data);
   },
+  async update(id, data) {
+    return api.put(`/usuarios/${id}`, data);
+  },
   async updateProfile(data) {
     return api.put('/usuarios/me', data);
   },

@@ -3,7 +3,7 @@
     <div class="cartao">
       <h2>
         {{ ehProfessor ? 'Alunos' : 'Gestão de Usuários' }}
-        <button v-if="!mostrarForm" class="botao primario" @click="mostrarForm = true">+ {{ ehProfessor ? 'Novo Aluno' : 'Novo Usuário' }}</button>
+        <button v-if="!mostrarForm" class="botao primario" @click="abrirNovo">+ {{ ehProfessor ? 'Novo Aluno' : 'Novo Usuário' }}</button>
       </h2>
 
       <AlertMessage :mensagem="erro" tipo="erro" />
@@ -15,12 +15,12 @@
           <input id="nome" v-model="form.nome" type="text" required />
         </div>
         <div class="campo">
-          <label for="email">E-mail</label>
-          <input id="email" v-model="form.email" type="email" required />
+          <label for="email">E-mail institucional</label>
+          <input id="email" v-model="form.email" type="email" required placeholder="nome@utfpr.edu.br" />
         </div>
         <div class="campo">
-          <label for="senha">Senha</label>
-          <input id="senha" v-model="form.senha" type="password" required placeholder="Mín. 8, Maiúsc., minúsc., número e especial" />
+          <label for="senha">Senha{{ editandoId ? ' (não alterada na edição)' : '' }}</label>
+          <input id="senha" v-model="form.senha" type="password" :required="!editandoId" placeholder="Mín. 8, Maiúsc., minúsc., número e especial" :disabled="!!editandoId" />
         </div>
         <div class="campo">
           <label for="tipo">Tipo de Usuário</label>
@@ -43,15 +43,15 @@
         <template v-if="form.tipo_usuario === 'Aluno'">
           <div class="campo">
             <label for="matriculaA">Matrícula</label>
-            <input id="matriculaA" v-model="form.matricula" type="text" required />
+            <input id="matriculaA" v-model="form.matricula" type="text" :required="!editandoId" />
           </div>
           <div class="campo">
             <label for="curso">Curso</label>
-            <input id="curso" v-model="form.curso" type="text" required />
+            <input id="curso" v-model="form.curso" type="text" :required="!editandoId" />
           </div>
           <div class="campo">
             <label for="dataMatricula">Data de matrícula</label>
-            <input id="dataMatricula" v-model="form.data_matricula" type="date" required />
+            <input id="dataMatricula" v-model="form.data_matricula" type="date" :required="!editandoId" />
           </div>
           <div class="campo" style="grid-column: 1 / -1">
             <label for="pos">Programa de Pós-graduação (opcional)</label>
@@ -59,8 +59,12 @@
           </div>
         </template>
 
+        <div v-if="editandoId && podeEditar" class="campo" style="grid-column: 1 / -1">
+          <label><input v-model="form.ativo" type="checkbox" /> Usuário ativo</label>
+        </div>
+
         <div style="grid-column: 1 / -1">
-          <button type="submit" class="botao primario" :disabled="salvando">{{ salvando ? 'Salvando...' : 'Criar usuário' }}</button>
+          <button type="submit" class="botao primario" :disabled="salvando">{{ salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Criar usuário') }}</button>
           <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="limparForm">Cancelar</button>
         </div>
       </form>
@@ -74,6 +78,8 @@
             <th>Matrícula</th>
             <th>Curso/Departamento</th>
             <th v-if="ehProfessor">Data de matrícula</th>
+            <th v-if="podeEditar">Situação</th>
+            <th v-if="podeEditar">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -84,6 +90,10 @@
             <td>{{ u.perfil?.matricula || u.perfil?.id_aluno || '—' }}</td>
             <td>{{ u.perfil?.curso || u.perfil?.departamento || '—' }}</td>
             <td v-if="ehProfessor">{{ u.perfil?.data_matricula || '—' }}</td>
+            <td v-if="podeEditar">{{ u.ativo === false ? 'Inativo' : 'Ativo' }}</td>
+            <td v-if="podeEditar" style="white-space: nowrap">
+              <button type="button" class="botao secundario" @click="abrirEditar(u)">Editar</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -101,12 +111,14 @@ import AlertMessage from './components/AlertMessage.vue';
 
 const tipos = ['Professor', 'Aluno', 'Coordenador', 'Administrador'];
 const ehProfessor = computed(() => authState.user?.tipo_usuario === 'Professor');
+const podeEditar = computed(() => ['Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario));
 const tiposVisiveis = computed(() => (ehProfessor.value ? ['Aluno'] : tipos));
 const mostrarForm = ref(false);
 const salvando = ref(false);
 const erro = ref('');
 const sucesso = ref('');
 const usuarios = ref([]);
+const editandoId = ref(null);
 
 const form = reactive({
   nome: '',
@@ -118,6 +130,7 @@ const form = reactive({
   curso: '',
   programa_pos: '',
   data_matricula: '',
+  ativo: true,
 });
 
 async function carregar() {
@@ -144,8 +157,31 @@ onMounted(async () => {
   }
 });
 
+function abrirNovo() {
+  limparForm();
+  mostrarForm.value = true;
+}
+
+function abrirEditar(u) {
+  erro.value = '';
+  sucesso.value = '';
+  editandoId.value = u.id_usuario;
+  form.nome = u.nome || '';
+  form.email = u.email || '';
+  form.senha = '';
+  form.tipo_usuario = u.tipo_usuario || 'Aluno';
+  form.matricula = u.perfil?.matricula || '';
+  form.departamento = u.perfil?.departamento || '';
+  form.curso = u.perfil?.curso || '';
+  form.programa_pos = u.perfil?.programa_pos || '';
+  form.data_matricula = u.perfil?.data_matricula || '';
+  form.ativo = u.ativo !== false;
+  mostrarForm.value = true;
+}
+
 function limparForm() {
   mostrarForm.value = false;
+  editandoId.value = null;
   form.nome = '';
   form.email = '';
   form.senha = '';
@@ -155,6 +191,7 @@ function limparForm() {
   form.curso = '';
   form.programa_pos = '';
   form.data_matricula = '';
+  form.ativo = true;
 }
 
 async function criar() {
@@ -162,10 +199,31 @@ async function criar() {
   sucesso.value = '';
   salvando.value = true;
   try {
-    await UsuariosController.criar({ ...form });
+    if (editandoId.value) {
+      const dados = {
+        nome: form.nome,
+        email: form.email,
+        tipo_usuario: form.tipo_usuario,
+        ativo: form.ativo,
+      };
+      if (form.tipo_usuario === 'Professor') {
+        dados.matricula = form.matricula;
+        dados.departamento = form.departamento;
+      }
+      if (form.tipo_usuario === 'Aluno') {
+        dados.matricula = form.matricula;
+        dados.curso = form.curso;
+        dados.programa_pos = form.programa_pos;
+        if (form.data_matricula) dados.data_matricula = form.data_matricula;
+      }
+      await UsuarioModel.update(editandoId.value, dados);
+      sucesso.value = 'Usuário atualizado com sucesso.';
+    } else {
+      await UsuariosController.criar({ ...form });
+      sucesso.value = ehProfessor.value ? 'Aluno incluído com sucesso.' : 'Usuário criado com sucesso.';
+    }
     await carregar();
     limparForm();
-    sucesso.value = ehProfessor.value ? 'Aluno incluído com sucesso.' : 'Usuário criado com sucesso.';
   } catch (err) {
     erro.value = err.message;
   } finally {

@@ -9,6 +9,12 @@ const routes = [
     meta: { publico: true },
   },
   {
+    path: '/recuperar-senha',
+    name: 'recuperar-senha',
+    component: () => import('../views/RecuperarSenhaView.vue'),
+    meta: { publico: true },
+  },
+  {
     path: '/',
     component: () => import('../views/LayoutView.vue'),
     children: [

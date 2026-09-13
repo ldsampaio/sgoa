@@ -183,6 +183,19 @@ CREATE TABLE IF NOT EXISTS notificacoes (
   data_criacao   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
+-- Códigos de recuperação de senha (RF.GU.003).
+-- Código de 6 dígitos, hash com salt (nunca em texto puro), expiração curta,
+-- tentativas limitadas e uso único. Novo pedido invalida os anteriores.
+CREATE TABLE IF NOT EXISTS recuperacoes_senha (
+  id              TEXT PRIMARY KEY,
+  id_usuario      TEXT NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+  codigo_hash     TEXT NOT NULL,
+  expira_em       TEXT NOT NULL,
+  tentativas      INTEGER NOT NULL DEFAULT 0,
+  usado_em        TEXT,
+  criado_em       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
 CREATE TABLE IF NOT EXISTS prompts_avaliacao (
   id_prompt        TEXT PRIMARY KEY,
   id_professor     TEXT NOT NULL REFERENCES professores(id_professor) ON DELETE CASCADE,
@@ -227,6 +240,7 @@ CREATE INDEX IF NOT EXISTS idx_mensagens_orientacao ON mensagens(id_orientacao);
 CREATE INDEX IF NOT EXISTS idx_notificacoes_usuario ON notificacoes(id_usuario);
 CREATE INDEX IF NOT EXISTS idx_orientacoes_orientador ON orientacoes(id_orientador);
 CREATE INDEX IF NOT EXISTS idx_orientacoes_aluno ON orientacoes(id_aluno);
+CREATE INDEX IF NOT EXISTS idx_recuperacao_usuario ON recuperacoes_senha(id_usuario);
 `;
 
 export function initDatabase() {
@@ -242,6 +256,7 @@ export function initDatabase() {
   db.exec('CREATE INDEX IF NOT EXISTS idx_avaliacoes_orientacao ON avaliacoes(id_orientacao)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_avaliacoes_documento ON avaliacoes(id_documento)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_prompts_professor ON prompts_avaliacao(id_professor)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_recuperacao_usuario ON recuperacoes_senha(id_usuario)');
 
   // alunos: data de matrícula (YYYY-MM-DD, vinda do sistema acadêmico; manual por ora).
   if (!colunasDe('alunos').includes('data_matricula')) {
