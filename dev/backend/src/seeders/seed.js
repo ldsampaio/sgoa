@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { db, initDatabase, ensureTiposBase, now } from '../config/database.js';
+import { execScript, initDatabase, ensureTiposBase } from '../config/database.js';
 import { hashPassword } from '../utils/password.js';
 import * as UsuarioModel from '../models/usuario.model.js';
 import * as ProfessorModel from '../models/professor.model.js';
@@ -10,9 +10,16 @@ import * as ReuniaoModel from '../models/reuniao.model.js';
 import * as MensagemModel from '../models/mensagem.model.js';
 import { garantirPadroes } from '../models/promptAvaliacao.model.js';
 
-initDatabase();
+// NUNCA rode em produção: apaga todas as tabelas. Em prod use
+// scripts/create-admin.js (bootstrap) — o schema é criado no boot.
+if (String(process.env.NODE_ENV ?? '').toLowerCase() === 'production' && !process.env.ALLOW_SEED) {
+  console.error('[SEED] recusado: NODE_ENV=production. Use scripts/create-admin.js para bootstrap.');
+  process.exit(1);
+}
 
-db.exec(`
+await initDatabase();
+
+await execScript(`
   DELETE FROM notificacoes;
   DELETE FROM recuperacoes_senha;
   DELETE FROM mensagens;
@@ -32,7 +39,7 @@ db.exec(`
   DELETE FROM usuarios;
 `);
 
-ensureTiposBase();
+await ensureTiposBase();
 
 async function criarUsuario({ nome, email, senha, tipo, matricula, departamento, curso, programaPos, dataMatricula }) {
   const user = await UsuarioModel.create({
@@ -209,8 +216,8 @@ await MensagemModel.create({
 });
 
 // Prompts-padrão de avaliação IA para cada professor.
-garantirPadroes(carlos.professor.id_professor);
-garantirPadroes(maria.professor.id_professor);
+await garantirPadroes(carlos.professor.id_professor);
+await garantirPadroes(maria.professor.id_professor);
 
 console.log('Seed concluído com sucesso.');
 console.log('Acessos de exemplo:');

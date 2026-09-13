@@ -25,21 +25,21 @@ async function resolverProfessor(req, res) {
 export const listar = asyncHandler(async (req, res) => {
   const professor = await resolverProfessor(req, res);
   if (!professor) return;
-  return res.json(PromptModel.listarPorProfessor(professor.id_professor));
+  return res.json(await PromptModel.listarPorProfessor(professor.id_professor));
 });
 
 export const atualizar = asyncHandler(async (req, res) => {
-  const tipoDoc = findTipoById(req.params.idTipo);
+  const tipoDoc = await findTipoById(req.params.idTipo);
   if (!tipoDoc) return res.status(404).json({ erro: 'Tipo de documento não encontrado.' });
   const professor = await resolverProfessor(req, res);
   if (!professor) return;
   const { prompt, restaurar } = req.body;
   if (restaurar === true) {
     const padrao = tipoDoc.prompt_padrao || PROMPTS_PADRAO[tipoDoc.nome];
-    return res.json(PromptModel.upsert(professor.id_professor, tipoDoc.id_tipo, padrao));
+    return res.json(await PromptModel.upsert(professor.id_professor, tipoDoc.id_tipo, padrao));
   }
   if (!prompt || String(prompt).trim().length < 50) {
     return res.status(400).json({ erro: 'O prompt deve ter ao menos 50 caracteres.' });
   }
-  return res.json(PromptModel.upsert(professor.id_professor, tipoDoc.id_tipo, String(prompt).trim()));
+  return res.json(await PromptModel.upsert(professor.id_professor, tipoDoc.id_tipo, String(prompt).trim()));
 });

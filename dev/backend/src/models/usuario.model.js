@@ -3,16 +3,16 @@ import { uuid } from '../utils/id.js';
 import { now } from '../config/database.js';
 
 export async function findByEmail(email) {
-  return get('SELECT * FROM usuarios WHERE email = ?', [email]);
+  return await get('SELECT * FROM usuarios WHERE email = ?', [email]);
 }
 
 export async function findById(id) {
-  return get('SELECT * FROM usuarios WHERE id_usuario = ?', [id]);
+  return await get('SELECT * FROM usuarios WHERE id_usuario = ?', [id]);
 }
 
 export async function create({ nome, email, senhaHash, tipoUsuario }) {
   const id = uuid();
-  run(
+  await run(
     `INSERT INTO usuarios (id_usuario, nome, email, senha_hash, tipo_usuario)
      VALUES (?, ?, ?, ?, ?)`,
     [id, nome, email, senhaHash, tipoUsuario],
@@ -46,12 +46,12 @@ export async function update(id, { nome, email, senhaHash, tipoUsuario, ativo })
   if (sets.length === 0) return findById(id);
   sets.push('data_atualizacao = ?');
   params.push(now(), id);
-  run(`UPDATE usuarios SET ${sets.join(', ')} WHERE id_usuario = ?`, params);
+  await run(`UPDATE usuarios SET ${sets.join(', ')} WHERE id_usuario = ?`, params);
   return findById(id);
 }
 
 export async function listAll() {
-  return all('SELECT * FROM usuarios ORDER BY nome');
+  return await all('SELECT * FROM usuarios ORDER BY nome');
 }
 
 function withRole(row) {
@@ -78,14 +78,14 @@ export async function publicProfile(id) {
   if (!user) return null;
   const roleInfo =
     user.tipo_usuario === 'Professor'
-      ? get('SELECT id_professor, matricula, departamento FROM professores WHERE id_usuario = ?', [id])
+      ? await get('SELECT id_professor, matricula, departamento FROM professores WHERE id_usuario = ?', [id])
       : user.tipo_usuario === 'Aluno'
-        ? get('SELECT id_aluno, matricula, curso, programa_pos, data_matricula FROM alunos WHERE id_usuario = ?', [id])
+        ? await get('SELECT id_aluno, matricula, curso, programa_pos, data_matricula FROM alunos WHERE id_usuario = ?', [id])
         : null;
   return { ...withRole(user), perfil: roleInfo };
 }
 
 export async function setAtivo(id, ativo) {
-  run('UPDATE usuarios SET ativo = ?, data_atualizacao = ? WHERE id_usuario = ?', [ativo ? 1 : 0, now(), id]);
+  await run('UPDATE usuarios SET ativo = ?, data_atualizacao = ? WHERE id_usuario = ?', [ativo ? 1 : 0, now(), id]);
   return publicProfile(id);
 }

@@ -14,7 +14,7 @@ export const authUrl = asyncHandler(async (req, res) => {
 });
 
 export const status = asyncHandler(async (req, res) => {
-  const integracao = IntegracaoModel.findByUsuario(req.user.id_usuario);
+  const integracao = await IntegracaoModel.findByUsuario(req.user.id_usuario);
   if (!integracao) return res.json({ conectado: false, email_google: null });
   return res.json({ conectado: true, email_google: integracao.email_google });
 });
@@ -38,7 +38,7 @@ export const callback = asyncHandler(async (req, res) => {
       return res.redirect(`${frontend}/google-ok?erro=dominio_invalido`);
     }
     const expiraEm = tokens?.expiry_date ? new Date(tokens.expiry_date).toISOString() : null;
-    IntegracaoModel.upsert({
+    await IntegracaoModel.upsert({
       idUsuario: payload.id_usuario,
       emailGoogle,
       refreshTokenEnc: encryptRefreshToken(tokens.refresh_token),
@@ -52,7 +52,7 @@ export const callback = asyncHandler(async (req, res) => {
 });
 
 export const disconnect = asyncHandler(async (req, res) => {
-  const integracao = IntegracaoModel.findByUsuario(req.user.id_usuario);
+  const integracao = await IntegracaoModel.findByUsuario(req.user.id_usuario);
   if (integracao?.refresh_token_enc) {
     try {
       await revogarRefreshToken(decryptRefreshToken(integracao.refresh_token_enc));
@@ -60,6 +60,6 @@ export const disconnect = asyncHandler(async (req, res) => {
       // Segue com a remoção local mesmo se a revogação falhar.
     }
   }
-  IntegracaoModel.removeByUsuario(req.user.id_usuario);
+  await IntegracaoModel.removeByUsuario(req.user.id_usuario);
   return res.status(204).end();
 });

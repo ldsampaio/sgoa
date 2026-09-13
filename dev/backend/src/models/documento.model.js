@@ -10,7 +10,7 @@ export async function create({ idOrientacao, idUploader, idTipoDocumento, nomeAr
   const id = uuid();
   // Guarda só o nome do arquivo (relativo). O absoluto do host quebra dentro do Docker.
   const caminhoRel = basename(String(caminho ?? ''));
-  run(
+  await run(
     `INSERT INTO documentos (id_documento, id_orientacao, id_uploader, id_tipo_documento, nome_arquivo, tipo_arquivo, caminho_armazenamento, descricao, versao)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, idOrientacao, idUploader, idTipoDocumento ?? null, nomeArquivo, tipoArquivo, caminhoRel, descricao ?? null, versao ?? 1],
@@ -19,7 +19,7 @@ export async function create({ idOrientacao, idUploader, idTipoDocumento, nomeAr
 }
 
 export async function findById(id) {
-  return get(
+  return await get(
     `SELECT d.*, u.nome AS nome_uploader, t.nome AS categoria FROM documentos d
      JOIN usuarios u ON u.id_usuario = d.id_uploader
      LEFT JOIN tipos_documento t ON t.id_tipo = d.id_tipo_documento
@@ -29,7 +29,7 @@ export async function findById(id) {
 }
 
 export async function listByOrientacao(idOrientacao) {
-  return all(
+  return await all(
     `SELECT d.*, u.nome AS nome_uploader, t.nome AS categoria FROM documentos d
      JOIN usuarios u ON u.id_usuario = d.id_uploader
      LEFT JOIN tipos_documento t ON t.id_tipo = d.id_tipo_documento
@@ -40,7 +40,7 @@ export async function listByOrientacao(idOrientacao) {
 
 export async function nextVersion(idOrientacao, nomeBase) {
   const base = nomeBase.includes('.') ? nomeBase.split('.').slice(0, -1).join('.') : nomeBase;
-  const rows = all(
+  const rows = await all(
     `SELECT nome_arquivo FROM documentos WHERE id_orientacao = ? AND nome_arquivo LIKE ?`,
     [idOrientacao, `${base}%`],
   );

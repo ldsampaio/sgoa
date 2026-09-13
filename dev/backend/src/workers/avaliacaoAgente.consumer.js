@@ -16,7 +16,7 @@ import {
   desconectar as desconectarFila,
 } from '../services/filaAvaliacao.service.js';
 
-initDatabase();
+await initDatabase();
 
 if (String(process.env.AGENT_ENABLED ?? 'true').toLowerCase() === 'false') {
   console.log('[AGENTE] AGENT_ENABLED=false — nada a consumir. Encerrando.');

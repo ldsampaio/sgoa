@@ -25,9 +25,9 @@ export function validarDataMatricula(valor) {
 // Calcula os prazos regulatórios de uma orientação a partir da data de
 // matrícula do aluno e dos parâmetros vigentes. TCC não tem prazos (null).
 // Retorna { prazo_conclusao, prazo_qualificacao } em YYYY-MM-DD ou null.
-export function calcularPrazos(dataMatricula, nivel, parametros) {
+export async function calcularPrazos(dataMatricula, nivel, parametros) {
   if (!dataMatricula) return { prazo_conclusao: null, prazo_qualificacao: null };
-  const params = parametros || ParametrosModel.findByNivel(nivel);
+  const params = parametros || (await ParametrosModel.findByNivel(nivel));
   if (!params) return { prazo_conclusao: null, prazo_qualificacao: null };
   return {
     prazo_conclusao:

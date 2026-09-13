@@ -8,7 +8,7 @@ import * as AvaliacaoModel from '../models/avaliacao.model.js';
 import { notificarParticipantes } from '../services/notificacao.service.js';
 import { topicResultados } from '../services/filaAvaliacao.service.js';
 
-initDatabase();
+await initDatabase();
 
 const kafka = new Kafka({
   clientId: `${process.env.KAFKA_CLIENT_ID || 'sgoa-backend'}-worker`,

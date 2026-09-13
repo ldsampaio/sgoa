@@ -46,7 +46,7 @@ export const uploadDocumento = asyncHandler(async (req, res) => {
   // Categoria do documento (dropdown no upload). Valida se informada.
   let tipoDoc = null;
   if (id_tipo) {
-    tipoDoc = findTipoById(String(id_tipo));
+    tipoDoc = await findTipoById(String(id_tipo));
     if (!tipoDoc) return res.status(400).json({ erro: 'Categoria de documento inválida.' });
     if (!tipoDoc.ativo) return res.status(400).json({ erro: 'Categoria de documento desativada.' });
   }
@@ -79,14 +79,14 @@ export const uploadDocumento = asyncHandler(async (req, res) => {
   if (req.user.tipo_usuario === 'Aluno') {
     try {
       const orientacao = await OrientacaoModel.findById(id);
-      const categoria = tipoDoc || (orientacao?.tipo ? findTipoByNome(orientacao.tipo) : null);
+      const categoria = tipoDoc || (orientacao?.tipo ? await findTipoByNome(orientacao.tipo) : null);
       if (categoria && !categoria.ativo) {
         console.error('[AVALIAÇÃO] categoria desativada, avaliação não criada.');
       } else {
         const professor = orientacao?.orientador?.id_professor
           ? await findProfessorById(orientacao.orientador.id_professor)
           : null;
-        const prompt = professor && categoria ? resolverPrompt(professor.id_professor, categoria.id_tipo) : null;
+        const prompt = professor && categoria ? await resolverPrompt(professor.id_professor, categoria.id_tipo) : null;
         if (professor && categoria && prompt) {
           avaliacao = await AvaliacaoModel.create({
             idDocumento: doc.id_documento,

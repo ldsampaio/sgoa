@@ -2,7 +2,7 @@ import { all } from '../utils/query.js';
 import { create as createNotif } from '../models/notificacao.model.js';
 
 export async function participantesDaOrientacao(idOrientacao) {
-  return all(
+  return await all(
     `SELECT DISTINCT u.id_usuario FROM (
        SELECT o.id_orientador AS id_professor FROM orientacoes o WHERE o.id_orientacao = ?
        UNION ALL

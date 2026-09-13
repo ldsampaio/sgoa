@@ -3,11 +3,11 @@ import { uuid } from '../utils/id.js';
 
 export async function create({ idOrientacao, idRemetente, conteudo }) {
   const id = uuid();
-  run(
+  await run(
     'INSERT INTO mensagens (id_mensagem, id_orientacao, id_remetente, conteudo) VALUES (?, ?, ?, ?)',
     [id, idOrientacao, idRemetente, conteudo],
   );
-  return get(
+  return await get(
     `SELECT m.*, u.nome AS nome_remetente FROM mensagens m
      JOIN usuarios u ON u.id_usuario = m.id_remetente
      WHERE m.id_mensagem = ?`,
@@ -16,7 +16,7 @@ export async function create({ idOrientacao, idRemetente, conteudo }) {
 }
 
 export async function listByOrientacao(idOrientacao) {
-  return all(
+  return await all(
     `SELECT m.*, u.nome AS nome_remetente FROM mensagens m
      JOIN usuarios u ON u.id_usuario = m.id_remetente
      WHERE m.id_orientacao = ? ORDER BY m.data_envio ASC`,

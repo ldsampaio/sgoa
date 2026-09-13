@@ -50,7 +50,7 @@ export const createUsuario = asyncHandler(async (req, res) => {
       return res.status(400).json({ erro: 'Matrícula é obrigatória para professores.' });
     }
     const professor = await ProfessorModel.create({ idUsuario: user.id_usuario, matricula, departamento });
-    garantirPadroes(professor.id_professor);
+    await garantirPadroes(professor.id_professor);
   }
   if (tipo === 'Aluno') {
     if (!matricula || !curso) {
@@ -137,7 +137,7 @@ export const updateUsuario = asyncHandler(async (req, res) => {
       await ProfessorModel.update(existente.id_professor, { matricula, departamento });
     } else {
       const professor = await ProfessorModel.create({ idUsuario: alvo.id_usuario, matricula, departamento });
-      garantirPadroes(professor.id_professor);
+      await garantirPadroes(professor.id_professor);
     }
   }
   if (novoTipo === 'Aluno' && (trocouTipo || matricula !== undefined || curso !== undefined || programa_pos !== undefined || data_matricula !== undefined)) {
