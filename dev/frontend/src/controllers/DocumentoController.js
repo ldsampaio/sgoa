@@ -20,10 +20,10 @@ export default {
     }
   },
 
-  async enviar(idOrientacao, arquivo, descricao) {
+  async enviar(idOrientacao, arquivo, descricao, idTipo) {
     documentoState.enviando = true;
     try {
-      const doc = await DocumentoModel.upload(idOrientacao, arquivo, descricao);
+      const doc = await DocumentoModel.upload(idOrientacao, arquivo, descricao, idTipo);
       documentoState.lista.unshift(doc);
       return doc;
     } finally {

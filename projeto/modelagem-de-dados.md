@@ -53,8 +53,33 @@ erDiagram
         VARCHAR status "Em Andamento, Concluída, Suspensa, Cancelada"
         DATE data_inicio
         DATE data_previsao_fim
+        DATE qualificacao_concluida_em "marcada pelo orientador; RPA futuro"
+        DATE defesa_concluida_em "marcada pelo orientador; RPA futuro"
+        VARCHAR origem_marcacao "manual, rpa"
         TIMESTAMP data_cadastro
         TIMESTAMP data_atualizacao
+    }
+
+    CONFIG_AVISOS_ORIENTACAO {
+        UUID id_orientacao PK/FK
+        INTEGER dias_antes_qualificacao "padrão 30"
+        INTEGER dias_antes_defesa "padrão 30"
+        VARCHAR frequencia "diaria, semanal, mensal"
+    }
+
+    LEMBRETE_ENVIADO {
+        UUID id_lembrete PK
+        UUID id_orientacao FK
+        VARCHAR etapa "qualificacao, defesa"
+        TIMESTAMP data_envio
+    }
+
+    EMAIL_INTEGRACAO {
+        UUID id_usuario PK/FK
+        VARCHAR email_remetente "e-mail do professor"
+        VARCHAR smtp_user
+        VARCHAR smtp_pass_enc "cifrada (SMTP_TOKEN_KEY), nunca exposta"
+        BOOLEAN requer_reconexao "senha institucional trocada"
     }
 
     PROFESSOR ||--|{ USUARIO : "é_um"
@@ -72,6 +97,14 @@ erDiagram
         VARCHAR matricula
         VARCHAR curso
         VARCHAR programa_pos
+        DATE data_matricula "origem: sistema acadêmico (manual por ora)"
+    }
+
+    PARAMETROS_PRAZOS {
+        VARCHAR nivel PK "TCC, Mestrado, Doutorado"
+        INTEGER prazo_conclusao_meses "NULL = sem prazo; padrão Mestrado 24, Doutorado 48"
+        INTEGER prazo_qualificacao_meses "NULL = sem prazo; padrão Mestrado 14, Doutorado 24"
+        TIMESTAMP data_atualizacao
     }
 
     CO_ORIENTADOR ||--|{ PROFESSOR : "é_um"

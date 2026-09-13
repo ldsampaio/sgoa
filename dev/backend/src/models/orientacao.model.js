@@ -7,6 +7,7 @@ export const SELECT_BASE = `
     o.*,
     u_aluno.nome AS nome_aluno,
     a.id_usuario AS id_usuario_aluno,
+    a.data_matricula AS data_matricula_aluno,
     u_orient.nome AS nome_orientador,
     u_orient.id_usuario AS id_usuario_orientador
   FROM orientacoes o
@@ -27,10 +28,16 @@ function mapOrientacao(row) {
     data_previsao_fim: row.data_previsao_fim,
     data_cadastro: row.data_cadastro,
     data_atualizacao: row.data_atualizacao,
+    etapas: {
+      qualificacao_concluida_em: row.qualificacao_concluida_em ?? null,
+      defesa_concluida_em: row.defesa_concluida_em ?? null,
+      origem_marcacao: row.origem_marcacao ?? 'manual',
+    },
     aluno: {
       id_aluno: row.id_aluno,
       id_usuario: row.id_usuario_aluno,
       nome: row.nome_aluno,
+      data_matricula: row.data_matricula_aluno ?? null,
     },
     orientador: {
       id_professor: row.id_orientador,
@@ -109,6 +116,25 @@ export async function update(id, { titulo, status, dataPrevisaoFim }) {
      SET titulo_provisorio = ?, status = ?, data_previsao_fim = ?, data_atualizacao = ?
      WHERE id_orientacao = ?`,
     [titulo ?? null, status ?? null, dataPrevisaoFim ?? null, now(), id],
+  );
+  return findById(id);
+}
+
+// Marca a conclusão de qualificação/defesa (professor orientador; RPA futuramente via origem='rpa').
+export async function updateEtapas(id, { qualificacaoConcluidaEm, defesaConcluidaEm, origem }) {
+  const atual = await findById(id);
+  if (!atual) return null;
+  run(
+    `UPDATE orientacoes
+     SET qualificacao_concluida_em = ?, defesa_concluida_em = ?, origem_marcacao = ?, data_atualizacao = ?
+     WHERE id_orientacao = ?`,
+    [
+      qualificacaoConcluidaEm ?? atual.etapas.qualificacao_concluida_em,
+      defesaConcluidaEm ?? atual.etapas.defesa_concluida_em,
+      origem ?? 'manual',
+      now(),
+      id,
+    ],
   );
   return findById(id);
 }

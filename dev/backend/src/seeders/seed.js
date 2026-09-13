@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { db, initDatabase, now } from '../config/database.js';
+import { db, initDatabase, ensureTiposBase, now } from '../config/database.js';
 import { hashPassword } from '../utils/password.js';
 import * as UsuarioModel from '../models/usuario.model.js';
 import * as ProfessorModel from '../models/professor.model.js';
@@ -8,6 +8,7 @@ import * as OrientacaoModel from '../models/orientacao.model.js';
 import * as TarefaModel from '../models/tarefa.model.js';
 import * as ReuniaoModel from '../models/reuniao.model.js';
 import * as MensagemModel from '../models/mensagem.model.js';
+import { garantirPadroes } from '../models/promptAvaliacao.model.js';
 
 initDatabase();
 
@@ -20,13 +21,19 @@ db.exec(`
   DELETE FROM co_orientadores;
   DELETE FROM orientacoes;
   DELETE FROM integracoes_google;
+  DELETE FROM avaliacoes;
+  DELETE FROM prompts_avaliacao;
+  DELETE FROM tipos_documento;
+  DELETE FROM documentos;
   DELETE FROM alunos;
   DELETE FROM professores;
   DELETE FROM perfis;
   DELETE FROM usuarios;
 `);
 
-async function criarUsuario({ nome, email, senha, tipo, matricula, departamento, curso, programaPos }) {
+ensureTiposBase();
+
+async function criarUsuario({ nome, email, senha, tipo, matricula, departamento, curso, programaPos, dataMatricula }) {
   const user = await UsuarioModel.create({
     nome,
     email,
@@ -37,7 +44,10 @@ async function criarUsuario({ nome, email, senha, tipo, matricula, departamento,
     return { user, professor: await ProfessorModel.create({ idUsuario: user.id_usuario, matricula, departamento }) };
   }
   if (tipo === 'Aluno') {
-    return { user, aluno: await AlunoModel.create({ idUsuario: user.id_usuario, matricula, curso, programaPos }) };
+    return {
+      user,
+      aluno: await AlunoModel.create({ idUsuario: user.id_usuario, matricula, curso, programaPos, dataMatricula }),
+    };
   }
   return { user };
 }
@@ -90,6 +100,7 @@ const joao = await criarUsuario({
   tipo: 'Aluno',
   matricula: 'A2001',
   curso: 'Ciência da Computação',
+  dataMatricula: '2024-03-15',
 });
 
 const ana = await criarUsuario({
@@ -100,6 +111,7 @@ const ana = await criarUsuario({
   matricula: 'A2002',
   curso: 'Pós-graduação em Educação',
   programaPos: 'Mestrado em Educação',
+  dataMatricula: '2024-08-01',
 });
 
 const pedro = await criarUsuario({
@@ -110,6 +122,7 @@ const pedro = await criarUsuario({
   matricula: 'A2003',
   curso: 'Pós-graduação em Ciência da Computação',
   programaPos: 'Doutorado em Ciência da Computação',
+  dataMatricula: '2023-03-01',
 });
 
 const oriJoao = await OrientacaoModel.create({
@@ -193,6 +206,10 @@ await MensagemModel.create({
   idRemetente: carlos.user.id_usuario,
   conteudo: 'Perfeito Ana, vou revisar até o final da semana.',
 });
+
+// Prompts-padrão de avaliação IA para cada professor.
+garantirPadroes(carlos.professor.id_professor);
+garantirPadroes(maria.professor.id_professor);
 
 console.log('Seed concluído com sucesso.');
 console.log('Acessos de exemplo:');

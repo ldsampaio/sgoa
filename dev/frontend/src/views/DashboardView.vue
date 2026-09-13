@@ -148,8 +148,9 @@
               <strong>{{ o.tipo }}</strong> - {{ o.aluno.nome }} ({{ o.orientador.nome }}) —
               <em>"{{ o.titulo_provisorio }}"</em>
               <StatusPill :status="o.status" />
+              <span class="pilula" style="margin-left: 0.4rem">{{ rotuloPrazo(o.tipo_prazo) }}</span>
               <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
-                Previsão: {{ formatarData(o.data_previsao_fim) }} · {{ o.dias_restantes }} dias restantes
+                {{ detalhePrazo(o) }} · {{ o.dias_restantes }} dias restantes
               </div>
             </div>
           </div>
@@ -188,6 +189,16 @@ import { formatarData } from '../utils/fmt.js';
 onMounted(() => {
   DashboardController.carregar();
 });
+
+function rotuloPrazo(tipo) {
+  return { previsao_fim: 'Previsão', conclusao_regulamentar: 'Conclusão', qualificacao: 'Qualificação' }[tipo] || 'Prazo';
+}
+
+function detalhePrazo(o) {
+  if (o.tipo_prazo === 'conclusao_regulamentar') return `Conclusão máx.: ${formatarData(o.prazos?.conclusao)}`;
+  if (o.tipo_prazo === 'qualificacao') return `Qualificação máx.: ${formatarData(o.prazos?.qualificacao)}`;
+  return `Previsão: ${formatarData(o.data_previsao_fim)}`;
+}
 
 async function marcarLida(n) {
   await NotificacaoController.marcarLida(n);

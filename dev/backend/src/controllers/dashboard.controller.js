@@ -5,6 +5,8 @@ import * as ProfessorModel from '../models/professor.model.js';
 import * as AlunoModel from '../models/aluno.model.js';
 import * as TarefaModel from '../models/tarefa.model.js';
 import * as NotificacaoModel from '../models/notificacao.model.js';
+import { anexarPrazos } from './orientacao.controller.js';
+import { diasRestantes } from '../services/prazos.service.js';
 
 export const dashboardProfessor = asyncHandler(async (req, res) => {
   const prof = await ProfessorModel.findByUsuario(req.user.id_usuario);
@@ -44,7 +46,7 @@ export const dashboardAluno = asyncHandler(async (req, res) => {
 });
 
 export const dashboardCoordenador = asyncHandler(async (req, res) => {
-  const orientacoes = await OrientacaoModel.listAll();
+  const orientacoes = anexarPrazos(await OrientacaoModel.listAll());
 
   const porStatus = orientacoes.reduce((acc, o) => {
     acc[o.status] = (acc[o.status] || 0) + 1;
@@ -55,10 +57,30 @@ export const dashboardCoordenador = asyncHandler(async (req, res) => {
     return acc;
   }, {});
 
-  const prazosCriticos = orientacoes
-    .filter((o) => o.data_previsao_fim)
-    .map((o) => ({ ...o, dias_restantes: Math.ceil((new Date(o.data_previsao_fim) - new Date()) / 86400000) }))
-    .filter((o) => o.status === 'Em Andamento' && o.dias_restantes <= 60)
+  // Prazos críticos: previsão de fim + prazos regulatórios (conclusão/qualificação).
+  const candidatos = [];
+  for (const o of orientacoes) {
+    if (o.status !== 'Em Andamento') continue;
+    if (o.data_previsao_fim) {
+      candidatos.push({ ...o, tipo_prazo: 'previsao_fim', dias_restantes: diasRestantes(o.data_previsao_fim) });
+    }
+    if (o.prazos?.conclusao) {
+      candidatos.push({
+        ...o,
+        tipo_prazo: 'conclusao_regulamentar',
+        dias_restantes: diasRestantes(o.prazos.conclusao),
+      });
+    }
+    if (o.prazos?.qualificacao) {
+      candidatos.push({
+        ...o,
+        tipo_prazo: 'qualificacao',
+        dias_restantes: diasRestantes(o.prazos.qualificacao),
+      });
+    }
+  }
+  const prazosCriticos = candidatos
+    .filter((o) => o.dias_restantes != null && o.dias_restantes <= 60)
     .sort((a, b) => a.dias_restantes - b.dias_restantes)
     .slice(0, 10);
 

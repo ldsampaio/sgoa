@@ -8,6 +8,9 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node src/seeders/seed.js",
+    "worker": "node src/workers/avaliacaoResultados.consumer.js",
+    "agent": "node src/workers/avaliacaoAgente.consumer.js",
+    "lembretes": "node src/workers/lembretes.worker.js",
     "test": "node --test"
   },
   "engines": {
@@ -19,6 +22,9 @@
     "express": "^5.2.1",
     "googleapis": "^144.0.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2"
+    "kafkajs": "^2.2.4",
+    "multer": "^2.0.2",
+    "nodemailer": "^10.0.9",
+    "unpdf": "^1.8.1"
   }
 }

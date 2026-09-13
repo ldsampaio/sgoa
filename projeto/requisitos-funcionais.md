@@ -19,11 +19,13 @@ As funcionalidades estão agrupadas por módulo principal, conforme definido no 
 
 #### 2.1. Gestão de Usuários
 
-*   **RF.GU.001:** Permitir o cadastro de novos usuários (professores, alunos, coordenadores) pelo administrador do sistema.
+*   **RF.GU.001:** Permitir o cadastro de novos usuários pelo administrador e pelo coordenador; professores podem cadastrar alunos (somente tipo Aluno) e incluir alunos já cadastrados em suas orientações.
 *   **RF.GU.002:** Permitir que usuários se autentiquem no sistema (login).
 *   **RF.GU.003:** Permitir que usuários recuperem suas senhas.
 *   **RF.GU.004:** Permitir que usuários visualizem e editem seu próprio perfil (nome, e-mail, etc.).
 *   **RF.GU.005:** Atribuir e gerenciar papéis de usuário (orientador, co-orientador, aluno, coordenador, administrador).
+*   **RF.GU.006:** Registrar para cada aluno somente a data de matrícula (obtida do sistema acadêmico; cadastro manual até a automatização) e calcular os prazos máximos a partir dela: conclusão do Mestrado (24 meses) e Doutorado (48 meses), exame de qualificação (14 meses no Mestrado, 24 no Doutorado); TCC não possui estes prazos. Parâmetros guardados em banco e editáveis pelo coordenador conforme o regulamento.
+*   **RF.GU.007:** Enviar mensagem automatizada (na orientação, em nome do orientador) e e-mail automatizado ao aluno quando o prazo de qualificação ou defesa estiver chegando e a etapa não estiver concluída, conforme dias de antecedência e frequência (diária, semanal, mensal) configurados pelo professor para cada orientação. O e-mail parte do endereço institucional do orientador via SMTP da universidade, com as credenciais de cada professor guardadas cifradas no sistema (recadastro necessário ao trocar a senha institucional). A conclusão de cada etapa é marcada pelo orientador (captura automática do sistema acadêmico via RPA futuramente).
 
 #### 2.2. Gestão de Orientações
 

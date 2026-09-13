@@ -12,6 +12,7 @@ import * as tarefa from '../controllers/tarefa.controller.js';
 import * as reuniao from '../controllers/reuniao.controller.js';
 import * as documento from '../controllers/documento.controller.js';
 import * as mensagem from '../controllers/mensagem.controller.js';
+import * as avaliacao from '../controllers/avaliacao.controller.js';
 import { timeline } from '../controllers/atividade.controller.js';
 
 const router = Router();
@@ -39,5 +40,7 @@ router.post('/:id/documentos', documento.upload.single('arquivo'), documento.upl
 
 router.get('/:id/mensagens', mensagem.listByOrientacao);
 router.post('/:id/mensagens', mensagem.create);
+
+router.get('/:id/avaliacoes', avaliacao.listByOrientacao);
 
 export default router;

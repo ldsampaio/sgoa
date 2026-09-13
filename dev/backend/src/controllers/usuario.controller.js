@@ -4,16 +4,24 @@ import * as ProfessorModel from '../models/professor.model.js';
 import * as AlunoModel from '../models/aluno.model.js';
 import { hashPassword, validatePassword } from '../utils/password.js';
 import { publicProfile } from '../models/usuario.model.js';
+import { garantirPadroes } from '../models/promptAvaliacao.model.js';
+import { validarDataMatricula } from '../services/prazos.service.js';
 
 const TIPOS = ['Professor', 'Aluno', 'Coordenador', 'Administrador'];
 
 export const createUsuario = asyncHandler(async (req, res) => {
-  const { nome, email, senha, tipo_usuario, matricula, departamento, curso, programa_pos } = req.body;
+  const { nome, email, senha, tipo_usuario, matricula, departamento, curso, programa_pos, data_matricula } = req.body;
+
+  // Professores só podem incluir alunos.
+  const tipo = req.user?.tipo_usuario === 'Professor' ? 'Aluno' : tipo_usuario;
+  if (req.user?.tipo_usuario === 'Professor' && tipo_usuario && tipo_usuario !== 'Aluno') {
+    return res.status(403).json({ erro: 'Professores só podem cadastrar alunos.' });
+  }
 
   if (!nome || !email || !senha) {
     return res.status(400).json({ erro: 'Nome, e-mail e senha são obrigatórios.' });
   }
-  if (!TIPOS.includes(tipo_usuario)) {
+  if (!TIPOS.includes(tipo)) {
     return res.status(400).json({ erro: `Tipo de usuário inválido. Use um de: ${TIPOS.join(', ')}.` });
   }
   if (!validatePassword(senha)) {
@@ -29,20 +37,24 @@ export const createUsuario = asyncHandler(async (req, res) => {
     nome,
     email: email.toLowerCase(),
     senhaHash: hashPassword(senha),
-    tipoUsuario: tipo_usuario,
+    tipoUsuario: tipo,
   });
 
-  if (tipo_usuario === 'Professor') {
+  if (tipo === 'Professor') {
     if (!matricula) {
       return res.status(400).json({ erro: 'Matrícula é obrigatória para professores.' });
     }
-    await ProfessorModel.create({ idUsuario: user.id_usuario, matricula, departamento });
+    const professor = await ProfessorModel.create({ idUsuario: user.id_usuario, matricula, departamento });
+    garantirPadroes(professor.id_professor);
   }
-  if (tipo_usuario === 'Aluno') {
+  if (tipo === 'Aluno') {
     if (!matricula || !curso) {
       return res.status(400).json({ erro: 'Matrícula e curso são obrigatórios para alunos.' });
     }
-    await AlunoModel.create({ idUsuario: user.id_usuario, matricula, curso, programaPos: programa_pos });
+    if (!validarDataMatricula(data_matricula)) {
+      return res.status(400).json({ erro: 'Data de matrícula inválida. Use o formato YYYY-MM-DD, não futura.' });
+    }
+    await AlunoModel.create({ idUsuario: user.id_usuario, matricula, curso, programaPos: programa_pos, dataMatricula: data_matricula });
   }
 
   return res.status(201).json(await publicProfile(user.id_usuario));

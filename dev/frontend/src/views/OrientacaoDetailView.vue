@@ -18,7 +18,12 @@
           <strong>Status:</strong> <StatusPill :status="orientacaoState.atual.status" /><br />
           <span style="color: var(--cor-texto-suave)">
             Início: {{ formatarData(orientacaoState.atual.data_inicio) }} ·
-            Previsão de fim: {{ formatarData(orientacaoState.atual.data_previsao_fim) }}
+            Previsão de fim: {{ formatarData(orientacaoState.atual.data_previsao_fim) }}<br />
+            <template v-if="orientacaoState.atual.prazos && (orientacaoState.atual.prazos.conclusao || orientacaoState.atual.prazos.qualificacao)">
+              Matrícula do aluno: {{ formatarData(orientacaoState.atual.aluno?.data_matricula) }} ·
+              Prazo máx. conclusão: {{ formatarData(orientacaoState.atual.prazos.conclusao) }} ({{ textoDias(orientacaoState.atual.prazos.dias_para_conclusao) }}) ·
+              Exame de qualificação: {{ formatarData(orientacaoState.atual.prazos.qualificacao) }} ({{ textoDias(orientacaoState.atual.prazos.dias_para_qualificacao) }})
+            </template>
           </span>
         </p>
         <RouterLink
@@ -28,6 +33,66 @@
         >
           Editar orientação
         </RouterLink>
+      </div>
+
+      <div class="cartao">
+        <h2>Etapas e Avisos Automáticos</h2>
+        <div v-if="orientacaoState.atual.tipo !== 'TCC'">
+          <strong>Qualificação:</strong>
+          {{ orientacaoState.atual.etapas?.qualificacao_concluida_em
+            ? `concluída em ${formatarData(orientacaoState.atual.etapas.qualificacao_concluida_em)}`
+            : `prazo máx. ${formatarData(orientacaoState.atual.prazos?.qualificacao)} (${textoDias(orientacaoState.atual.prazos?.dias_para_qualificacao)})` }}
+        </div>
+        <div style="margin-top: 0.4rem">
+          <strong>Defesa:</strong>
+          {{ orientacaoState.atual.etapas?.defesa_concluida_em
+            ? `concluída em ${formatarData(orientacaoState.atual.etapas.defesa_concluida_em)}`
+            : `prazo máx. ${formatarData(orientacaoState.atual.prazos?.conclusao)} (${textoDias(orientacaoState.atual.prazos?.dias_para_conclusao)})` }}
+        </div>
+
+        <template v-if="podeGerenciarEtapas">
+          <h3 style="margin-top: 1rem">Marcar conclusão de etapa</h3>
+          <form class="grid-2" @submit.prevent="salvarEtapas">
+            <div class="campo" v-if="orientacaoState.atual.tipo !== 'TCC'">
+              <label for="qualiEm">Qualificação concluída em</label>
+              <input id="qualiEm" v-model="formEtapas.qualificacao_concluida_em" type="date" />
+            </div>
+            <div class="campo">
+              <label for="defesaEm">Defesa concluída em</label>
+              <input id="defesaEm" v-model="formEtapas.defesa_concluida_em" type="date" />
+            </div>
+            <div style="grid-column: 1 / -1">
+              <button type="submit" class="botao primario" :disabled="salvandoEtapas">{{ salvandoEtapas ? 'Salvando...' : 'Salvar etapas' }}</button>
+            </div>
+          </form>
+
+          <h3 style="margin-top: 1rem">Configuração dos avisos</h3>
+          <form class="grid-2" @submit.prevent="salvarConfigAvisos">
+            <div class="campo" v-if="orientacaoState.atual.tipo !== 'TCC'">
+              <label for="diasQuali">Dias antes da qualificação</label>
+              <input id="diasQuali" v-model.number="formAvisos.dias_antes_qualificacao" type="number" min="0" step="1" required />
+            </div>
+            <div class="campo">
+              <label for="diasDefesa">Dias antes da defesa</label>
+              <input id="diasDefesa" v-model.number="formAvisos.dias_antes_defesa" type="number" min="0" step="1" required />
+            </div>
+            <div class="campo">
+              <label for="freq">Frequência de envio</label>
+              <select id="freq" v-model="formAvisos.frequencia" required>
+                <option value="diaria">Diária</option>
+                <option value="semanal">Semanal</option>
+                <option value="mensal">Mensal</option>
+              </select>
+            </div>
+            <div style="grid-column: 1 / -1">
+              <button type="submit" class="botao primario" :disabled="salvandoAvisos">{{ salvandoAvisos ? 'Salvando...' : 'Salvar configuração' }}</button>
+            </div>
+          </form>
+
+          <div v-if="envios.length" style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--cor-texto-suave)">
+            Últimos avisos enviados: {{ envios.slice(0, 5).map((e) => `${e.etapa} em ${formatarDataHora(e.data_envio)}`).join(' · ') }}
+          </div>
+        </template>
       </div>
 
       <AlertMessage :mensagem="acaoErro" tipo="erro" />
@@ -218,6 +283,13 @@
               <label for="descDoc">Descrição (opcional)</label>
               <input id="descDoc" v-model="formDoc.descricao" type="text" placeholder="Ex: Capítulo 2 - Metodologia" />
             </div>
+            <div class="campo">
+              <label for="catDoc">Categoria (define o prompt da avaliação IA)</label>
+              <select id="catDoc" v-model="formDoc.id_tipo">
+                <option value="">Padrão da orientação ({{ orientacaoState.atual?.tipo }})</option>
+                <option v-for="t in tipoDocumentoState.lista" :key="t.id_tipo" :value="t.id_tipo">{{ t.nome }}</option>
+              </select>
+            </div>
             <button type="submit" class="botao primario" :disabled="documentoState.enviando">
               {{ documentoState.enviando ? 'Enviando...' : 'Enviar' }}
             </button>
@@ -231,12 +303,44 @@
           <div v-for="d in documentoState.lista" :key="d.id_documento" class="item-lista">
             <div>
               📄 {{ d.nome_arquivo }} <span class="pilula Concluida">v{{ d.versao }}</span>
+              <span v-if="d.categoria" class="pilula">{{ d.categoria }}</span>
               <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
                 Enviado por {{ d.nome_uploader }} em {{ formatarDataHora(d.data_upload) }}
                 <template v-if="d.descricao"> · {{ d.descricao }}</template>
               </div>
+              <div v-if="avaliacaoDe(d.id_documento)" style="margin-top: 0.3rem; font-size: 0.85rem">
+                <StatusPill :status="rotuloAvaliacao(avaliacaoDe(d.id_documento).status)" />
+                <button
+                  v-if="avaliacaoDe(d.id_documento).status === 'concluída'"
+                  type="button" class="botao secundario" style="margin-left: 0.5rem"
+                  @click="verAvaliacao(d.id_documento)"
+                >
+                  Ver avaliação
+                </button>
+                <button
+                  v-if="['falha', 'pendente'].includes(avaliacaoDe(d.id_documento).status) && podeCriarReuniao"
+                  type="button" class="botao secundario" style="margin-left: 0.5rem"
+                  @click="reenviarAvaliacao(d.id_documento)"
+                >
+                  Reenviar
+                </button>
+              </div>
             </div>
-            <a class="botao secundario" :href="documentoState.urlDownload(d.id_documento)" download>Baixar</a>
+            <a class="botao secundario" :href="DocumentoController.urlDownload(d.id_documento)" download>Baixar</a>
+          </div>
+
+          <div v-if="avaliacaoState.detalhe" class="cartao" style="margin-top: 1rem; border-left: 4px solid var(--cor-primaria-clara)">
+            <h3>Avaliação por IA — {{ avaliacaoState.detalhe.nome_arquivo }} (v{{ avaliacaoState.detalhe.versao }})</h3>
+            <p style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+              Categoria: {{ avaliacaoState.detalhe.tipo }} · Tentativa {{ avaliacaoState.detalhe.tentativas }}
+              <template v-if="avaliacaoState.detalhe.nota"> · Nota: {{ avaliacaoState.detalhe.nota }}</template>
+            </p>
+            <div style="white-space: pre-wrap">{{ avaliacaoState.detalhe.resultado }}</div>
+            <details style="margin-top: 0.5rem">
+              <summary style="cursor: pointer; font-size: 0.85rem">Prompt utilizado</summary>
+              <div style="white-space: pre-wrap; font-size: 0.85rem; color: var(--cor-texto-suave)">{{ avaliacaoState.detalhe.prompt_usado }}</div>
+            </details>
+            <button type="button" class="botao secundario" style="margin-top: 0.5rem" @click="AvaliacaoController.fecharDetalhe()">Fechar</button>
           </div>
         </div>
       </div>
@@ -278,7 +382,10 @@ import TarefaController, { tarefaState } from '../controllers/TarefaController.j
 import ReuniaoController, { reuniaoState } from '../controllers/ReuniaoController.js';
 import GoogleController, { googleState } from '../controllers/GoogleController.js';
 import DocumentoController, { documentoState } from '../controllers/DocumentoController.js';
+import AvaliacaoController, { avaliacaoState } from '../controllers/AvaliacaoController.js';
+import TipoDocumentoController, { tipoDocumentoState } from '../controllers/TipoDocumentoController.js';
 import MensagemController, { mensagemState } from '../controllers/MensagemController.js';
+import LembreteModel from '../models/LembreteModel.js';
 import { authState } from '../controllers/AuthController.js';
 import StatusPill from './components/StatusPill.vue';
 import Spinner from './components/Spinner.vue';
@@ -300,9 +407,16 @@ const areaMensagens = ref(null);
 
 const formTarefa = reactive({ id_responsavel: '', descricao: '', data_limite: '' });
 const formReuniao = reactive({ data_hora: '', pauta: '', decisoes_proximos_passos: '', link: '', duracaoMinutos: 60, criarNoGoogle: true });
-const formDoc = reactive({ descricao: '' });
+const formDoc = reactive({ descricao: '', id_tipo: '' });
 
 const id = computed(() => route.params.id);
+
+function textoDias(dias) {
+  if (dias == null) return 'sem prazo';
+  if (dias < 0) return `${Math.abs(dias)} dias em atraso`;
+  if (dias === 0) return 'vence hoje';
+  return `${dias} dias restantes`;
+}
 
 const podeEditar = computed(() =>
   ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario),
@@ -313,6 +427,19 @@ const podeEnviarDoc = computed(() => true);
 const podeAtualizarTarefa = computed(() =>
   (t) => ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario) || t.id_responsavel === authState.user?.id_usuario,
 );
+
+const podeGerenciarEtapas = computed(() => {
+  const o = orientacaoState.atual;
+  if (!o) return false;
+  if (['Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario)) return true;
+  return authState.user?.tipo_usuario === 'Professor' && o.orientador?.id_usuario === authState.user?.id_usuario;
+});
+
+const formEtapas = reactive({ qualificacao_concluida_em: '', defesa_concluida_em: '' });
+const formAvisos = reactive({ dias_antes_qualificacao: 30, dias_antes_defesa: 30, frequencia: 'semanal' });
+const envios = ref([]);
+const salvandoEtapas = ref(false);
+const salvandoAvisos = ref(false);
 
 const responsaveis = computed(() => {
   const lista = [];
@@ -339,7 +466,11 @@ async function abrir(nome) {
     await ReuniaoController.carregar(id.value);
     if (podeCriarReuniao.value) await GoogleController.carregarStatus().catch(() => {});
   }
-  if (nome === 'documentos') await DocumentoController.carregar(id.value);
+  if (nome === 'documentos') {
+    await DocumentoController.carregar(id.value);
+    await AvaliacaoController.carregarPorOrientacao(id.value);
+    await TipoDocumentoController.carregar();
+  }
   if (nome === 'mensagens') await MensagemController.carregar(id.value);
 }
 
@@ -441,12 +572,44 @@ async function enviarDocumento() {
     return;
   }
   try {
-    await DocumentoController.enviar(id.value, arquivo, formDoc.descricao);
+    await DocumentoController.enviar(id.value, arquivo, formDoc.descricao, formDoc.id_tipo || undefined);
     formDoc.descricao = '';
+    formDoc.id_tipo = '';
     if (inputArquivo.value) inputArquivo.value.value = '';
     mostrarFormDoc.value = false;
     acaoSucesso.value = 'Documento enviado.';
     await DocumentoController.carregar(id.value);
+    await AvaliacaoController.carregarPorOrientacao(id.value);
+  } catch (err) {
+    acaoErro.value = err.message;
+  }
+}
+
+function avaliacaoDe(idDocumento) {
+  return AvaliacaoController.avaliacaoDoDocumento(id.value, idDocumento);
+}
+
+function rotuloAvaliacao(status) {
+  return { pendente: 'Avaliação pendente', processando: 'Avaliando...', concluída: 'Avaliado por IA', falha: 'Avaliação falhou' }[status] || status;
+}
+
+async function verAvaliacao(idDocumento) {
+  acaoErro.value = '';
+  try {
+    await AvaliacaoController.verDetalhe(idDocumento);
+  } catch (err) {
+    acaoErro.value = err.message;
+  }
+}
+
+async function reenviarAvaliacao(idDocumento) {
+  acaoErro.value = '';
+  acaoSucesso.value = '';
+  const av = avaliacaoDe(idDocumento);
+  if (!av) return;
+  try {
+    await AvaliacaoController.reenviar(id.value, av.id_avaliacao);
+    acaoSucesso.value = 'Avaliação reenviada para a fila.';
   } catch (err) {
     acaoErro.value = err.message;
   }
@@ -484,6 +647,56 @@ async function carregarOrientacao() {
   if (orientacaoState.atual) {
     await OrientacaoController.carregarAtividades(id.value);
     atividades.value = orientacaoState.atividades;
+    await carregarEtapasAvisos();
+  }
+}
+
+async function carregarEtapasAvisos() {
+  const o = orientacaoState.atual;
+  formEtapas.qualificacao_concluida_em = o.etapas?.qualificacao_concluida_em || '';
+  formEtapas.defesa_concluida_em = o.etapas?.defesa_concluida_em || '';
+  try {
+    const cfg = await LembreteModel.getConfig(id.value);
+    formAvisos.dias_antes_qualificacao = cfg.dias_antes_qualificacao;
+    formAvisos.dias_antes_defesa = cfg.dias_antes_defesa;
+    formAvisos.frequencia = cfg.frequencia;
+    envios.value = await LembreteModel.listarEnvios(id.value);
+  } catch {
+    envios.value = [];
+  }
+}
+
+async function salvarEtapas() {
+  acaoErro.value = '';
+  acaoSucesso.value = '';
+  salvandoEtapas.value = true;
+  try {
+    const dados = {};
+    if (formEtapas.qualificacao_concluida_em) dados.qualificacao_concluida_em = formEtapas.qualificacao_concluida_em;
+    if (formEtapas.defesa_concluida_em) dados.defesa_concluida_em = formEtapas.defesa_concluida_em;
+    await LembreteModel.marcarEtapas(id.value, dados);
+    await OrientacaoController.carregar(id.value);
+    await carregarEtapasAvisos();
+    acaoSucesso.value = 'Etapas atualizadas.';
+  } catch (err) {
+    acaoErro.value = err.message;
+  } finally {
+    salvandoEtapas.value = false;
+  }
+}
+
+async function salvarConfigAvisos() {
+  acaoErro.value = '';
+  acaoSucesso.value = '';
+  salvandoAvisos.value = true;
+  try {
+    await LembreteModel.updateConfig(id.value, { ...formAvisos });
+    envios.value = await LembreteModel.listarEnvios(id.value);
+    acaoSucesso.value = 'Configuração de avisos salva.';
+  } catch (err) {
+    acaoErro.value = err.message;
+  } finally {
+    salvandoAvisos.value = false;
   }
 }
 

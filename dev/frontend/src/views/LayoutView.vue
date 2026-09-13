@@ -13,6 +13,21 @@
         <RouterLink v-if="authState.user?.tipo_usuario === 'Administrador'" :to="{ name: 'usuarios' }">
           🧑‍💼 Usuários
         </RouterLink>
+        <RouterLink
+          v-if="['Coordenador', 'Professor'].includes(authState.user?.tipo_usuario)"
+          :to="{ name: 'usuarios' }"
+        >
+          🎓 Alunos
+        </RouterLink>
+        <RouterLink v-if="authState.user?.tipo_usuario === 'Coordenador'" :to="{ name: 'parametros-prazos' }">
+          ⏱️ Prazos do Regulamento
+        </RouterLink>
+        <RouterLink
+          v-if="['Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario)"
+          :to="{ name: 'tipos-documento' }"
+        >
+          🏷️ Categorias IA
+        </RouterLink>
       </nav>
     </aside>
 
@@ -48,6 +63,8 @@ const titulo = computed(() => {
     'orientacao-editar': 'Editar Orientação',
     perfil: 'Meu Perfil',
     usuarios: 'Gestão de Usuários',
+    'tipos-documento': 'Categorias de Avaliação IA',
+    'parametros-prazos': 'Prazos do Regulamento',
   };
   return mapa[router.currentRoute.value.name] ?? 'SGOA';
 });

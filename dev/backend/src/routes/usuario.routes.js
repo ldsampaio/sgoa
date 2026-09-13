@@ -18,6 +18,6 @@ router.get('/alunos', listAlunos);
 router.put('/me', updateMe);
 
 router.get('/', authorize('Administrador', 'Coordenador'), listUsuarios);
-router.post('/', authorize('Administrador'), createUsuario);
+router.post('/', authorize('Administrador', 'Coordenador', 'Professor'), createUsuario);
 
 export default router;

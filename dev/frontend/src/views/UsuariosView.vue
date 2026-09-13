@@ -2,8 +2,8 @@
   <div>
     <div class="cartao">
       <h2>
-        Gestão de Usuários
-        <button v-if="!mostrarForm" class="botao primario" @click="mostrarForm = true">+ Novo Usuário</button>
+        {{ ehProfessor ? 'Alunos' : 'Gestão de Usuários' }}
+        <button v-if="!mostrarForm" class="botao primario" @click="mostrarForm = true">+ {{ ehProfessor ? 'Novo Aluno' : 'Novo Usuário' }}</button>
       </h2>
 
       <AlertMessage :mensagem="erro" tipo="erro" />
@@ -24,8 +24,8 @@
         </div>
         <div class="campo">
           <label for="tipo">Tipo de Usuário</label>
-          <select id="tipo" v-model="form.tipo_usuario">
-            <option v-for="t in tipos" :key="t" :value="t">{{ t }}</option>
+          <select id="tipo" v-model="form.tipo_usuario" :disabled="ehProfessor">
+            <option v-for="t in tiposVisiveis" :key="t" :value="t">{{ t }}</option>
           </select>
         </div>
 
@@ -49,6 +49,10 @@
             <label for="curso">Curso</label>
             <input id="curso" v-model="form.curso" type="text" required />
           </div>
+          <div class="campo">
+            <label for="dataMatricula">Data de matrícula</label>
+            <input id="dataMatricula" v-model="form.data_matricula" type="date" required />
+          </div>
           <div class="campo" style="grid-column: 1 / -1">
             <label for="pos">Programa de Pós-graduação (opcional)</label>
             <input id="pos" v-model="form.programa_pos" type="text" placeholder="Ex: Mestrado em Educação" />
@@ -69,6 +73,7 @@
             <th>Tipo</th>
             <th>Matrícula</th>
             <th>Curso/Departamento</th>
+            <th v-if="ehProfessor">Data de matrícula</th>
           </tr>
         </thead>
         <tbody>
@@ -78,6 +83,7 @@
             <td><span class="pilula Em-Andamento">{{ u.tipo_usuario }}</span></td>
             <td>{{ u.perfil?.matricula || u.perfil?.id_aluno || '—' }}</td>
             <td>{{ u.perfil?.curso || u.perfil?.departamento || '—' }}</td>
+            <td v-if="ehProfessor">{{ u.perfil?.data_matricula || '—' }}</td>
           </tr>
         </tbody>
       </table>
@@ -87,12 +93,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import UsuarioModel from '../models/UsuarioModel.js';
 import UsuariosController from '../controllers/UsuariosController.js';
+import { authState } from '../controllers/AuthController.js';
 import AlertMessage from './components/AlertMessage.vue';
 
 const tipos = ['Professor', 'Aluno', 'Coordenador', 'Administrador'];
+const ehProfessor = computed(() => authState.user?.tipo_usuario === 'Professor');
+const tiposVisiveis = computed(() => (ehProfessor.value ? ['Aluno'] : tipos));
 const mostrarForm = ref(false);
 const salvando = ref(false);
 const erro = ref('');
@@ -108,11 +117,28 @@ const form = reactive({
   departamento: '',
   curso: '',
   programa_pos: '',
+  data_matricula: '',
 });
+
+async function carregar() {
+  if (ehProfessor.value) {
+    // Professor vê os alunos já cadastrados (para incluir em orientações) e cadastra novos.
+    const alunos = await UsuarioModel.listAlunos();
+    usuarios.value = alunos.map((a) => ({
+      id_usuario: a.id_usuario,
+      nome: a.nome,
+      email: a.email,
+      tipo_usuario: 'Aluno',
+      perfil: { matricula: a.matricula, curso: a.curso, data_matricula: a.data_matricula },
+    }));
+  } else {
+    usuarios.value = await UsuarioModel.list();
+  }
+}
 
 onMounted(async () => {
   try {
-    usuarios.value = await UsuarioModel.list();
+    await carregar();
   } catch (err) {
     erro.value = err.message;
   }
@@ -128,6 +154,7 @@ function limparForm() {
   form.departamento = '';
   form.curso = '';
   form.programa_pos = '';
+  form.data_matricula = '';
 }
 
 async function criar() {
@@ -136,9 +163,9 @@ async function criar() {
   salvando.value = true;
   try {
     await UsuariosController.criar({ ...form });
-    usuarios.value = await UsuarioModel.list();
+    await carregar();
     limparForm();
-    sucesso.value = 'Usuário criado com sucesso.';
+    sucesso.value = ehProfessor.value ? 'Aluno incluído com sucesso.' : 'Usuário criado com sucesso.';
   } catch (err) {
     erro.value = err.message;
   } finally {
