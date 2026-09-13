@@ -78,7 +78,18 @@ CREATE TABLE IF NOT EXISTS reunioes (
   pauta                   TEXT,
   decisoes_proximos_passos TEXT,
   participantes           TEXT,
+  link                    TEXT,
+  google_event_id         TEXT,
   data_cadastro           TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE TABLE IF NOT EXISTS integracoes_google (
+  id_usuario        TEXT PRIMARY KEY REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+  email_google      TEXT NOT NULL,
+  refresh_token_enc TEXT NOT NULL,
+  access_token      TEXT,
+  expira_em         TEXT,
+  data_conexao      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 CREATE TABLE IF NOT EXISTS tarefas (
@@ -136,6 +147,14 @@ CREATE INDEX IF NOT EXISTS idx_orientacoes_aluno ON orientacoes(id_aluno);
 
 export function initDatabase() {
   db.exec(SCHEMA);
+  // Migração idempotente para bancos criados antes das colunas Google/link.
+  // (Os índices novos ficam aqui — criá-los no SCHEMA quebraria bancos antigos,
+  // pois CREATE INDEX falha quando a coluna ainda não existe.)
+  const colunas = db.prepare('PRAGMA table_info(reunioes)').all().map((c) => c.name);
+  if (!colunas.includes('link')) db.exec('ALTER TABLE reunioes ADD COLUMN link TEXT');
+  if (!colunas.includes('google_event_id')) db.exec('ALTER TABLE reunioes ADD COLUMN google_event_id TEXT');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_integracoes_email ON integracoes_google(email_google)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_reunioes_google_event ON reunioes(google_event_id)');
 }
 
 export function now() {

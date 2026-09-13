@@ -7,4 +7,7 @@ export default {
   async create(idOrientacao, data) {
     return api.post(`/orientacoes/${idOrientacao}/reunioes`, data);
   },
+  async remove(idOrientacao, idReuniao) {
+    return api.del(`/orientacoes/${idOrientacao}/reunioes/${idReuniao}`);
+  },
 };

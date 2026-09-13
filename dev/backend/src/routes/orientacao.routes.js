@@ -32,6 +32,7 @@ router.post('/:id/tarefas', tarefa.create);
 
 router.get('/:id/reunioes', reuniao.listByOrientacao);
 router.post('/:id/reunioes', reuniao.create);
+router.delete('/:id/reunioes/:idReuniao', reuniao.remove);
 
 router.get('/:id/documentos', documento.listByOrientacao);
 router.post('/:id/documentos', documento.upload.single('arquivo'), documento.uploadDocumento);

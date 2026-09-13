@@ -19,6 +19,7 @@ db.exec(`
   DELETE FROM reunioes;
   DELETE FROM co_orientadores;
   DELETE FROM orientacoes;
+  DELETE FROM integracoes_google;
   DELETE FROM alunos;
   DELETE FROM professores;
   DELETE FROM perfis;

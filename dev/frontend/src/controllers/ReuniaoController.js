@@ -30,4 +30,14 @@ export default {
       reuniaoState.salvando = false;
     }
   },
+
+  async excluir(idOrientacao, idReuniao) {
+    reuniaoState.salvando = true;
+    try {
+      await ReuniaoModel.remove(idOrientacao, idReuniao);
+      reuniaoState.lista = reuniaoState.lista.filter((r) => r.id_reuniao !== idReuniao);
+    } finally {
+      reuniaoState.salvando = false;
+    }
+  },
 };

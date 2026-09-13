@@ -6,6 +6,7 @@ import tarefaRoutes from './tarefa.routes.js';
 import documentoRoutes from './documento.routes.js';
 import notificacaoRoutes from './notificacao.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
+import integracaoGoogleRoutes from './integracaoGoogle.routes.js';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/tarefas', tarefaRoutes);
 router.use('/documentos', documentoRoutes);
 router.use('/notificacoes', notificacaoRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/integracoes/google', integracaoGoogleRoutes);
 
 export default router;

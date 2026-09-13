@@ -126,10 +126,30 @@
             </button>
           </h2>
 
-          <form v-if="mostrarFormReuniao" @submit.prevent="criarReuniao">
+          <div v-if="podeCriarReuniao" class="google-status" style="margin-bottom: 0.75rem; font-size: 0.85rem">
+            <span v-if="googleState.carregando">Verificando Google Calendar...</span>
+            <template v-else-if="googleState.conectado">
+              📅 Google conectado como <strong>{{ googleState.emailGoogle }}</strong>
+              <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="desconectarGoogle">
+                Desconectar
+              </button>
+            </template>
+            <template v-else>
+              📅 Google Calendar não conectado.
+              <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="conectarGoogle">
+                Conectar Google
+              </button>
+            </template>
+          </div>
+
+          <form v-if="mostrarFormReuniao" @submit.prevent="criarReuniao(true)">
             <div class="campo">
               <label for="dh">Data e Hora</label>
               <input id="dh" v-model="formReuniao.data_hora" type="datetime-local" required />
+            </div>
+            <div class="campo">
+              <label for="dur">Duração (minutos)</label>
+              <input id="dur" v-model.number="formReuniao.duracaoMinutos" type="number" min="15" max="480" step="15" />
             </div>
             <div class="campo">
               <label for="pauta">Pauta / Assuntos</label>
@@ -139,7 +159,20 @@
               <label for="dec">Decisões / Próximos Passos</label>
               <textarea id="dec" v-model="formReuniao.decisoes_proximos_passos" rows="2"></textarea>
             </div>
-            <button type="submit" class="botao primario" :disabled="reuniaoState.salvando">Salvar</button>
+            <div class="campo">
+              <label for="link">Link da reunião (preenchido sozinho ao agendar com Google)</label>
+              <input id="link" v-model="formReuniao.link" type="url" placeholder="https://meet.google.com/..." />
+            </div>
+            <label style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem">
+              <input v-model="formReuniao.criarNoGoogle" type="checkbox" />
+              Criar evento no Google Calendar com link Meet
+            </label>
+            <button type="submit" class="botao primario" :disabled="reuniaoState.salvando">
+              {{ reuniaoState.salvando ? 'Agendando...' : 'Salvar + Agendar' }}
+            </button>
+            <button type="button" class="botao secundario" style="margin-left: 0.5rem" :disabled="reuniaoState.salvando" @click="criarReuniao(false)">
+              Salvar sem Google
+            </button>
             <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="mostrarFormReuniao = false">Cancelar</button>
           </form>
 
@@ -150,11 +183,18 @@
           <div v-for="r in reuniaoState.lista" :key="r.id_reuniao" class="item-lista">
             <div>
               <strong>{{ formatarDataHora(r.data_hora) }}</strong>
+              <span v-if="r.google_event_id" title="Sincronizada com o Google Calendar"> 📅</span>
               <div v-if="r.pauta" style="margin-top: 0.2rem">{{ r.pauta }}</div>
               <div v-if="r.decisoes_proximos_passos" style="font-size: 0.85rem; color: var(--cor-texto-suave)">
                 <strong>Decisões:</strong> {{ r.decisoes_proximos_passos }}
               </div>
+              <div v-if="r.link" style="margin-top: 0.3rem">
+                <a :href="r.link" target="_blank" rel="noopener">Entrar no Meet</a>
+              </div>
             </div>
+            <button v-if="podeCriarReuniao" type="button" class="botao secundario" :disabled="reuniaoState.salvando" @click="excluirReuniao(r)">
+              Excluir
+            </button>
           </div>
         </div>
       </div>
@@ -236,6 +276,7 @@ import { useRoute } from 'vue-router';
 import OrientacaoController, { orientacaoState } from '../controllers/OrientacaoController.js';
 import TarefaController, { tarefaState } from '../controllers/TarefaController.js';
 import ReuniaoController, { reuniaoState } from '../controllers/ReuniaoController.js';
+import GoogleController, { googleState } from '../controllers/GoogleController.js';
 import DocumentoController, { documentoState } from '../controllers/DocumentoController.js';
 import MensagemController, { mensagemState } from '../controllers/MensagemController.js';
 import { authState } from '../controllers/AuthController.js';
@@ -258,7 +299,7 @@ const inputArquivo = ref(null);
 const areaMensagens = ref(null);
 
 const formTarefa = reactive({ id_responsavel: '', descricao: '', data_limite: '' });
-const formReuniao = reactive({ data_hora: '', pauta: '', decisoes_proximos_passos: '' });
+const formReuniao = reactive({ data_hora: '', pauta: '', decisoes_proximos_passos: '', link: '', duracaoMinutos: 60, criarNoGoogle: true });
 const formDoc = reactive({ descricao: '' });
 
 const id = computed(() => route.params.id);
@@ -294,7 +335,10 @@ async function abrir(nome) {
   aba.value = nome;
   acaoErro.value = '';
   if (nome === 'tarefas') await TarefaController.carregar(id.value);
-  if (nome === 'reunioes') await ReuniaoController.carregar(id.value);
+  if (nome === 'reunioes') {
+    await ReuniaoController.carregar(id.value);
+    if (podeCriarReuniao.value) await GoogleController.carregarStatus().catch(() => {});
+  }
   if (nome === 'documentos') await DocumentoController.carregar(id.value);
   if (nome === 'mensagens') await MensagemController.carregar(id.value);
 }
@@ -324,17 +368,65 @@ async function avancarStatus(t) {
   }
 }
 
-async function criarReuniao() {
+async function criarReuniao(agendarNoGoogle) {
   acaoErro.value = '';
   acaoSucesso.value = '';
   try {
-    await ReuniaoController.criar(id.value, { ...formReuniao });
+    const payload = { ...formReuniao, criarNoGoogle: agendarNoGoogle && formReuniao.criarNoGoogle };
+    if (!payload.criarNoGoogle) {
+      delete payload.criarNoGoogle;
+      delete payload.duracaoMinutos;
+    }
+    if (!payload.link) delete payload.link;
+    await ReuniaoController.criar(id.value, payload);
     formReuniao.data_hora = '';
     formReuniao.pauta = '';
     formReuniao.decisoes_proximos_passos = '';
+    formReuniao.link = '';
+    formReuniao.duracaoMinutos = 60;
     mostrarFormReuniao.value = false;
-    acaoSucesso.value = 'Reunião registrada.';
+    acaoSucesso.value = payload.criarNoGoogle ? 'Reunião agendada com link Meet.' : 'Reunião registrada.';
     await ReuniaoController.carregar(id.value);
+  } catch (err) {
+    if (err.data?.code === 'GOOGLE_NAO_CONECTADO' || err.data?.code === 'GOOGLE_RECONECTAR') {
+      acaoErro.value = `${err.message} Conecte sua conta Google e tente de novo.`;
+      try {
+        await GoogleController.conectar();
+      } catch {
+        // Redirecionamento ao Google; nada a fazer.
+      }
+      return;
+    }
+    acaoErro.value = err.message;
+  }
+}
+
+async function excluirReuniao(r) {
+  acaoErro.value = '';
+  acaoSucesso.value = '';
+  const extra = r.google_event_id ? ' Também será removida do Google Calendar.' : '';
+  if (!window.confirm(`Excluir esta reunião?${extra}`)) return;
+  try {
+    await ReuniaoController.excluir(id.value, r.id_reuniao);
+    acaoSucesso.value = 'Reunião excluída.';
+  } catch (err) {
+    acaoErro.value = err.message;
+  }
+}
+
+async function conectarGoogle() {
+  acaoErro.value = '';
+  try {
+    await GoogleController.conectar();
+  } catch (err) {
+    acaoErro.value = err.message;
+  }
+}
+
+async function desconectarGoogle() {
+  acaoErro.value = '';
+  try {
+    await GoogleController.desconectar();
   } catch (err) {
     acaoErro.value = err.message;
   }
