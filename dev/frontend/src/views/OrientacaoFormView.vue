@@ -41,12 +41,12 @@
 
           <div class="campo">
             <label for="inicio">Data de Início</label>
-            <input id="inicio" v-model="form.data_inicio" type="date" />
+            <CampoData id="inicio" v-model="form.data_inicio" limpar />
           </div>
 
           <div class="campo">
             <label for="previsao">Data de Previsão de Fim</label>
-            <input id="previsao" v-model="form.data_previsao_fim" type="date" />
+            <CampoData id="previsao" v-model="form.data_previsao_fim" limpar />
           </div>
 
           <template v-if="edicao">
@@ -71,8 +71,9 @@
                 </button>
               </div>
               <div v-if="coAtuais.length" style="margin-top: 0.5rem">
-                <span v-for="co in coAtuais" :key="co.id_professor" class="pilula Em-Ativo" style="background: #dbeafe; color: var(--cor-primaria); margin-right: 0.4rem">
-                  {{ co.nome }} <button type="button" style="background: none; border: none; cursor: pointer; color: inherit" @click="removerCoOrientador(co)">✕</button>
+                <span v-for="co in coAtuais" :key="co.id_professor" class="pilula co-orientador">
+                  {{ co.nome }}
+                  <button type="button" class="remover-co" aria-label="Remover co-orientador" @click="removerCoOrientador(co)">✕</button>
                 </span>
               </div>
             </div>
@@ -101,6 +102,7 @@ import { useRoute, useRouter } from 'vue-router';
 import OrientacaoController, { orientacaoState } from '../controllers/OrientacaoController.js';
 import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
+import CampoData from './components/CampoData.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -192,3 +194,23 @@ async function removerCoOrientador(co) {
   }
 }
 </script>
+
+<style scoped>
+.co-orientador {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 0.4rem;
+}
+
+.remover-co {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+</style>

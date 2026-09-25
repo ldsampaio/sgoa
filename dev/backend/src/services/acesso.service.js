@@ -56,4 +56,28 @@ export async function requireAcesso(req, res, idOrientacao) {
   return true;
 }
 
+/**
+ * Professor só edita dados de aluno quando é orientador (ou co-orientador) de
+ * ao menos uma orientação daquele aluno. Sem isso, liberar PUT /usuarios/:id
+ * para Professor daria edição de qualquer aluno do sistema.
+ */
+export async function professorPodeEditarAluno(user, idAlunoUsuario) {
+  if (user.tipo_usuario !== 'Professor') return true;
+  const p = await findProfessorByUsuario(user.id_usuario);
+  if (!p) return false;
+  const row = await get(
+    `SELECT 1 AS ok FROM orientacoes o
+     WHERE o.id_aluno = (
+       SELECT a.id_aluno FROM alunos a WHERE a.id_usuario = ?
+     )
+       AND (o.id_orientador = ?
+            OR o.id_orientacao IN (
+                  SELECT c.id_orientacao FROM co_orientadores c WHERE c.id_professor = ?
+                ))
+     LIMIT 1`,
+    [idAlunoUsuario, p.id_professor, p.id_professor],
+  );
+  return !!row;
+}
+
 export { findOrientacao };

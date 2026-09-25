@@ -1,6 +1,7 @@
 import { asyncHandler } from '../middleware/errorHandler.js';
 import * as IntegracaoModel from '../models/integracaoGoogle.model.js';
 import { encryptRefreshToken, decryptRefreshToken } from '../utils/cryptoTokens.js';
+import { emailCasaComDominio } from '../utils/email.js';
 import {
   getAuthUrl,
   trocarCodePorTokens,
@@ -34,7 +35,7 @@ export const callback = asyncHandler(async (req, res) => {
   try {
     const { tokens, emailGoogle } = await trocarCodePorTokens(String(code));
     const dominio = (process.env.GOOGLE_WORKSPACE_DOMAIN || '').trim().toLowerCase();
-    if (dominio && !String(emailGoogle).toLowerCase().endsWith(`@${dominio}`)) {
+    if (!emailCasaComDominio(emailGoogle, dominio)) {
       return res.redirect(`${frontend}/google-ok?erro=dominio_invalido`);
     }
     const expiraEm = tokens?.expiry_date ? new Date(tokens.expiry_date).toISOString() : null;

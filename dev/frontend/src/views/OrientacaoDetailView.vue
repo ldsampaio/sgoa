@@ -55,11 +55,11 @@
           <form class="grid-2" @submit.prevent="salvarEtapas">
             <div class="campo" v-if="orientacaoState.atual.tipo !== 'TCC'">
               <label for="qualiEm">Qualificação concluída em</label>
-              <input id="qualiEm" v-model="formEtapas.qualificacao_concluida_em" type="date" />
+              <CampoData id="qualiEm" v-model="formEtapas.qualificacao_concluida_em" limpar />
             </div>
             <div class="campo">
               <label for="defesaEm">Defesa concluída em</label>
-              <input id="defesaEm" v-model="formEtapas.defesa_concluida_em" type="date" />
+              <CampoData id="defesaEm" v-model="formEtapas.defesa_concluida_em" limpar />
             </div>
             <div style="grid-column: 1 / -1">
               <button type="submit" class="botao primario" :disabled="salvandoEtapas">{{ salvandoEtapas ? 'Salvando...' : 'Salvar etapas' }}</button>
@@ -142,7 +142,7 @@
             </div>
             <div class="campo">
               <label for="prazo">Data Limite</label>
-              <input id="prazo" v-model="formTarefa.data_limite" type="date" />
+              <CampoData id="prazo" v-model="formTarefa.data_limite" limpar />
             </div>
             <div class="campo" style="grid-column: 1 / -1">
               <label for="desc">Descrição</label>
@@ -210,7 +210,7 @@
           <form v-if="mostrarFormReuniao" @submit.prevent="criarReuniao(true)">
             <div class="campo">
               <label for="dh">Data e Hora</label>
-              <input id="dh" v-model="formReuniao.data_hora" type="datetime-local" required />
+              <CampoData id="dh" v-model="formReuniao.data_hora" com-hora required limpar />
             </div>
             <div class="campo">
               <label for="dur">Duração (minutos)</label>
@@ -329,7 +329,7 @@
             <a class="botao secundario" :href="DocumentoController.urlDownload(d.id_documento)" download>Baixar</a>
           </div>
 
-          <div v-if="avaliacaoState.detalhe" class="cartao" style="margin-top: 1rem; border-left: 4px solid var(--cor-primaria-clara)">
+          <div v-if="avaliacaoState.detalhe" class="cartao destaque-ia">
             <h3>Avaliação por IA — {{ avaliacaoState.detalhe.nome_arquivo }} (v{{ avaliacaoState.detalhe.versao }})</h3>
             <p style="font-size: 0.85rem; color: var(--cor-texto-suave)">
               Categoria: {{ avaliacaoState.detalhe.tipo }} · Tentativa {{ avaliacaoState.detalhe.tentativas }}
@@ -390,6 +390,7 @@ import { authState } from '../controllers/AuthController.js';
 import StatusPill from './components/StatusPill.vue';
 import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
+import CampoData from './components/CampoData.vue';
 import { formatarData, formatarDataHora } from '../utils/fmt.js';
 
 const route = useRoute();
@@ -707,25 +708,30 @@ onMounted(carregarOrientacao);
 .caixa-check {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--cor-primaria-clara);
-  border-radius: 5px;
+  border: 1.5px solid var(--spark);
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-right: 0.5rem;
   vertical-align: middle;
-  background: #fff;
+  background: transparent;
 }
 
 button.caixa-check {
   cursor: pointer;
-  color: var(--cor-primaria-clara);
-  font-weight: 800;
+  color: var(--spark);
+  font-weight: 700;
 }
 
 .caixa-check.concluida {
-  background: var(--cor-concluida);
-  border-color: var(--cor-concluida);
-  color: #fff;
+  background: var(--spark);
+  border-color: var(--spark);
+  color: var(--offline);
+}
+
+.destaque-ia {
+  margin-top: 1rem;
+  border-left: 4px solid var(--bright-spark);
 }
 </style>
