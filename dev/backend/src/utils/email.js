@@ -39,3 +39,19 @@ export function institutionalEmailError(email) {
   const exemplos = allowed.map((d) => `@${d}`).join(', ');
   return `E-mail deve ser institucional (${exemplos}).`;
 }
+
+/**
+ * Confere o domínio de um e-mail contra uma lista de domínios base,
+ * aceitando subdomínios: `fulano@professores.utfpr.edu.br` casa com
+ * `utfpr.edu.br`. Sem isso, contas de subdomínio da instituição eram
+ * rejeitadas (usado pela integração Google, que tem `hd` de subdomínio).
+ */
+export function emailCasaComDominio(email, dominios) {
+  const lista = (Array.isArray(dominios) ? dominios : String(dominios ?? '').split(','))
+    .map((d) => String(d).trim().toLowerCase().replace(/^@/, ''))
+    .filter(Boolean);
+  if (lista.length === 0) return true;
+  const domain = extractDomain(email);
+  if (!domain) return false;
+  return lista.some((base) => domain === base || domain.endsWith(`.${base}`));
+}

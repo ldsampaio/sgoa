@@ -20,6 +20,7 @@ router.put('/me', updateMe);
 
 router.get('/', authorize('Administrador', 'Coordenador'), listUsuarios);
 router.post('/', authorize('Administrador', 'Coordenador', 'Professor'), createUsuario);
-router.put('/:id', authorize('Coordenador', 'Administrador'), updateUsuario);
+// Professor edita apenas dados acadêmicos dos alunos que orienta (validado no controller).
+router.put('/:id', authorize('Coordenador', 'Administrador', 'Professor'), updateUsuario);
 
 export default router;

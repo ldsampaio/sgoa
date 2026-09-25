@@ -7,6 +7,7 @@ import { institutionalEmailError } from '../utils/email.js';
 import { publicProfile } from '../models/usuario.model.js';
 import { garantirPadroes } from '../models/promptAvaliacao.model.js';
 import { validarDataMatricula } from '../services/prazos.service.js';
+import { professorPodeEditarAluno } from '../services/acesso.service.js';
 
 const TIPOS = ['Professor', 'Aluno', 'Coordenador', 'Administrador'];
 
@@ -71,14 +72,33 @@ export const listUsuarios = asyncHandler(async (req, res) => {
   return res.json(fotos);
 });
 
-// Edição por Coordenador/Administrador (nunca altera senha por aqui).
+// Edição por Coordenador/Administrador (nunca altera senha por aqui), e por
+// Professor apenas nos dados acadêmicos dos alunos que ele orienta.
 // Troca de tipo preserva o perfil antigo (histórico de orientações) e cria o novo.
 export const updateUsuario = asyncHandler(async (req, res) => {
   const alvo = await UsuarioModel.findById(req.params.id);
   if (!alvo) return res.status(404).json({ erro: 'Usuário não encontrado.' });
 
+  const ehProfessor = req.user?.tipo_usuario === 'Professor';
+  if (ehProfessor) {
+    if (alvo.tipo_usuario !== 'Aluno') {
+      return res.status(403).json({ erro: 'Professores só podem editar dados de alunos.' });
+    }
+    if (!(await professorPodeEditarAluno(req.user, alvo.id_usuario))) {
+      return res.status(403).json({ erro: 'Você só pode editar alunos das suas orientações.' });
+    }
+  }
+
   const { nome, email, tipo_usuario, ativo, matricula, departamento, curso, programa_pos, data_matricula } =
     req.body ?? {};
+
+  // Professor fica restrito aos campos acadêmicos do aluno: não troca e-mail,
+  // tipo de usuário, situação da conta nem dados de professor/coordenador.
+  if (ehProfessor) {
+    if (email !== undefined || tipo_usuario !== undefined || ativo !== undefined || departamento !== undefined) {
+      return res.status(403).json({ erro: 'Professores só podem alterar os dados acadêmicos do aluno.' });
+    }
+  }
 
   if (email !== undefined) {
     const erroEmail = institutionalEmailError(email);

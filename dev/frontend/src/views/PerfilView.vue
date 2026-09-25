@@ -21,7 +21,7 @@
           </div>
           <div class="campo">
             <label>Tipo de Usuário</label>
-            <input :value="authState.user?.tipo_usuario" type="text" disabled style="background: #f4f6fa" />
+            <input :value="authState.user?.tipo_usuario" type="text" disabled />
           </div>
         </div>
         <button type="submit" class="botao primario" :disabled="salvando">{{ salvando ? 'Salvando...' : 'Salvar alterações' }}</button>
