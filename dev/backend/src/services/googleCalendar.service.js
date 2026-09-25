@@ -20,18 +20,30 @@ function requiredEnv(name) {
   return v;
 }
 
+// O redirect_uri precisa bater EXATAMENTE com o registrado no console do Google.
+// Se não for informado, derivamos de FRONTEND_URL (única origem real do app),
+// evitando o clássico callback em localhost em produção.
+export function redirectUriConfigurada() {
+  const explicita = (process.env.GOOGLE_REDIRECT_URI || '').trim();
+  if (explicita) return explicita;
+  const frontend = (process.env.FRONTEND_URL || '').trim().replace(/\/+$/, '');
+  return frontend ? `${frontend}/api/integracoes/google/callback` : '';
+}
+
 export function newOAuthClient() {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID || '',
     process.env.GOOGLE_CLIENT_SECRET || '',
-    process.env.GOOGLE_REDIRECT_URI || '',
+    redirectUriConfigurada(),
   );
 }
 
 export function assertGoogleConfig() {
   requiredEnv('GOOGLE_CLIENT_ID');
   requiredEnv('GOOGLE_CLIENT_SECRET');
-  requiredEnv('GOOGLE_REDIRECT_URI');
+  if (!redirectUriConfigurada()) {
+    throw new Error('Defina GOOGLE_REDIRECT_URI ou FRONTEND_URL para a integração Google.');
+  }
 }
 
 // state anti-CSRF: JWT curto identificando quem iniciou o fluxo.

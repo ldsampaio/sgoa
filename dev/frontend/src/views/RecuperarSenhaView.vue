@@ -225,16 +225,19 @@ async function redefinir() {
   flex: 1;
   padding: 0.35rem 0.5rem;
   border-radius: 999px;
-  background: #eef2f7;
+  border: 1px solid var(--graphite);
+  background: var(--raised-offline);
   text-align: center;
 }
 .passos li.ativo {
-  background: var(--cor-primaria);
-  color: #fff;
+  background: var(--spark);
+  border-color: var(--spark);
+  color: var(--offline);
 }
 .passos li.feito {
-  background: #dcfce7;
-  color: #166534;
+  background: transparent;
+  border-color: var(--spark);
+  color: var(--spark);
 }
 .codigo-input {
   letter-spacing: 0.4em;
@@ -255,10 +258,11 @@ async function redefinir() {
 .link {
   background: none;
   border: none;
-  color: var(--cor-primaria-clara);
+  color: var(--spark);
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
+  font-family: inherit;
 }
 .voltar {
   margin-top: 1rem;

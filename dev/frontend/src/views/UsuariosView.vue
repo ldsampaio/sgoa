@@ -12,11 +12,18 @@
       <form v-if="mostrarForm" class="grid-2" @submit.prevent="criar">
         <div class="campo">
           <label for="nome">Nome</label>
-          <input id="nome" v-model="form.nome" type="text" required />
+          <input id="nome" v-model="form.nome" type="text" :disabled="ehProfessor && !!editandoId" required />
         </div>
         <div class="campo">
           <label for="email">E-mail institucional</label>
-          <input id="email" v-model="form.email" type="email" required placeholder="nome@utfpr.edu.br" />
+          <input
+            id="email"
+            v-model="form.email"
+            type="email"
+            required
+            placeholder="nome@utfpr.edu.br"
+            :disabled="ehProfessor && !!editandoId"
+          />
         </div>
         <div class="campo">
           <label for="senha">Senha{{ editandoId ? ' (não alterada na edição)' : '' }}</label>
@@ -51,7 +58,12 @@
           </div>
           <div class="campo">
             <label for="dataMatricula">Data de matrícula</label>
-            <input id="dataMatricula" v-model="form.data_matricula" type="date" :required="!editandoId" />
+            <CampoData
+              id="dataMatricula"
+              v-model="form.data_matricula"
+              limpar
+              :required="!editandoId"
+            />
           </div>
           <div class="campo" style="grid-column: 1 / -1">
             <label for="pos">Programa de Pós-graduação (opcional)</label>
@@ -79,7 +91,7 @@
             <th>Curso/Departamento</th>
             <th v-if="ehProfessor">Data de matrícula</th>
             <th v-if="podeEditar">Situação</th>
-            <th v-if="podeEditar">Ações</th>
+            <th v-if="podeEditar || ehProfessor">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -89,9 +101,9 @@
             <td><span class="pilula Em-Andamento">{{ u.tipo_usuario }}</span></td>
             <td>{{ u.perfil?.matricula || u.perfil?.id_aluno || '—' }}</td>
             <td>{{ u.perfil?.curso || u.perfil?.departamento || '—' }}</td>
-            <td v-if="ehProfessor">{{ u.perfil?.data_matricula || '—' }}</td>
+            <td v-if="ehProfessor">{{ u.perfil?.data_matricula ? formatarData(u.perfil.data_matricula) : '—' }}</td>
             <td v-if="podeEditar">{{ u.ativo === false ? 'Inativo' : 'Ativo' }}</td>
-            <td v-if="podeEditar" style="white-space: nowrap">
+            <td v-if="podeEditar || ehProfessor" style="white-space: nowrap">
               <button type="button" class="botao secundario" @click="abrirEditar(u)">Editar</button>
             </td>
           </tr>
@@ -108,6 +120,8 @@ import UsuarioModel from '../models/UsuarioModel.js';
 import UsuariosController from '../controllers/UsuariosController.js';
 import { authState } from '../controllers/AuthController.js';
 import AlertMessage from './components/AlertMessage.vue';
+import CampoData from './components/CampoData.vue';
+import { formatarData } from '../utils/fmt.js';
 
 const tipos = ['Professor', 'Aluno', 'Coordenador', 'Administrador'];
 const ehProfessor = computed(() => authState.user?.tipo_usuario === 'Professor');
@@ -142,7 +156,13 @@ async function carregar() {
       nome: a.nome,
       email: a.email,
       tipo_usuario: 'Aluno',
-      perfil: { matricula: a.matricula, curso: a.curso, data_matricula: a.data_matricula },
+      ativo: a.ativo,
+      perfil: {
+        matricula: a.matricula,
+        curso: a.curso,
+        programa_pos: a.programa_pos,
+        data_matricula: a.data_matricula,
+      },
     }));
   } else {
     usuarios.value = await UsuarioModel.list();
@@ -215,6 +235,12 @@ async function criar() {
         dados.curso = form.curso;
         dados.programa_pos = form.programa_pos;
         if (form.data_matricula) dados.data_matricula = form.data_matricula;
+      }
+      // Professor edita só dados acadêmicos: a API rejeita e-mail/tipo/ativo.
+      if (ehProfessor.value) {
+        delete dados.email;
+        delete dados.tipo_usuario;
+        delete dados.ativo;
       }
       await UsuarioModel.update(editandoId.value, dados);
       sucesso.value = 'Usuário atualizado com sucesso.';
