@@ -5,6 +5,7 @@ import * as ProfessorModel from '../models/professor.model.js';
 import * as AlunoModel from '../models/aluno.model.js';
 import * as TarefaModel from '../models/tarefa.model.js';
 import * as NotificacaoModel from '../models/notificacao.model.js';
+import * as EnlaceModel from '../models/enlaceOverleaf.model.js';
 import { anexarPrazos } from './orientacao.controller.js';
 import { diasRestantes } from '../services/prazos.service.js';
 
@@ -24,8 +25,16 @@ export const dashboardProfessor = asyncHandler(async (req, res) => {
   const ids = todas.map((o) => o.id_orientacao);
   const tarefas = await TarefaModel.listPendentesPorOrientacoes(ids);
   const notificacoes = await NotificacaoModel.listForUsuario(req.user.id_usuario);
+  // RF.OV.004 — o card do dashboard lista os links (fixados primeiro) de cada orientação.
+  const enlaces = await EnlaceModel.listByOrientacoes(ids, req.user.id_usuario);
 
-  return res.json({ orientacoes: todas, orientacoes_ativas: ativas, tarefas_pendentes: tarefas, notificacoes });
+  return res.json({
+    orientacoes: todas,
+    orientacoes_ativas: ativas,
+    tarefas_pendentes: tarefas,
+    notificacoes,
+    enlaces,
+  });
 });
 
 export const dashboardAluno = asyncHandler(async (req, res) => {
@@ -41,8 +50,15 @@ export const dashboardAluno = asyncHandler(async (req, res) => {
     NotificacaoModel.listForUsuario(req.user.id_usuario),
   ]);
   const pendentes = tarefas.filter((t) => t.status !== 'Concluída');
+  const enlaces = await EnlaceModel.listByOrientacoes(ids, req.user.id_usuario);
 
-  return res.json({ orientacao_atual: atual, orientacoes, tarefas_pendentes: pendentes, notificacoes });
+  return res.json({
+    orientacao_atual: atual,
+    orientacoes,
+    tarefas_pendentes: pendentes,
+    notificacoes,
+    enlaces,
+  });
 });
 
 export const dashboardCoordenador = asyncHandler(async (req, res) => {
@@ -94,6 +110,7 @@ export const dashboardCoordenador = asyncHandler(async (req, res) => {
   );
 
   const notificacoes = await NotificacaoModel.listForUsuario(req.user.id_usuario);
+  const enlaces = await EnlaceModel.listByOrientacoes(orientacoes.map((o) => o.id_orientacao), req.user.id_usuario);
   return res.json({
     total: orientacoes.length,
     por_status: porStatus,
@@ -101,5 +118,6 @@ export const dashboardCoordenador = asyncHandler(async (req, res) => {
     prazos_criticos: prazosCriticos,
     carga_professores: carga,
     notificacoes,
+    enlaces,
   });
 });
