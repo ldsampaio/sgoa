@@ -5,6 +5,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROMPTS_PADRAO, TIPOS_DOCUMENTO_BASE } from '../services/promptsPadrao.js';
+import { CATEGORIAS_ENLACE, ESTADOS_ENLACE, valoresDoCheck } from '../services/enlacesCategorias.js';
 
 // Driver selecionado por env:
 //   DB_DRIVER=postgres (ou DATABASE_URL definido) → Postgres (produção).
@@ -204,6 +205,28 @@ CREATE TABLE IF NOT EXISTS documentos (
   descricao              TEXT,
   versao                 INTEGER NOT NULL DEFAULT 1,
   data_upload            TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+-- Enlaces Overleaf (RF.OV): o link que o aluno registra; o destaque é por usuário.
+CREATE TABLE IF NOT EXISTS enlaces_overleaf (
+  id_enlace     TEXT PRIMARY KEY,
+  id_orientacao TEXT NOT NULL REFERENCES orientacoes(id_orientacao) ON DELETE CASCADE,
+  id_criador    TEXT NOT NULL REFERENCES usuarios(id_usuario),
+  categoria     TEXT NOT NULL CHECK (categoria IN (${valoresDoCheck(CATEGORIAS_ENLACE)})),
+  url           TEXT NOT NULL,
+  status        TEXT NOT NULL DEFAULT 'Vigente' CHECK (status IN (${valoresDoCheck(ESTADOS_ENLACE)})),
+  observacao    TEXT,
+  criado_em     TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  atualizado_em TEXT,
+  UNIQUE (id_orientacao, url)
+);
+
+CREATE TABLE IF NOT EXISTS enlaces_destacados (
+  id_destacado  TEXT PRIMARY KEY,
+  id_enlace     TEXT NOT NULL REFERENCES enlaces_overleaf(id_enlace) ON DELETE CASCADE,
+  id_usuario    TEXT NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+  destacado_em  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE (id_enlace, id_usuario)
 );
 
 CREATE TABLE IF NOT EXISTS mensagens (
@@ -427,6 +450,28 @@ CREATE TABLE IF NOT EXISTS documentos (
   data_upload            TEXT NOT NULL DEFAULT (${PG_NOW})
 );
 
+-- Enlaces Overleaf (RF.OV): o link que o aluno registra; o destaque é por usuário.
+CREATE TABLE IF NOT EXISTS enlaces_overleaf (
+  id_enlace     TEXT PRIMARY KEY,
+  id_orientacao TEXT NOT NULL REFERENCES orientacoes(id_orientacao) ON DELETE CASCADE,
+  id_criador    TEXT NOT NULL REFERENCES usuarios(id_usuario),
+  categoria     TEXT NOT NULL CHECK (categoria IN (${valoresDoCheck(CATEGORIAS_ENLACE)})),
+  url           TEXT NOT NULL,
+  status        TEXT NOT NULL DEFAULT 'Vigente' CHECK (status IN (${valoresDoCheck(ESTADOS_ENLACE)})),
+  observacao    TEXT,
+  criado_em     TEXT NOT NULL DEFAULT (${PG_NOW}),
+  atualizado_em TEXT,
+  UNIQUE (id_orientacao, url)
+);
+
+CREATE TABLE IF NOT EXISTS enlaces_destacados (
+  id_destacado  TEXT PRIMARY KEY,
+  id_enlace     TEXT NOT NULL REFERENCES enlaces_overleaf(id_enlace) ON DELETE CASCADE,
+  id_usuario    TEXT NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+  destacado_em  TEXT NOT NULL DEFAULT (${PG_NOW}),
+  UNIQUE (id_enlace, id_usuario)
+);
+
 CREATE TABLE IF NOT EXISTS mensagens (
   id_mensagem   TEXT PRIMARY KEY,
   id_orientacao TEXT NOT NULL REFERENCES orientacoes(id_orientacao) ON DELETE CASCADE,
@@ -496,6 +541,8 @@ CREATE INDEX IF NOT EXISTS idx_reunioes_google_event ON reunioes(google_event_id
 CREATE INDEX IF NOT EXISTS idx_avaliacoes_orientacao ON avaliacoes(id_orientacao);
 CREATE INDEX IF NOT EXISTS idx_avaliacoes_documento ON avaliacoes(id_documento);
 CREATE INDEX IF NOT EXISTS idx_prompts_professor ON prompts_avaliacao(id_professor);
+CREATE INDEX IF NOT EXISTS idx_enlaces_orientacao ON enlaces_overleaf(id_orientacao);
+CREATE INDEX IF NOT EXISTS idx_destacados_usuario ON enlaces_destacados(id_usuario);
 `;
 
 export async function initDatabase() {
@@ -521,6 +568,10 @@ export async function initDatabase() {
   sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_avaliacoes_documento ON avaliacoes(id_documento)');
   sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_prompts_professor ON prompts_avaliacao(id_professor)');
   sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_recuperacao_usuario ON recuperacoes_senha(id_usuario)');
+  // RF.OV — enlaces Overleaf. Os CREATE TABLE IF NOT EXISTS do SCHEMA cobrem os bancos
+  // criados antes da funcionalidade; os índices entram aqui para os bancos legados.
+  sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_enlaces_orientacao ON enlaces_overleaf(id_orientacao)');
+  sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_destacados_usuario ON enlaces_destacados(id_usuario)');
 
   // alunos: data de matrícula (YYYY-MM-DD, vinda do sistema acadêmico; manual por ora).
   if (!colunasDe('alunos').includes('data_matricula')) {
