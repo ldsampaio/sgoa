@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="cartao">
+    <div class="cartao cartao-tabela">
       <h2>
         Categorias de documento para avaliação IA
         <button v-if="!mostrarForm" class="botao primario" @click="abrirNovo">

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="cartao">
+    <div class="cartao cartao-tabela">
       <h2>Prazos do Regulamento</h2>
       <p class="metadado">
         Prazos máximos em meses contados da <strong>data de matrícula</strong> do aluno.

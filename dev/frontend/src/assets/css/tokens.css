@@ -176,9 +176,19 @@
   --navbar-fg: var(--color-text);
   --navbar-border: 3px solid var(--color-border);
   --navbar-radius: var(--radius-md);
+  --navbar-height: 64px;
   --navbar-shadow: var(--shadow-flat);
   --focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.4);
   --focus-outline: 3px solid rgba(79, 70, 229, 0.5);
   --focus-offset: 2px;
   --touch-min-target: 44px;
+  --spinner-size: 28px;
+  --meter-height: 16px;
+  --checkbox-size: 20px;
+  --checkbox-size-radio: 18px;
+  --checkbox-size-check-circle: 22px;
+  --clear-size: 32px;
+  --avatar-size: 40px;
+  --scroll-panel-height: 320px;
+  --scroll-chat-height: 420px;
 }

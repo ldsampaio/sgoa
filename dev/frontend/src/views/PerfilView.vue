@@ -28,7 +28,7 @@
       </form>
     </div>
 
-    <div class="cartao" v-if="authState.user?.perfil">
+    <div class="cartao cartao-tabela" v-if="authState.user?.perfil">
       <h2>Dados Acadêmicos</h2>
       <table class="tabela">
         <tbody>

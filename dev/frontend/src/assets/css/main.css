@@ -1,44 +1,15 @@
 /* ==========================================================================
    SGOA — entry CSS
-   tokens.css  : gerado de design/tokens.json (primitive → semantic → component)
-   base.css    : reset, tipografia, layout, foco, movimento
-   components.css: componentes clay compartilhados
+   tokens.css     : gerado de design/tokens.json (primitive → semantic → component)
+   base.css       : reset, tipografia, layout, foco, movimento
+   components.css : componentes clay compartilhados
    ========================================================================== */
 
 @import './tokens.css';
 @import './base.css';
 @import './components.css';
 
-/* === Aliases legados (DEPRECATED — remover no fim do revamp, wave 6) ===
-   Os `<style scoped>` das views ainda referenciam os tokens do tema antigo.
-   Mapeados para o equivalente do tema clay para nada quebrar em mid-flight. */
-:root {
-  --spark: var(--color-cta);
-  --ember: var(--color-cta-hover);
-  --bright-spark: var(--color-cta);
-  --suntech: linear-gradient(135deg, var(--color-brand), var(--color-cta-hover));
-  --spark-glow-1: rgba(79, 70, 229, 0.25);
-
-  --offline: var(--color-bg);
-  --deep-offline: var(--color-surface-muted);
-  --raised-offline: var(--color-card);
-  --online: var(--color-text);
-  --graphite: var(--color-border-soft);
-  --fog: var(--color-text-muted);
-
-  --cor-texto: var(--color-text);
-  --cor-texto-suave: var(--color-text-muted);
-  --cor-primaria: var(--color-primary);
-  --cor-secundaria: var(--color-secondary);
-  --cor-borda: var(--color-border-soft);
-
-  --raio: var(--radius-md);
-  --raio-sm: var(--radius-sm);
-  --raio-lg: var(--radius-lg);
-  --raio-pill: var(--radius-pill);
-  --nav-h: 64px;
-
-  --sombra: var(--shadow-flat);
-  --sombra-cartao: var(--card-shadow);
-  --sombra-cta: var(--button-shadow);
-}
+/* Os aliases do tema anterior (--spark, --offline, --cor-texto-suave, ...)
+   foram removidos na wave 6: todas as views usam os tokens clay.
+   Se alguma referência antiga voltar, ela deve virar token em
+   design/tokens.json, não alias aqui. */

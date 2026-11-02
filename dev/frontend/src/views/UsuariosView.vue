@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="cartao">
+    <div class="cartao cartao-tabela">
       <h2>
         {{ ehProfessor ? 'Alunos' : 'Gestão de Usuários' }}
         <button v-if="!mostrarForm" class="botao primario" @click="abrirNovo">

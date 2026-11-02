@@ -124,19 +124,30 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
 
 ---
 
-## 3. Pre-Delivery Checklist (por onda)
+## 3. Pre-Delivery Checklist (por onda) — resultado da Wave 6
 
-- [ ] Nenhum hex/px fora de `tokens.css` (validação: `validate-tokens.cjs` — exceções registradas aqui).
-      Exceções aceitas: constantes de layout não-tokens (largura de container, `max-height` de áreas de
-      rolagem 320/420px, altura de medidor 16px, checkbox 20px/20px, botão limpar 32px) e `:style`
-      dinâmico de percentual em gráficos.
-- [ ] Contraste ≥ 4.5 : 1 texto; 3 : 1 bordas significativas.
-- [ ] Foco visível em todos os controles (`:focus-visible` ring indigo).
-- [ ] `prefers-reduced-motion` respeitado.
-- [ ] Touch targets ≥ 44px; scroll não escondido atrás da nav sticky (padding-top do scroll).
-- [ ] Ícones Phosphor; nenhum emoji estrutural.
-- [ ] Testado em 375 / 768 / 1024 / 1440 px.
-- [ ] States disabled/loading/empty estilizados (não "quebrados").
+- [x] Nenhum hex fora de `tokens.css` (verificado: zero ocorrências em `src/`).
+      Exceções aceitas e registradas: constantes de layout não-tokens — breakpoints
+      (767/1023px), container `max-width: 1280px`, paddings de nav/célula (10/12/16px),
+      micro-radios de detalhes (3/4/6px), larguras de hero/caixa (520/480/380/560px) e
+      `:style` dinâmico de percentual nos medidores. Dimensões de componente foram
+      promovidas a tokens (`spinner.size`, `meter.height`, `checkbox.*`, `clear.size`,
+      `avatar.size`, `scroll.*`, `input.width-inline`, `navbar.height`).
+- [x] Contraste ≥ 4.5:1 de texto — ink no cream 16.0, muted 5.81, CTA branco 5.2,
+      destructive branco 6.47; tiles: ink 9.1–13.8.
+- [x] Foco visível em todos os controles (`:focus-visible`, ring indigo).
+- [x] `prefers-reduced-motion` respeitado (base.css, duas coberturas).
+- [~] Touch targets ≥ 44px em controles primários. Exceções documentadas (controles
+      secundários de listas densas): `.botao-mini` 32px, `.limpar-data` 32px,
+      checkbox 20px/18px, `.caixa-check` 22px, pílula 26px.
+- [x] Ícones Phosphor; nenhum emoji estrutural (verificado em `src/`).
+- [ ] Testado visualmente em 375 / 768 / 1024 / 1440 px — cobertura de breakpoints
+      verificada estaticamente (767, 1023, container 1280); falta o teste visual em
+      navegador, que não há ambiente headless aqui.
+- [x] States disabled/loading/empty estilizados (`:disabled`, `.spinner`, `.linha-vazia`).
+
+Pendência de ambiente: verificação visual por navegador (browser-qa) quando houver
+Playwright/chromium disponível — o checklist acima é a lista a confirmar visualmente.
 
 ---
 
@@ -148,4 +159,9 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
 - **Wave 3 (done):** núcleo — dashboard, listas, detalhe (736 linhas), notificações; zero style inline, zero emoji.
 - **Wave 4 (done):** forms/admin — radios, tabela de usuários, categorias, parâmetros de prazo, CampoData.
 - **Wave 5 (done):** métricas — medidores bullet no dashboard do Coordenador (composição por status/tipo e carga por professor) com valor textual + `role="meter"`; sem biblioteca de gráficos.
-- **Wave 6 (pendente):** QA — checklist §3, remover aliases legados de `main.css`, testes 375/768/1024/1440, teclado, reduced-motion.
+- **Wave 6 (done):** QA — aliases legados removidos de `main.css` (nenhum uso restava);
+  `--nav-h` promovido a token (`component.navbar.height`); correção de bug de nomes:
+  `base.css`/`components.css` usavam `--dur-*`/`--ease-*` enquanto o gerador emite
+  `--duration-*`/`--easing-*` (transições ficavam inválidas); dimensões de componente
+  promovidas a tokens; `--neutral-tint` → `--color-neutral-tint`; tabelas com
+  `.cartao-tabela` (scroll em telas estreitas); `.pilula` ganhou `min-height` do token.

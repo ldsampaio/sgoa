@@ -726,8 +726,8 @@ onMounted(carregarOrientacao);
 
 /* Caixa de check (checkbox de tarefa): círculo clay; concluída = mint */
 .caixa-check {
-  width: 22px;
-  height: 22px;
+  width: var(--checkbox-size-check-circle);
+  height: var(--checkbox-size-check-circle);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-pill);
   display: inline-flex;
@@ -741,7 +741,7 @@ onMounted(carregarOrientacao);
 
 button.caixa-check {
   cursor: pointer;
-  transition: transform var(--dur-press) var(--ease-clay);
+  transition: transform var(--duration-press) var(--easing-clay);
 }
 
 button.caixa-check:hover {
@@ -787,7 +787,7 @@ button.caixa-check:active {
 
 /* Área das mensagens de chat */
 .rolagem-mensagens {
-  max-height: 420px;
+  max-height: var(--scroll-chat-height);
   overflow-y: auto;
 }
 

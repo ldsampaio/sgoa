@@ -29,7 +29,7 @@ defineEmits(['ler']);
 <style scoped>
 /* Painel de notificações rola por conta própria dentro do cartão */
 .rolagem-notificacoes {
-  max-height: 320px;
+  max-height: var(--scroll-panel-height);
   overflow-y: auto;
 }
 

@@ -166,8 +166,8 @@ function limparValor() {
 /* Botão limpar: pílula clay compacta */
 .limpar-data {
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: var(--clear-size);
+  height: var(--clear-size);
   border-radius: var(--radius-pill);
   border: 2px solid var(--color-border-soft);
   background: var(--color-card);
