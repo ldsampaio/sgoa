@@ -1,5 +1,11 @@
 import { get } from '../utils/query.js';
-import { findById as findOrientacao } from '../models/orientacao.model.js';
+import {
+  findById as findOrientacao,
+  listAll as listOrientacoesAll,
+  listByAluno as listOrientacoesByAluno,
+  listByProfessor as listOrientacoesByProfessor,
+  listByCoOrientador as listOrientacoesByCoOrientador,
+} from '../models/orientacao.model.js';
 import { findByUsuario as findProfessorByUsuario } from '../models/professor.model.js';
 import { findByUsuario as findAlunoByUsuario } from '../models/aluno.model.js';
 
@@ -41,6 +47,30 @@ export async function canAcessarOrientacao(user, idOrientacao) {
     if (a && orientacao.id_aluno === a.id_aluno) return orientacao;
   }
   return false;
+}
+
+/**
+ * Orientações visíveis para o usuário (mesma semântica de canAcessarOrientacao),
+ * usada pelas listagens agregadas — ex. a página consolidada de links Overleaf.
+ */
+export async function orientacoesDoUsuario(user) {
+  if (user.tipo_usuario === 'Coordenador' || user.tipo_usuario === 'Administrador') {
+    return await listOrientacoesAll();
+  }
+  if (user.tipo_usuario === 'Professor') {
+    const p = await findProfessorByUsuario(user.id_usuario);
+    if (!p) return [];
+    const propias = await listOrientacoesByProfessor(p.id_professor);
+    const co = await listOrientacoesByCoOrientador(p.id_professor);
+    const mapa = new Map();
+    for (const o of [...propias, ...co]) mapa.set(o.id_orientacao, o);
+    return [...mapa.values()];
+  }
+  if (user.tipo_usuario === 'Aluno') {
+    const a = await findAlunoByUsuario(user.id_usuario);
+    return a ? await listOrientacoesByAluno(a.id_aluno) : [];
+  }
+  return [];
 }
 
 export async function requireAcesso(req, res, idOrientacao) {

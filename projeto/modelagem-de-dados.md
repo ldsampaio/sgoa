@@ -41,6 +41,9 @@ erDiagram
     ORIENTACAO ||--o{ TAREFA : "contém"
     ORIENTACAO ||--o{ DOCUMENTO : "contém"
     ORIENTACAO ||--o{ MENSAGEM : "contém"
+    ORIENTACAO ||--o{ ENLACE_OVERLEAF : "contém"
+    ENLACE_OVERLEAF ||--o{ ENLACE_DESTACADO : "é fixado por"
+    USUARIO ||--o{ ENLACE_DESTACADO : "fixa"
     ORIENTACAO ||--|{ PROFESSOR : "orienta"
     ORIENTACAO ||--|{ ALUNO : "é_orientado"
     ORIENTACAO ||--o{ CO_ORIENTADOR : "tem"
@@ -153,6 +156,25 @@ erDiagram
         UUID id_remetente FK "Usuário que enviou"
         TEXT conteudo
         TIMESTAMP data_envio
+    }
+
+    ENLACE_OVERLEAF {
+        UUID id_enlace PK
+        UUID id_orientacao FK
+        UUID id_criador FK "Usuário que registrou"
+        VARCHAR categoria "TCC1, TCC2, Convalidação, Projeto de Mestrado, Projeto de Doutorado, Dissertação, Tese, Artigo"
+        VARCHAR url "HTTPS + host da allowlist (overleaf.utfpr.edu.br)"
+        VARCHAR status "Vigente, Encerrado"
+        TEXT observacao
+        TIMESTAMP criado_em
+        TIMESTAMP atualizado_em
+    }
+
+    ENLACE_DESTACADO {
+        UUID id_destacado PK
+        UUID id_enlace FK
+        UUID id_usuario FK
+        TIMESTAMP destacado_em
     }
 ```
 
@@ -272,3 +294,27 @@ erDiagram
 | `id_remetente`    | UUID         | -               | Chave Estrangeira para `USUARIO.id_usuario`, Não Nulo |
 | `conteudo`        | TEXT         | -               | Não Nulo                                             |
 | `data_envio`      | TIMESTAMP    | -               | Não Nulo, Gerado automaticamente                     |
+
+#### 3.11. Entidade: `ENLACE_OVERLEAF` (RF.OV)
+
+| Atributo         | Tipo de Dado | Tamanho/Formato | Restrições/Observações                               |
+| :---------------- | :----------- | :-------------- | :--------------------------------------------------- |
+| `id_enlace`       | UUID         | -               | Chave Primária, Gerado automaticamente               |
+| `id_orientacao`   | UUID         | -               | Chave Estrangeira para `ORIENTACAO.id_orientacao`, Não Nulo, ON DELETE CASCADE |
+| `id_criador`      | UUID         | -               | Chave Estrangeira para `USUARIO.id_usuario`, Não Nulo |
+| `categoria`       | VARCHAR      | 50              | Não Nulo. Enum próprio de enlace: 'TCC1', 'TCC2', 'Convalidação', 'Projeto de Mestrado', 'Projeto de Doutorado', 'Dissertação', 'Tese', 'Artigo' |
+| `url`             | VARCHAR      | 2048            | Não Nulo. Só HTTPS + host da allowlist (`OVERLEAF_HOSTS`); normalizada (host minúsculo, sem fragment, sem barra final). Único por orientação (`UNIQUE (id_orientacao, url)`) |
+| `status`          | VARCHAR      | 20              | Não Nulo, Valores: 'Vigente', 'Encerrado'. Padrão: 'Vigente' |
+| `observacao`      | TEXT         | 500             | Pode ser Nulo                                        |
+| `criado_em`       | TIMESTAMP    | -               | Não Nulo, Gerado automaticamente                     |
+| `atualizado_em`   | TIMESTAMP    | -               | Gerado automaticamente na atualização                |
+
+#### 3.12. Entidade: `ENLACE_DESTACADO` (RF.OV.006)
+
+| Atributo         | Tipo de Dado | Tamanho/Formato | Restrições/Observações                               |
+| :---------------- | :----------- | :-------------- | :--------------------------------------------------- |
+| `id_destacado`    | UUID         | -               | Chave Primária, Gerado automaticamente               |
+| `id_enlace`       | UUID         | -               | Chave Estrangeira para `ENLACE_OVERLEAF.id_enlace`, Não Nulo, ON DELETE CASCADE |
+| `id_usuario`      | UUID         | -               | Chave Estrangeira para `USUARIO.id_usuario`, Não Nulo |
+| `destacado_em`    | TIMESTAMP    | -               | Não Nulo, Gerado automaticamente                     |
+| —                 | —            | -               | `UNIQUE (id_enlace, id_usuario)`: o destaque é por usuário, nunca global |

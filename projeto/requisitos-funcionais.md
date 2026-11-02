@@ -53,6 +53,7 @@ As funcionalidades estão agrupadas por módulo principal, conforme definido no 
     *   Um prazo de tarefa estiver se aproximando (ex: 3 dias antes).
     *   Uma nova mensagem for recebida em uma orientação.
     *   Um documento for carregado em uma orientação.
+    *   Um link Overleaf for registrado em uma orientação (RF.OV.005).
 
 #### 2.5. Gestão de Documentos
 
@@ -61,7 +62,16 @@ As funcionalidades estão agrupadas por módulo principal, conforme definido no 
 *   **RF.GD.003:** Manter um histórico de versões para cada documento carregado, permitindo a visualização de versões anteriores.
 *   **RF.GD.004:** Exibir uma lista de documentos associados a cada orientação.
 
-#### 2.6. Visualização (Dashboards)
+#### 2.6. Enlaces Overleaf
+
+*   **RF.OV.001:** Permitir que o aluno registre o link do projeto que criou na instância institucional do Overleaf (`overleaf.utfpr.edu.br`), indicando o tipo de documento: TCC1, TCC2, Convalidação, Projeto de Mestrado, Projeto de Doutorado, Dissertação, Tese ou Artigo. São aceitos somente HTTPS e o domínio da allowlist (`OVERLEAF_HOSTS`); o caminho do link não é validado.
+*   **RF.OV.002:** Permitir múltiplos links por orientação. Cada enlace guarda autor, situação (Vigente ou Encerrado) e observação; o mesmo link não pode ser registrado duas vezes na mesma orientação.
+*   **RF.OV.003:** Permitir que aluno, professor, coordenador e administrador listem, editem e removam os enlaces de uma orientação em que participam (mesmas ações).
+*   **RF.OV.004:** Exibir os links em locais de acesso rápido para o professor: aba da orientação, card no dashboard e uma página consolidada por usuário (todas as orientações em que participa).
+*   **RF.OV.005:** Notificar os participantes da orientação quando um link é registrado (quem registrou não recebe a notificação).
+*   **RF.OV.006:** Permitir que cada usuário fixe (destaque) um enlace. O destaque é individual — fixar para um usuário não altera a lista dos demais — e ordena as listas.
+
+#### 2.7. Visualização (Dashboards)
 
 *   **RF.VI.001:** Exibir um dashboard para o professor com:
     *   Lista de suas orientações.
