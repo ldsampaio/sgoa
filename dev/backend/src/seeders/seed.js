@@ -8,6 +8,7 @@ import * as OrientacaoModel from '../models/orientacao.model.js';
 import * as TarefaModel from '../models/tarefa.model.js';
 import * as ReuniaoModel from '../models/reuniao.model.js';
 import * as MensagemModel from '../models/mensagem.model.js';
+import * as EnlaceModel from '../models/enlaceOverleaf.model.js';
 import { garantirPadroes } from '../models/promptAvaliacao.model.js';
 
 // NUNCA rode em produção: apaga todas as tabelas. Em prod use
@@ -23,6 +24,8 @@ await execScript(`
   DELETE FROM notificacoes;
   DELETE FROM recuperacoes_senha;
   DELETE FROM mensagens;
+  DELETE FROM enlaces_destacados;
+  DELETE FROM enlaces_overleaf;
   DELETE FROM documentos;
   DELETE FROM tarefas;
   DELETE FROM reunioes;
@@ -203,6 +206,30 @@ await ReuniaoModel.create({
   decisoes: 'Ana deve enviar o capítulo 3 até a próxima sexta-feira.',
   participantes: [carlos.user.id_usuario, ana.user.id_usuario, maria.user.id_usuario],
 });
+
+// Enlaces Overleaf (RF.OV) — o aluno registra o link do projeto institucional.
+const enlaceDissertacao = await EnlaceModel.create({
+  idOrientacao: oriAna.id_orientacao,
+  idCriador: ana.user.id_usuario,
+  categoria: 'Dissertação',
+  url: 'https://overleaf.utfpr.edu.br/project/demo-dissertacao-ana',
+  observacao: 'Capítulos 1 a 3 em revisão.',
+});
+await EnlaceModel.create({
+  idOrientacao: oriAna.id_orientacao,
+  idCriador: ana.user.id_usuario,
+  categoria: 'Projeto de Mestrado',
+  url: 'https://overleaf.utfpr.edu.br/read/demo-projeto-mestrado-ana',
+  status: 'Encerrado',
+});
+await EnlaceModel.create({
+  idOrientacao: oriJoao.id_orientacao,
+  idCriador: joao.user.id_usuario,
+  categoria: 'TCC1',
+  url: 'https://overleaf.utfpr.edu.br/project/demo-tcc1-joao',
+});
+// Destaque é por usuário: fixar para o professor não muda a lista da aluna.
+await EnlaceModel.alternarDestaque(enlaceDissertacao.id_enlace, carlos.user.id_usuario);
 
 await MensagemModel.create({
   idOrientacao: oriAna.id_orientacao,
