@@ -13,7 +13,10 @@
         <div class="cartao">
           <h2>
             Minhas Orientações Ativas
-            <RouterLink :to="{ name: 'orientacao-nova' }" class="botao primario">+ Nova Orientação</RouterLink>
+            <RouterLink :to="{ name: 'orientacao-nova' }" class="botao primario">
+              <Icon name="plus" :size="16" />
+              Nova Orientação
+            </RouterLink>
           </h2>
           <div v-if="!dashboardState.dados.orientacoes_ativas.length" class="linha-vazia">
             Nenhuma orientação ativa.
@@ -23,7 +26,7 @@
               <strong>{{ o.tipo }}</strong> - {{ o.aluno.nome }} —
               <em>"{{ o.titulo_provisorio }}"</em>
               <StatusPill :status="o.status" />
-              <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+              <div class="metadado">
                 Prazo previsto: {{ formatarData(o.data_previsao_fim) }}
               </div>
             </div>
@@ -31,8 +34,9 @@
               Abrir
             </RouterLink>
           </div>
-          <RouterLink :to="{ name: 'orientacoes' }" style="display: inline-block; margin-top: 0.75rem">
-            Ver todas as orientações →
+          <RouterLink :to="{ name: 'orientacoes' }" class="link-mais">
+            Ver todas as orientações
+            <Icon name="arrow-right" :size="14" />
           </RouterLink>
         </div>
 
@@ -46,7 +50,7 @@
               <div>
                 {{ t.descricao }}
                 <StatusPill :status="t.status" />
-                <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+                <div class="metadado">
                   {{ t.nome_responsavel }} · {{ t.nome_aluno }} ({{ t.tipo }}) · Prazo: {{ formatarData(t.data_limite) }}
                 </div>
               </div>
@@ -91,13 +95,13 @@
           <div class="cartao">
             <h2>Minhas Tarefas e Prazos</h2>
             <div v-if="!dashboardState.dados.tarefas_pendentes.length" class="linha-vazia">
-              Nenhuma tarefa pendente. 🎉
+              Nenhuma tarefa pendente. Bom trabalho.
             </div>
             <div v-for="t in dashboardState.dados.tarefas_pendentes" :key="t.id_tarefa" class="item-lista">
               <div>
                 {{ t.descricao }}
                 <StatusPill :status="t.status" />
-                <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+                <div class="metadado">
                   Prazo: {{ formatarData(t.data_limite) }}
                 </div>
               </div>
@@ -117,19 +121,43 @@
           <div class="cartao">
             <h2>Visão Geral das Orientações</h2>
             <p><strong>Total:</strong> {{ dashboardState.dados.total }}</p>
-            <div class="grade-3">
-              <div v-for="(v, k) in dashboardState.dados.por_status" :key="k" class="cartao" style="margin: 0; text-align: center">
-                <strong style="font-size: 1.4rem">{{ v }}</strong>
-                <div style="font-size: 0.85rem">{{ k }}</div>
-              </div>
-            </div>
-            <h3 style="margin-top: 1rem">Por tipo</h3>
-            <div class="grade-3">
-              <div v-for="(v, k) in dashboardState.dados.por_tipo" :key="k" class="cartao" style="margin: 0; text-align: center">
-                <strong style="font-size: 1.4rem">{{ v }}</strong>
-                <div style="font-size: 0.85rem">{{ k }}</div>
-              </div>
-            </div>
+
+            <h3 class="desce-3">Por status</h3>
+            <ul class="medidores">
+              <li v-for="(v, k) in dashboardState.dados.por_status" :key="k" class="medidor">
+                <StatusPill :status="k" />
+                <span
+                  class="medidor-trilha"
+                  :class="classeMedidor(k)"
+                  role="meter"
+                  :aria-valuemin="0"
+                  :aria-valuemax="dashboardState.dados.total || 1"
+                  :aria-valuenow="v"
+                  :aria-label="k + ': ' + v + ' de ' + (dashboardState.dados.total || 1) + ' orientações'"
+                >
+                  <span class="medidor-fill" :style="{ width: percentual(v) + '%' }"></span>
+                </span>
+                <span class="medidor-valor">{{ v }} · {{ percentual(v) }}%</span>
+              </li>
+            </ul>
+
+            <h3 class="desce-3">Por tipo</h3>
+            <ul class="medidores">
+              <li v-for="(v, k) in dashboardState.dados.por_tipo" :key="k" class="medidor">
+                <StatusPill :status="k" />
+                <span
+                  class="medidor-trilha"
+                  role="meter"
+                  :aria-valuemin="0"
+                  :aria-valuemax="dashboardState.dados.total || 1"
+                  :aria-valuenow="v"
+                  :aria-label="k + ': ' + v + ' de ' + (dashboardState.dados.total || 1) + ' orientações'"
+                >
+                  <span class="medidor-fill" :style="{ width: percentual(v) + '%' }"></span>
+                </span>
+                <span class="medidor-valor">{{ v }} · {{ percentual(v) }}%</span>
+              </li>
+            </ul>
           </div>
 
           <NotificacoesPanel
@@ -148,8 +176,8 @@
               <strong>{{ o.tipo }}</strong> - {{ o.aluno.nome }} ({{ o.orientador.nome }}) —
               <em>"{{ o.titulo_provisorio }}"</em>
               <StatusPill :status="o.status" />
-              <span class="pilula" style="margin-left: 0.4rem">{{ rotuloPrazo(o.tipo_prazo) }}</span>
-              <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+              <span class="pilula empurra-esq">{{ rotuloPrazo(o.tipo_prazo) }}</span>
+              <div class="metadado">
                 {{ detalhePrazo(o) }} · {{ o.dias_restantes }} dias restantes
               </div>
             </div>
@@ -158,10 +186,22 @@
 
         <div class="cartao">
           <h2>Carga de Orientação por Professor</h2>
-          <div v-for="p in dashboardState.dados.carga_professores" :key="p.id_professor" class="item-lista">
-            <span><strong>{{ p.nome }}</strong></span>
-            <span>{{ p.total }} orientações ativas</span>
-          </div>
+          <ul class="medidores">
+            <li v-for="p in dashboardState.dados.carga_professores" :key="p.id_professor" class="medidor">
+              <span class="medidor-rotulo">{{ p.nome }}</span>
+              <span
+                class="medidor-trilha"
+                role="meter"
+                :aria-valuemin="0"
+                :aria-valuemax="maxCarga"
+                :aria-valuenow="p.total"
+                :aria-label="p.nome + ': ' + p.total + ' orientações ativas'"
+              >
+                <span class="medidor-fill" :style="{ width: percentualCarga(p.total) + '%' }"></span>
+              </span>
+              <span class="medidor-valor">{{ p.total }}</span>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -176,19 +216,44 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import DashboardController, { dashboardState } from '../controllers/DashboardController.js';
 import NotificacaoController from '../controllers/NotificacaoController.js';
 import NotificacoesPanel from './components/NotificacoesPanel.vue';
 import StatusPill from './components/StatusPill.vue';
 import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
+import Icon from './components/Icon.vue';
 import { authState } from '../controllers/AuthController.js';
 import { formatarData } from '../utils/fmt.js';
 
 onMounted(() => {
   DashboardController.carregar();
 });
+
+function percentual(v) {
+  const total = dashboardState.dados?.total || 0;
+  if (!total) return 0;
+  return Math.round((v / total) * 100);
+}
+
+const maxCarga = computed(() => Math.max(1, ...(dashboardState.dados?.carga_professores || []).map((p) => p.total)));
+
+function percentualCarga(total) {
+  return Math.round((total / maxCarga.value) * 100);
+}
+
+/* Cor do medidor segue o status; o número ao lado é o portador da informação */
+function classeMedidor(k) {
+  const chave = String(k)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-');
+  const conhecidos = ['em-andamento', 'pendente', 'concluida', 'atrasada', 'suspensa', 'cancelada'];
+  return conhecidos.includes(chave) ? `medidor-${chave}` : '';
+}
 
 function rotuloPrazo(tipo) {
   return { previsao_fim: 'Previsão', conclusao_regulamentar: 'Conclusão', qualificacao: 'Qualificação' }[tipo] || 'Prazo';

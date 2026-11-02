@@ -1,6 +1,9 @@
 <template>
   <div>
-    <RouterLink :to="{ name: 'dashboard' }">← Voltar para Dashboard</RouterLink>
+    <RouterLink :to="{ name: 'dashboard' }" class="voltar-topo">
+      <Icon name="arrow-left" :size="14" />
+      Voltar para Dashboard
+    </RouterLink>
 
     <Spinner :carregando="orientacaoState.carregando" />
     <AlertMessage v-if="orientacaoState.erro" :mensagem="orientacaoState.erro" tipo="erro" />
@@ -11,12 +14,12 @@
           Orientação: {{ orientacaoState.atual.tipo }} - {{ orientacaoState.atual.aluno.nome }} -
           <em>"{{ orientacaoState.atual.titulo_provisorio }}"</em>
         </h2>
-        <p style="margin: 0.25rem 0">
+        <p class="p-meta">
           <strong>Orientador:</strong> {{ orientacaoState.atual.orientador.nome }} ·
           <strong>Co-orientador(es):</strong>
           {{ (orientacaoState.atual.co_orientadores || []).map((c) => c.nome).join(', ') || '—' }} ·
           <strong>Status:</strong> <StatusPill :status="orientacaoState.atual.status" /><br />
-          <span style="color: var(--cor-texto-suave)">
+          <span class="metadado">
             Início: {{ formatarData(orientacaoState.atual.data_inicio) }} ·
             Previsão de fim: {{ formatarData(orientacaoState.atual.data_previsao_fim) }}<br />
             <template v-if="orientacaoState.atual.prazos && (orientacaoState.atual.prazos.conclusao || orientacaoState.atual.prazos.qualificacao)">
@@ -43,7 +46,7 @@
             ? `concluída em ${formatarData(orientacaoState.atual.etapas.qualificacao_concluida_em)}`
             : `prazo máx. ${formatarData(orientacaoState.atual.prazos?.qualificacao)} (${textoDias(orientacaoState.atual.prazos?.dias_para_qualificacao)})` }}
         </div>
-        <div style="margin-top: 0.4rem">
+        <div class="desce-1">
           <strong>Defesa:</strong>
           {{ orientacaoState.atual.etapas?.defesa_concluida_em
             ? `concluída em ${formatarData(orientacaoState.atual.etapas.defesa_concluida_em)}`
@@ -51,7 +54,7 @@
         </div>
 
         <template v-if="podeGerenciarEtapas">
-          <h3 style="margin-top: 1rem">Marcar conclusão de etapa</h3>
+          <h3 class="desce-3">Marcar conclusão de etapa</h3>
           <form class="grid-2" @submit.prevent="salvarEtapas">
             <div class="campo" v-if="orientacaoState.atual.tipo !== 'TCC'">
               <label for="qualiEm">Qualificação concluída em</label>
@@ -61,12 +64,12 @@
               <label for="defesaEm">Defesa concluída em</label>
               <CampoData id="defesaEm" v-model="formEtapas.defesa_concluida_em" limpar />
             </div>
-            <div style="grid-column: 1 / -1">
+            <div class="span-total">
               <button type="submit" class="botao primario" :disabled="salvandoEtapas">{{ salvandoEtapas ? 'Salvando...' : 'Salvar etapas' }}</button>
             </div>
           </form>
 
-          <h3 style="margin-top: 1rem">Configuração dos avisos</h3>
+          <h3 class="desce-3">Configuração dos avisos</h3>
           <form class="grid-2" @submit.prevent="salvarConfigAvisos">
             <div class="campo" v-if="orientacaoState.atual.tipo !== 'TCC'">
               <label for="diasQuali">Dias antes da qualificação</label>
@@ -84,12 +87,12 @@
                 <option value="mensal">Mensal</option>
               </select>
             </div>
-            <div style="grid-column: 1 / -1">
+            <div class="span-total">
               <button type="submit" class="botao primario" :disabled="salvandoAvisos">{{ salvandoAvisos ? 'Salvando...' : 'Salvar configuração' }}</button>
             </div>
           </form>
 
-          <div v-if="envios.length" style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--cor-texto-suave)">
+          <div v-if="envios.length" class="metadado desce-2">
             Últimos avisos enviados: {{ envios.slice(0, 5).map((e) => `${e.etapa} em ${formatarDataHora(e.data_envio)}`).join(' · ') }}
           </div>
         </template>
@@ -114,7 +117,7 @@
           <li v-for="(a, i) in atividades" :key="i">
             <StatusPill :status="a.tipo" />
             <strong>{{ a.titulo }}</strong>
-            <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+            <div class="metadado">
               {{ a.descricao }} · {{ a.autor ? a.autor + ' · ' : '' }}{{ formatarDataHora(a.quando) }}
             </div>
           </li>
@@ -128,7 +131,8 @@
           <h2>
             Tarefas e Prazos
             <button v-if="!mostrarFormTarefa && podeCriarTarefa" class="botao primario" @click="mostrarFormTarefa = true">
-              + Nova Tarefa
+              <Icon name="plus" :size="16" />
+              Nova Tarefa
             </button>
           </h2>
 
@@ -144,13 +148,13 @@
               <label for="prazo">Data Limite</label>
               <CampoData id="prazo" v-model="formTarefa.data_limite" limpar />
             </div>
-            <div class="campo" style="grid-column: 1 / -1">
+            <div class="campo span-total">
               <label for="desc">Descrição</label>
               <textarea id="desc" v-model="formTarefa.descricao" rows="2" required placeholder="Ex: Revisar capítulo 3"></textarea>
             </div>
             <div>
               <button type="submit" class="botao primario" :disabled="tarefaState.salvando">Salvar</button>
-              <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="mostrarFormTarefa = false">Cancelar</button>
+              <button type="button" class="botao secundario empurra-esq" @click="mostrarFormTarefa = false">Cancelar</button>
             </div>
           </form>
 
@@ -167,12 +171,14 @@
                 :title="t.status === 'Concluída' ? 'Reabrir tarefa' : 'Marcar como concluída'"
                 @click="avancarStatus(t)"
               >
-                {{ t.status === 'Concluída' ? '✓' : '' }}
+                <Icon v-if="t.status === 'Concluída'" name="check" :size="14" />
               </button>
-              <span v-else class="caixa-check" :class="{ concluida: t.status === 'Concluída' }">{{ t.status === 'Concluída' ? '✓' : '' }}</span>
+              <span v-else class="caixa-check" :class="{ concluida: t.status === 'Concluída' }">
+                <Icon v-if="t.status === 'Concluída'" name="check" :size="14" />
+              </span>
               {{ t.descricao }}
               <StatusPill :status="t.status" />
-              <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+              <div class="metadado">
                 Responsável: {{ t.nome_responsavel }} · Prazo: {{ formatarData(t.data_limite) }}
                 <span v-if="t.concluida_em"> · Concluída em {{ formatarDataHora(t.concluida_em) }}</span>
               </div>
@@ -187,23 +193,22 @@
           <h2>
             Reuniões
             <button v-if="!mostrarFormReuniao && podeCriarReuniao" class="botao primario" @click="mostrarFormReuniao = true">
-              + Registrar Reunião
+              <Icon name="plus" :size="16" />
+              Registrar Reunião
             </button>
           </h2>
 
-          <div v-if="podeCriarReuniao" class="google-status" style="margin-bottom: 0.75rem; font-size: 0.85rem">
+          <div v-if="podeCriarReuniao" class="google-status">
             <span v-if="googleState.carregando">Verificando Google Calendar...</span>
             <template v-else-if="googleState.conectado">
-              📅 Google conectado como <strong>{{ googleState.emailGoogle }}</strong>
-              <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="desconectarGoogle">
-                Desconectar
-              </button>
+              <Icon name="calendar" :size="14" />
+              Google conectado como <strong>{{ googleState.emailGoogle }}</strong>
+              <button type="button" class="botao secundario empurra-esq" @click="desconectarGoogle">Desconectar</button>
             </template>
             <template v-else>
-              📅 Google Calendar não conectado.
-              <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="conectarGoogle">
-                Conectar Google
-              </button>
+              <Icon name="calendar" :size="14" />
+              Google Calendar não conectado.
+              <button type="button" class="botao secundario empurra-esq" @click="conectarGoogle">Conectar Google</button>
             </template>
           </div>
 
@@ -228,17 +233,17 @@
               <label for="link">Link da reunião (preenchido sozinho ao agendar com Google)</label>
               <input id="link" v-model="formReuniao.link" type="url" placeholder="https://meet.google.com/..." />
             </div>
-            <label style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem">
+            <label class="check-linha">
               <input v-model="formReuniao.criarNoGoogle" type="checkbox" />
               Criar evento no Google Calendar com link Meet
             </label>
             <button type="submit" class="botao primario" :disabled="reuniaoState.salvando">
               {{ reuniaoState.salvando ? 'Agendando...' : 'Salvar + Agendar' }}
             </button>
-            <button type="button" class="botao secundario" style="margin-left: 0.5rem" :disabled="reuniaoState.salvando" @click="criarReuniao(false)">
+            <button type="button" class="botao secundario empurra-esq" :disabled="reuniaoState.salvando" @click="criarReuniao(false)">
               Salvar sem Google
             </button>
-            <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="mostrarFormReuniao = false">Cancelar</button>
+            <button type="button" class="botao secundario empurra-esq" @click="mostrarFormReuniao = false">Cancelar</button>
           </form>
 
           <Spinner :carregando="reuniaoState.carregando" />
@@ -248,12 +253,14 @@
           <div v-for="r in reuniaoState.lista" :key="r.id_reuniao" class="item-lista">
             <div>
               <strong>{{ formatarDataHora(r.data_hora) }}</strong>
-              <span v-if="r.google_event_id" title="Sincronizada com o Google Calendar"> 📅</span>
-              <div v-if="r.pauta" style="margin-top: 0.2rem">{{ r.pauta }}</div>
-              <div v-if="r.decisoes_proximos_passos" style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+              <span v-if="r.google_event_id" title="Sincronizada com o Google Calendar">
+                <Icon name="calendar" :size="14" />
+              </span>
+              <div v-if="r.pauta" class="desce-1">{{ r.pauta }}</div>
+              <div v-if="r.decisoes_proximos_passos" class="metadado">
                 <strong>Decisões:</strong> {{ r.decisoes_proximos_passos }}
               </div>
-              <div v-if="r.link" style="margin-top: 0.3rem">
+              <div v-if="r.link" class="desce-1">
                 <a :href="r.link" target="_blank" rel="noopener">Entrar no Meet</a>
               </div>
             </div>
@@ -270,7 +277,8 @@
           <h2>
             Documentos
             <button v-if="!mostrarFormDoc && podeEnviarDoc" class="botao primario" @click="mostrarFormDoc = true">
-              + Upload Documento
+              <Icon name="plus" :size="16" />
+              Upload Documento
             </button>
           </h2>
 
@@ -293,7 +301,7 @@
             <button type="submit" class="botao primario" :disabled="documentoState.enviando">
               {{ documentoState.enviando ? 'Enviando...' : 'Enviar' }}
             </button>
-            <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="mostrarFormDoc = false">Cancelar</button>
+            <button type="button" class="botao secundario empurra-esq" @click="mostrarFormDoc = false">Cancelar</button>
           </form>
 
           <Spinner :carregando="documentoState.carregando" />
@@ -302,24 +310,26 @@
           </div>
           <div v-for="d in documentoState.lista" :key="d.id_documento" class="item-lista">
             <div>
-              📄 {{ d.nome_arquivo }} <span class="pilula Concluida">v{{ d.versao }}</span>
+              <Icon name="file" :size="16" />
+              {{ d.nome_arquivo }}
+              <span class="pilula concluida">v{{ d.versao }}</span>
               <span v-if="d.categoria" class="pilula">{{ d.categoria }}</span>
-              <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+              <div class="metadado">
                 Enviado por {{ d.nome_uploader }} em {{ formatarDataHora(d.data_upload) }}
                 <template v-if="d.descricao"> · {{ d.descricao }}</template>
               </div>
-              <div v-if="avaliacaoDe(d.id_documento)" style="margin-top: 0.3rem; font-size: 0.85rem">
+              <div v-if="avaliacaoDe(d.id_documento)" class="desce-1">
                 <StatusPill :status="rotuloAvaliacao(avaliacaoDe(d.id_documento).status)" />
                 <button
                   v-if="avaliacaoDe(d.id_documento).status === 'concluída'"
-                  type="button" class="botao secundario" style="margin-left: 0.5rem"
+                  type="button" class="botao secundario empurra-esq"
                   @click="verAvaliacao(d.id_documento)"
                 >
                   Ver avaliação
                 </button>
                 <button
                   v-if="['falha', 'pendente'].includes(avaliacaoDe(d.id_documento).status) && podeCriarReuniao"
-                  type="button" class="botao secundario" style="margin-left: 0.5rem"
+                  type="button" class="botao secundario empurra-esq"
                   @click="reenviarAvaliacao(d.id_documento)"
                 >
                   Reenviar
@@ -331,16 +341,16 @@
 
           <div v-if="avaliacaoState.detalhe" class="cartao destaque-ia">
             <h3>Avaliação por IA — {{ avaliacaoState.detalhe.nome_arquivo }} (v{{ avaliacaoState.detalhe.versao }})</h3>
-            <p style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+            <p class="metadado">
               Categoria: {{ avaliacaoState.detalhe.tipo }} · Tentativa {{ avaliacaoState.detalhe.tentativas }}
               <template v-if="avaliacaoState.detalhe.nota"> · Nota: {{ avaliacaoState.detalhe.nota }}</template>
             </p>
-            <div style="white-space: pre-wrap">{{ avaliacaoState.detalhe.resultado }}</div>
-            <details style="margin-top: 0.5rem">
-              <summary style="cursor: pointer; font-size: 0.85rem">Prompt utilizado</summary>
-              <div style="white-space: pre-wrap; font-size: 0.85rem; color: var(--cor-texto-suave)">{{ avaliacaoState.detalhe.prompt_usado }}</div>
+            <div class="pre-ia">{{ avaliacaoState.detalhe.resultado }}</div>
+            <details class="desce-1">
+              <summary class="resumo-detalhe">Prompt utilizado</summary>
+              <div class="metadado pre-ia">{{ avaliacaoState.detalhe.prompt_usado }}</div>
             </details>
-            <button type="button" class="botao secundario" style="margin-top: 0.5rem" @click="AvaliacaoController.fecharDetalhe()">Fechar</button>
+            <button type="button" class="botao secundario desce-1" @click="AvaliacaoController.fecharDetalhe()">Fechar</button>
           </div>
         </div>
       </div>
@@ -350,7 +360,7 @@
         <div class="cartao">
           <h2>Mensagens</h2>
           <Spinner :carregando="mensagemState.carregando" />
-          <div style="max-height: 420px; overflow-y: auto" ref="areaMensagens">
+          <div class="rolagem-mensagens" ref="areaMensagens">
             <div v-if="!mensagemState.lista.length && !mensagemState.carregando" class="linha-vazia">
               Nenhuma mensagem ainda. Seja o primeiro a escrever!
             </div>
@@ -364,9 +374,12 @@
               {{ m.conteudo }}
             </div>
           </div>
-          <form style="display: flex; gap: 0.5rem; margin-top: 1rem" @submit.prevent="enviarMensagem">
-            <input v-model="novaMensagem" type="text" placeholder="Escreva uma mensagem..." style="flex: 1" required />
-            <button type="submit" class="botao primario" :disabled="mensagemState.enviando">Enviar</button>
+          <form class="form-mensagem" @submit.prevent="enviarMensagem">
+            <input v-model="novaMensagem" type="text" placeholder="Escreva uma mensagem..." class="mensagem-input" required />
+            <button type="submit" class="botao primario" :disabled="mensagemState.enviando">
+              <Icon name="send" :size="16" />
+              Enviar
+            </button>
           </form>
         </div>
       </div>
@@ -391,6 +404,7 @@ import StatusPill from './components/StatusPill.vue';
 import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
 import CampoData from './components/CampoData.vue';
+import Icon from './components/Icon.vue';
 import { formatarData, formatarDataHora } from '../utils/fmt.js';
 
 const route = useRoute();
@@ -705,33 +719,99 @@ onMounted(carregarOrientacao);
 </script>
 
 <style scoped>
+/* Parágrafo de metadados sob o título da orientação */
+.p-meta {
+  margin: var(--spacing-1) 0;
+}
+
+/* Caixa de check (checkbox de tarefa): círculo clay; concluída = mint */
 .caixa-check {
-  width: 20px;
-  height: 20px;
-  border: 1.5px solid var(--spark);
-  border-radius: 999px;
+  width: var(--checkbox-size-check-circle);
+  height: var(--checkbox-size-check-circle);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-pill);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-right: 0.5rem;
+  margin-right: var(--spacing-1);
   vertical-align: middle;
-  background: transparent;
+  background: var(--color-card);
+  flex: none;
 }
 
 button.caixa-check {
   cursor: pointer;
-  color: var(--spark);
-  font-weight: 700;
+  transition: transform var(--duration-press) var(--easing-clay);
+}
+
+button.caixa-check:hover {
+  background: var(--color-success);
+}
+
+button.caixa-check:active {
+  transform: scale(0.9);
 }
 
 .caixa-check.concluida {
-  background: var(--spark);
-  border-color: var(--spark);
-  color: var(--offline);
+  background: var(--color-success);
 }
 
+/* Painel da avaliação por IA: barra primária à esquerda do cartão */
 .destaque-ia {
-  margin-top: 1rem;
-  border-left: 4px solid var(--bright-spark);
+  margin-top: var(--spacing-3);
+  border-left: 6px solid var(--color-primary);
+}
+
+/* Bloco de resultado IA: preserva as quebras do relatório */
+.pre-ia {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.resumo-detalhe {
+  cursor: pointer;
+  font-size: var(--size-sm);
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--color-primary-strong);
+}
+
+/* Linha do combo checkbox + rótulo */
+.check-linha {
+  display: flex;
+  gap: var(--spacing-1);
+  align-items: center;
+  margin-bottom: var(--spacing-2);
+  font-size: var(--size-sm);
+}
+
+/* Área das mensagens de chat */
+.rolagem-mensagens {
+  max-height: var(--scroll-chat-height);
+  overflow-y: auto;
+}
+
+.form-mensagem {
+  display: flex;
+  gap: var(--spacing-1);
+  margin-top: var(--spacing-3);
+}
+
+.mensagem-input {
+  flex: 1;
+  min-height: var(--input-min-height);
+  padding: 10px 16px;
+  border: var(--input-border-soft);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--input-fg);
+  font-size: var(--size-base);
+  font-family: var(--font-body);
+}
+
+.mensagem-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--input-ring);
 }
 </style>

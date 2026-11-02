@@ -153,7 +153,7 @@ function limparValor() {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--spacing-1);
 }
 
 .entrada-data {
@@ -163,22 +163,31 @@ function limparValor() {
   letter-spacing: 0.02em;
 }
 
+/* Botão limpar: pílula clay compacta */
 .limpar-data {
   flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  border: 1px solid var(--cor-borda);
-  background: transparent;
-  color: var(--cor-texto-suave);
-  font-size: 1.1rem;
+  width: var(--clear-size);
+  height: var(--clear-size);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--color-border-soft);
+  background: var(--color-card);
+  color: var(--color-text-muted);
+  font-size: var(--size-lg);
   line-height: 1;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .limpar-data:hover:not(:disabled) {
-  color: var(--cor-primaria);
-  border-color: var(--cor-primaria);
+  color: var(--color-primary-strong);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-flat);
+}
+
+.limpar-data:active:not(:disabled) {
+  transform: translateY(2px);
 }
 
 .limpar-data:disabled {

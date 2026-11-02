@@ -1,9 +1,12 @@
 <template>
   <div>
-    <div class="cartao">
+    <div class="cartao cartao-tabela">
       <h2>
         {{ ehProfessor ? 'Alunos' : 'Gestão de Usuários' }}
-        <button v-if="!mostrarForm" class="botao primario" @click="abrirNovo">+ {{ ehProfessor ? 'Novo Aluno' : 'Novo Usuário' }}</button>
+        <button v-if="!mostrarForm" class="botao primario" @click="abrirNovo">
+          <Icon name="plus" :size="16" />
+          {{ ehProfessor ? 'Novo Aluno' : 'Novo Usuário' }}
+        </button>
       </h2>
 
       <AlertMessage :mensagem="erro" tipo="erro" />
@@ -65,19 +68,19 @@
               :required="!editandoId"
             />
           </div>
-          <div class="campo" style="grid-column: 1 / -1">
+          <div class="campo span-total">
             <label for="pos">Programa de Pós-graduação (opcional)</label>
             <input id="pos" v-model="form.programa_pos" type="text" placeholder="Ex: Mestrado em Educação" />
           </div>
         </template>
 
-        <div v-if="editandoId && podeEditar" class="campo" style="grid-column: 1 / -1">
+        <div v-if="editandoId && podeEditar" class="campo span-total">
           <label><input v-model="form.ativo" type="checkbox" /> Usuário ativo</label>
         </div>
 
-        <div style="grid-column: 1 / -1">
+        <div class="span-total">
           <button type="submit" class="botao primario" :disabled="salvando">{{ salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Criar usuário') }}</button>
-          <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="limparForm">Cancelar</button>
+          <button type="button" class="botao secundario empurra-esq" @click="limparForm">Cancelar</button>
         </div>
       </form>
 
@@ -98,12 +101,12 @@
           <tr v-for="u in usuarios" :key="u.id_usuario">
             <td><strong>{{ u.nome }}</strong></td>
             <td>{{ u.email }}</td>
-            <td><span class="pilula Em-Andamento">{{ u.tipo_usuario }}</span></td>
+            <td><span class="pilula">{{ u.tipo_usuario }}</span></td>
             <td>{{ u.perfil?.matricula || u.perfil?.id_aluno || '—' }}</td>
             <td>{{ u.perfil?.curso || u.perfil?.departamento || '—' }}</td>
             <td v-if="ehProfessor">{{ u.perfil?.data_matricula ? formatarData(u.perfil.data_matricula) : '—' }}</td>
-            <td v-if="podeEditar">{{ u.ativo === false ? 'Inativo' : 'Ativo' }}</td>
-            <td v-if="podeEditar || ehProfessor" style="white-space: nowrap">
+            <td v-if="podeEditar"><StatusPill :status="u.ativo === false ? 'Desativada' : 'Ativa'" /></td>
+            <td v-if="podeEditar || ehProfessor" class="sem-quebra">
               <button type="button" class="botao secundario" @click="abrirEditar(u)">Editar</button>
             </td>
           </tr>
@@ -121,6 +124,8 @@ import UsuariosController from '../controllers/UsuariosController.js';
 import { authState } from '../controllers/AuthController.js';
 import AlertMessage from './components/AlertMessage.vue';
 import CampoData from './components/CampoData.vue';
+import Icon from './components/Icon.vue';
+import StatusPill from './components/StatusPill.vue';
 import { formatarData } from '../utils/fmt.js';
 
 const tipos = ['Professor', 'Aluno', 'Coordenador', 'Administrador'];

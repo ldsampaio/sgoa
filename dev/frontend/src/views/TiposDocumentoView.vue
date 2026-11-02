@@ -1,9 +1,12 @@
 <template>
   <div>
-    <div class="cartao">
+    <div class="cartao cartao-tabela">
       <h2>
         Categorias de documento para avaliação IA
-        <button v-if="!mostrarForm" class="botao primario" @click="abrirNovo">+ Nova categoria</button>
+        <button v-if="!mostrarForm" class="botao primario" @click="abrirNovo">
+          <Icon name="plus" :size="16" />
+          Nova categoria
+        </button>
       </h2>
       <AlertMessage :mensagem="erro" tipo="erro" />
       <AlertMessage :mensagem="sucesso" tipo="sucesso" />
@@ -23,10 +26,10 @@
           <textarea id="prompt" v-model="form.prompt_padrao" rows="6" required></textarea>
         </div>
         <button type="submit" class="botao primario" :disabled="salvando">{{ salvando ? 'Salvando...' : 'Salvar' }}</button>
-        <button type="button" class="botao secundario" style="margin-left: 0.5rem" @click="fecharForm">Cancelar</button>
+        <button type="button" class="botao secundario empurra-esq" @click="fecharForm">Cancelar</button>
       </form>
 
-      <table class="tabela" style="margin-top: 1rem">
+      <table class="tabela desce-3">
         <thead>
           <tr><th>Nome</th><th>Descrição</th><th>Status</th><th>Ações</th></tr>
         </thead>
@@ -34,13 +37,13 @@
           <tr v-for="t in tipoDocumentoState.lista" :key="t.id_tipo">
             <td><strong>{{ t.nome }}</strong></td>
             <td>{{ t.descricao || '—' }}</td>
-            <td>{{ t.ativo ? 'Ativa' : 'Desativada' }}</td>
-            <td style="white-space: nowrap">
+            <td><StatusPill :status="t.ativo ? 'Ativa' : 'Desativada'" /></td>
+            <td class="sem-quebra">
               <button type="button" class="botao secundario" @click="abrirEditar(t)">Editar</button>
-              <button type="button" class="botao secundario" style="margin-left: 0.4rem" @click="alternar(t)">
+              <button type="button" class="botao secundario empurra-esq" @click="alternar(t)">
                 {{ t.ativo ? 'Desativar' : 'Ativar' }}
               </button>
-              <button type="button" class="botao secundario" style="margin-left: 0.4rem" @click="excluir(t)">Excluir</button>
+              <button type="button" class="botao secundario empurra-esq" @click="excluir(t)">Excluir</button>
             </td>
           </tr>
         </tbody>
@@ -55,6 +58,8 @@ import TipoDocumentoModel from '../models/TipoDocumentoModel.js';
 import TipoDocumentoController, { tipoDocumentoState } from '../controllers/TipoDocumentoController.js';
 import AlertMessage from './components/AlertMessage.vue';
 import Spinner from './components/Spinner.vue';
+import StatusPill from './components/StatusPill.vue';
+import Icon from './components/Icon.vue';
 
 const erro = ref('');
 const sucesso = ref('');
