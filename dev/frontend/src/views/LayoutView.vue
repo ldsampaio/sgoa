@@ -31,14 +31,18 @@
             <span class="nome-usuario">{{ authState.user?.nome }}</span>
             <span class="avatar" :title="authState.user?.nome">{{ inicial(authState.user?.nome) }}</span>
           </div>
-          <button class="botao secundario sair" @click="sair">Sair</button>
+          <button class="botao secundario sair" @click="sair">
+            <Icon name="signout" :size="16" />
+            Sair
+          </button>
           <button
             class="menu-toggle"
             :aria-expanded="menuAberto"
-            aria-label="Abrir menu de navegação"
+            :aria-label="menuAberto ? 'Fechar menu de navegação' : 'Abrir menu de navegação'"
             @click="menuAberto = !menuAberto"
           >
-            ☰
+            <Icon name="menu" :size="20" v-if="!menuAberto" />
+            <Icon name="x" :size="20" v-else />
           </button>
         </div>
       </div>
@@ -59,6 +63,7 @@ import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { authState, AuthController } from '../controllers/AuthController.js';
 import { inicial } from '../utils/fmt.js';
+import Icon from './components/Icon.vue';
 
 const router = useRouter();
 const menuAberto = ref(false);
