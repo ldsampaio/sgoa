@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS documentos (
   data_upload            TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
--- Enlaces Overleaf (RF.OV): o link que o aluno registra; o destaque é por usuário.
+-- Enlaces Overleaf (RF.OV) - link registrado pelo aluno. O destaque é por usuário.
 CREATE TABLE IF NOT EXISTS enlaces_overleaf (
   id_enlace     TEXT PRIMARY KEY,
   id_orientacao TEXT NOT NULL REFERENCES orientacoes(id_orientacao) ON DELETE CASCADE,
@@ -450,7 +450,7 @@ CREATE TABLE IF NOT EXISTS documentos (
   data_upload            TEXT NOT NULL DEFAULT (${PG_NOW})
 );
 
--- Enlaces Overleaf (RF.OV): o link que o aluno registra; o destaque é por usuário.
+-- Enlaces Overleaf (RF.OV) - link registrado pelo aluno. O destaque é por usuário.
 CREATE TABLE IF NOT EXISTS enlaces_overleaf (
   id_enlace     TEXT PRIMARY KEY,
   id_orientacao TEXT NOT NULL REFERENCES orientacoes(id_orientacao) ON DELETE CASCADE,
