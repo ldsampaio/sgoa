@@ -17,6 +17,7 @@
  */
 import {
   PhArrowLeft,
+  PhArrowRight,
   PhCalendarBlank,
   PhCalendarCheck,
   PhCheckCircle,
@@ -29,6 +30,7 @@ import {
   PhList,
   PhListChecks,
   PhPauseCircle,
+  PhPaperPlaneRight,
   PhPlay,
   PhPlus,
   PhSignOut,
@@ -42,6 +44,7 @@ import { computed } from 'vue';
 
 const ICONES = {
   'arrow-left': PhArrowLeft,
+  'arrow-right': PhArrowRight,
   calendar: PhCalendarBlank,
   'calendar-check': PhCalendarCheck,
   'graduation-cap': PhGraduationCap,
@@ -54,6 +57,7 @@ const ICONES = {
   bulb: PhLightbulb,
   menu: PhList,
   pause: PhPauseCircle,
+  send: PhPaperPlaneRight,
   play: PhPlay,
   plus: PhPlus,
   signout: PhSignOut,

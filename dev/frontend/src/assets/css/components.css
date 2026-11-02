@@ -440,6 +440,70 @@ a.aba:hover {
   color: var(--color-text);
 }
 
+/* ===== Utilidades de layout corrente (usadas pelas views) ===== */
+.metadado {
+  font-size: var(--size-sm);
+  color: var(--color-text-muted);
+}
+
+.metadado-xs {
+  font-size: var(--size-xs);
+  color: var(--color-text-muted);
+}
+
+.desce-1 {
+  margin-top: var(--spacing-1);
+}
+
+.desce-2 {
+  margin-top: var(--spacing-2);
+}
+
+.desce-3 {
+  margin-top: var(--spacing-3);
+}
+
+.empurra-esq {
+  margin-left: var(--spacing-1);
+}
+
+.span-total {
+  grid-column: 1 / -1;
+}
+
+.link-mais {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--spacing-2);
+}
+
+/* Mini-KPI (grade de contagens do dashboard do Coordenador) */
+.cartao-kpi {
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.kpi-valor {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--size-xl);
+  line-height: 1.2;
+}
+
+.kpi-rotulo {
+  font-size: var(--size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Botão compacto para listas densas (ex.: "Marcar lida").
+   Exceção de target de toque documentada no MASTER.md §3 (32px). */
+.botao-mini {
+  min-height: 32px;
+  padding: 2px 10px;
+  font-size: var(--size-xs);
+}
+
 /* ===== Hints ===== */
 .dica-suave {
   font-size: var(--size-sm);
@@ -448,6 +512,8 @@ a.aba:hover {
 
 .google-status {
   color: var(--color-text-muted);
+  font-size: var(--size-sm);
+  margin-bottom: var(--spacing-2);
 }
 
 /* ===== Página de login: hero clay + caixa ===== */

@@ -13,7 +13,10 @@
         <div class="cartao">
           <h2>
             Minhas Orientações Ativas
-            <RouterLink :to="{ name: 'orientacao-nova' }" class="botao primario">+ Nova Orientação</RouterLink>
+            <RouterLink :to="{ name: 'orientacao-nova' }" class="botao primario">
+              <Icon name="plus" :size="16" />
+              Nova Orientação
+            </RouterLink>
           </h2>
           <div v-if="!dashboardState.dados.orientacoes_ativas.length" class="linha-vazia">
             Nenhuma orientação ativa.
@@ -23,7 +26,7 @@
               <strong>{{ o.tipo }}</strong> - {{ o.aluno.nome }} —
               <em>"{{ o.titulo_provisorio }}"</em>
               <StatusPill :status="o.status" />
-              <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+              <div class="metadado">
                 Prazo previsto: {{ formatarData(o.data_previsao_fim) }}
               </div>
             </div>
@@ -31,8 +34,9 @@
               Abrir
             </RouterLink>
           </div>
-          <RouterLink :to="{ name: 'orientacoes' }" style="display: inline-block; margin-top: 0.75rem">
-            Ver todas as orientações →
+          <RouterLink :to="{ name: 'orientacoes' }" class="link-mais">
+            Ver todas as orientações
+            <Icon name="arrow-right" :size="14" />
           </RouterLink>
         </div>
 
@@ -46,7 +50,7 @@
               <div>
                 {{ t.descricao }}
                 <StatusPill :status="t.status" />
-                <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+                <div class="metadado">
                   {{ t.nome_responsavel }} · {{ t.nome_aluno }} ({{ t.tipo }}) · Prazo: {{ formatarData(t.data_limite) }}
                 </div>
               </div>
@@ -91,13 +95,13 @@
           <div class="cartao">
             <h2>Minhas Tarefas e Prazos</h2>
             <div v-if="!dashboardState.dados.tarefas_pendentes.length" class="linha-vazia">
-              Nenhuma tarefa pendente. 🎉
+              Nenhuma tarefa pendente. Bom trabalho.
             </div>
             <div v-for="t in dashboardState.dados.tarefas_pendentes" :key="t.id_tarefa" class="item-lista">
               <div>
                 {{ t.descricao }}
                 <StatusPill :status="t.status" />
-                <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+                <div class="metadado">
                   Prazo: {{ formatarData(t.data_limite) }}
                 </div>
               </div>
@@ -118,16 +122,16 @@
             <h2>Visão Geral das Orientações</h2>
             <p><strong>Total:</strong> {{ dashboardState.dados.total }}</p>
             <div class="grade-3">
-              <div v-for="(v, k) in dashboardState.dados.por_status" :key="k" class="cartao" style="margin: 0; text-align: center">
-                <strong style="font-size: 1.4rem">{{ v }}</strong>
-                <div style="font-size: 0.85rem">{{ k }}</div>
+              <div v-for="(v, k) in dashboardState.dados.por_status" :key="k" class="cartao cartao-kpi">
+                <strong class="kpi-valor">{{ v }}</strong>
+                <div class="kpi-rotulo">{{ k }}</div>
               </div>
             </div>
-            <h3 style="margin-top: 1rem">Por tipo</h3>
+            <h3 class="desce-3">Por tipo</h3>
             <div class="grade-3">
-              <div v-for="(v, k) in dashboardState.dados.por_tipo" :key="k" class="cartao" style="margin: 0; text-align: center">
-                <strong style="font-size: 1.4rem">{{ v }}</strong>
-                <div style="font-size: 0.85rem">{{ k }}</div>
+              <div v-for="(v, k) in dashboardState.dados.por_tipo" :key="k" class="cartao cartao-kpi">
+                <strong class="kpi-valor">{{ v }}</strong>
+                <div class="kpi-rotulo">{{ k }}</div>
               </div>
             </div>
           </div>
@@ -148,8 +152,8 @@
               <strong>{{ o.tipo }}</strong> - {{ o.aluno.nome }} ({{ o.orientador.nome }}) —
               <em>"{{ o.titulo_provisorio }}"</em>
               <StatusPill :status="o.status" />
-              <span class="pilula" style="margin-left: 0.4rem">{{ rotuloPrazo(o.tipo_prazo) }}</span>
-              <div style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+              <span class="pilula empurra-esq">{{ rotuloPrazo(o.tipo_prazo) }}</span>
+              <div class="metadado">
                 {{ detalhePrazo(o) }} · {{ o.dias_restantes }} dias restantes
               </div>
             </div>
@@ -183,6 +187,7 @@ import NotificacoesPanel from './components/NotificacoesPanel.vue';
 import StatusPill from './components/StatusPill.vue';
 import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
+import Icon from './components/Icon.vue';
 import { authState } from '../controllers/AuthController.js';
 import { formatarData } from '../utils/fmt.js';
 
