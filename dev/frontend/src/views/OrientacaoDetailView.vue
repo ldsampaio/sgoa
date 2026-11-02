@@ -106,6 +106,7 @@
         <button class="aba" :class="{ ativa: aba === 'tarefas' }" @click="abrir('tarefas')">Tarefas</button>
         <button class="aba" :class="{ ativa: aba === 'reunioes' }" @click="abrir('reunioes')">Reuniões</button>
         <button class="aba" :class="{ ativa: aba === 'documentos' }" @click="abrir('documentos')">Documentos</button>
+        <button class="aba" :class="{ ativa: aba === 'overleaf' }" @click="abrir('overleaf')">Overleaf</button>
         <button class="aba" :class="{ ativa: aba === 'mensagens' }" @click="abrir('mensagens')">Mensagens</button>
       </div>
 
@@ -118,7 +119,11 @@
             <StatusPill :status="a.tipo" />
             <strong>{{ a.titulo }}</strong>
             <div class="metadado">
-              {{ a.descricao }} · {{ a.autor ? a.autor + ' · ' : '' }}{{ formatarDataHora(a.quando) }}
+              <template v-if="ehLinkOverleaf(a.descricao)">
+                <a :href="a.descricao" target="_blank" rel="noopener noreferrer">{{ a.descricao }}</a> ·
+              </template>
+              <template v-else>{{ a.descricao }} · </template>
+              {{ a.autor ? a.autor + ' · ' : '' }}{{ formatarDataHora(a.quando) }}
             </div>
           </li>
         </ul>
@@ -355,6 +360,61 @@
         </div>
       </div>
 
+      <!-- ===== Aba Overleaf (RF.OV) ===== -->
+      <div v-else-if="aba === 'overleaf'">
+        <div class="cartao">
+          <h2>
+            Links Overleaf
+            <button v-if="!mostrarFormEnlace" class="botao primario" @click="mostrarFormEnlace = true">
+              <Icon name="plus" :size="16" />
+              Registrar link
+            </button>
+          </h2>
+
+          <form v-if="mostrarFormEnlace" @submit.prevent="registrarEnlace">
+            <div class="campo">
+              <label for="catEnlace">Tipo de documento</label>
+              <select id="catEnlace" v-model="formEnlace.categoria" required>
+                <option v-for="c in enlaceState.categorias" :key="c" :value="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="urlEnlace">Link do projeto (domínio {{ hostOverleaf }})</label>
+              <input
+                id="urlEnlace"
+                v-model="formEnlace.url"
+                type="url"
+                :placeholder="`https://${hostOverleaf}/project/...`"
+                required
+              />
+            </div>
+            <div class="campo">
+              <label for="obsEnlace">Observação (opcional)</label>
+              <input id="obsEnlace" v-model="formEnlace.observacao" type="text" placeholder="Ex: versão para a banca" />
+            </div>
+            <button type="submit" class="botao primario" :disabled="enlaceState.salvando">
+              {{ enlaceState.salvando ? 'Registrando...' : 'Registrar' }}
+            </button>
+            <button type="button" class="botao secundario empurra-esq" @click="mostrarFormEnlace = false">Cancelar</button>
+          </form>
+
+          <Spinner :carregando="enlaceState.carregando" />
+          <div v-if="!enlaceState.lista.length && !enlaceState.carregando" class="linha-vazia">
+            Nenhum link registrado. O aluno registra o link do projeto e o professor encontra aqui.
+          </div>
+          <EnlaceItem
+            v-for="e in enlaceState.lista"
+            :key="e.id_enlace"
+            :enlace="e"
+            :categorias="enlaceState.categorias"
+            :salvando="enlaceState.salvando"
+            @destacar="destacarEnlace"
+            @salvar="salvarEnlace"
+            @remover="excluirEnlace"
+          />
+        </div>
+      </div>
+
       <!-- ===== Aba Mensagens ===== -->
       <div v-else-if="aba === 'mensagens'">
         <div class="cartao">
@@ -398,6 +458,7 @@ import DocumentoController, { documentoState } from '../controllers/DocumentoCon
 import AvaliacaoController, { avaliacaoState } from '../controllers/AvaliacaoController.js';
 import TipoDocumentoController, { tipoDocumentoState } from '../controllers/TipoDocumentoController.js';
 import MensagemController, { mensagemState } from '../controllers/MensagemController.js';
+import EnlaceController, { enlaceState } from '../controllers/EnlaceOverleafController.js';
 import LembreteModel from '../models/LembreteModel.js';
 import { authState } from '../controllers/AuthController.js';
 import StatusPill from './components/StatusPill.vue';
@@ -405,6 +466,8 @@ import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
 import CampoData from './components/CampoData.vue';
 import Icon from './components/Icon.vue';
+import EnlaceItem from './components/EnlaceItem.vue';
+import { HOST_OVERLEAF, ehLinkOverleaf } from '../utils/overleaf.js';
 import { formatarData, formatarDataHora } from '../utils/fmt.js';
 
 const route = useRoute();
@@ -416,6 +479,7 @@ const acaoSucesso = ref('');
 const mostrarFormTarefa = ref(false);
 const mostrarFormReuniao = ref(false);
 const mostrarFormDoc = ref(false);
+const mostrarFormEnlace = ref(false);
 const novaMensagem = ref('');
 const inputArquivo = ref(null);
 const areaMensagens = ref(null);
@@ -423,6 +487,8 @@ const areaMensagens = ref(null);
 const formTarefa = reactive({ id_responsavel: '', descricao: '', data_limite: '' });
 const formReuniao = reactive({ data_hora: '', pauta: '', decisoes_proximos_passos: '', link: '', duracaoMinutos: 60, criarNoGoogle: true });
 const formDoc = reactive({ descricao: '', id_tipo: '' });
+const formEnlace = reactive({ categoria: '', url: '', observacao: '' });
+const hostOverleaf = HOST_OVERLEAF;
 
 const id = computed(() => route.params.id);
 
@@ -486,6 +552,7 @@ async function abrir(nome) {
     await AvaliacaoController.carregarPorOrientacao(id.value);
     await TipoDocumentoController.carregar();
   }
+  if (nome === 'overleaf') await EnlaceController.carregar(id.value);
   if (nome === 'mensagens') await MensagemController.carregar(id.value);
 }
 
@@ -630,6 +697,53 @@ async function reenviarAvaliacao(idDocumento) {
   }
 }
 
+// RF.OV — aluno e professor têm as mesmas ações sobre o link.
+async function registrarEnlace() {
+  acaoErro.value = '';
+  acaoSucesso.value = '';
+  try {
+    await EnlaceController.criar(id.value, { ...formEnlace });
+    formEnlace.categoria = '';
+    formEnlace.url = '';
+    formEnlace.observacao = '';
+    mostrarFormEnlace.value = false;
+    acaoSucesso.value = 'Link registrado e os participantes foram notificados.';
+  } catch (err) {
+    acaoErro.value = err.message;
+  }
+}
+
+async function salvarEnlace(enlace, dados) {
+  acaoErro.value = '';
+  try {
+    await EnlaceController.atualizar(enlace, dados);
+    acaoSucesso.value = 'Link atualizado.';
+  } catch (err) {
+    acaoErro.value = err.message;
+  }
+}
+
+async function excluirEnlace(enlace) {
+  acaoErro.value = '';
+  acaoSucesso.value = '';
+  if (!window.confirm('Excluir este link Overleaf?')) return;
+  try {
+    await EnlaceController.remover(enlace);
+    acaoSucesso.value = 'Link excluído.';
+  } catch (err) {
+    acaoErro.value = err.message;
+  }
+}
+
+async function destacarEnlace(enlace) {
+  acaoErro.value = '';
+  try {
+    await EnlaceController.destacar(enlace);
+  } catch (err) {
+    acaoErro.value = err.message;
+  }
+}
+
 async function enviarMensagem() {
   acaoErro.value = '';
   const texto = novaMensagem.value.trim();
@@ -650,9 +764,11 @@ watch(id, async () => {
   reuniaoState.lista = [];
   documentoState.lista = [];
   mensagemState.lista = [];
+  enlaceState.lista = [];
   mostrarFormTarefa.value = false;
   mostrarFormReuniao.value = false;
   mostrarFormDoc.value = false;
+  mostrarFormEnlace.value = false;
   await carregarOrientacao();
 });
 

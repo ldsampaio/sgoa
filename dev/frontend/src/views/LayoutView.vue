@@ -11,6 +11,7 @@
         <nav class="menu-nav" :class="{ aberto: menuAberto }" aria-label="Navegação principal">
           <RouterLink :to="{ name: 'dashboard' }" @click="menuAberto = false">Dashboard</RouterLink>
           <RouterLink :to="{ name: 'orientacoes' }" @click="menuAberto = false">Orientações</RouterLink>
+          <RouterLink :to="{ name: 'links-overleaf' }" @click="menuAberto = false">Links Overleaf</RouterLink>
           <RouterLink :to="{ name: 'perfil' }" @click="menuAberto = false">Meu Perfil</RouterLink>
           <RouterLink v-if="ehAdministrador" :to="{ name: 'usuarios' }" @click="menuAberto = false">
             Usuários
@@ -81,6 +82,7 @@ const titulo = computed(() => {
     'orientacao-nova': 'Nova Orientação',
     'orientacao-detalhe': 'Detalhes da Orientação',
     'orientacao-editar': 'Editar Orientação',
+    'links-overleaf': 'Links Overleaf',
     perfil: 'Meu Perfil',
     usuarios: ehAdministrador.value ? 'Gestão de Usuários' : 'Alunos',
     'tipos-documento': 'Categorias de Avaliação IA',
