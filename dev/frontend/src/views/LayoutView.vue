@@ -101,13 +101,13 @@ function sair() {
 </script>
 
 <style scoped>
+/* Sair: botão de nav, menor que o CTA de página mas mantendo o target de toque */
 .sair {
-  padding: 8px 18px;
-  min-height: 40px;
-  font-size: 0.85rem;
+  font-size: var(--size-sm);
+  padding: var(--spacing-1) var(--spacing-2);
 }
 
 .navbar-acoes .usuario-atual {
-  gap: 0.5rem;
+  gap: var(--spacing-1);
 }
 </style>

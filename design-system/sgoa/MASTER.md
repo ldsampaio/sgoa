@@ -119,6 +119,7 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
 | `.mensagem-balao` | clay bubble, border-2.5; "minha" = sky |
 | `.navbar` | **floating clay card** (sticky top 12px), bg card, border-3, nav items pill; ativo = primary-soft + border primary |
 | `.linha-tempo` | diamantes primário com border ink |
+| `.medidores` | bullet bar clay: trilha 16px border-2 ink + fill do token de status; **valor numérico sempre ao lado** (cor nunca é o único portador); trilha com `role="meter"` + `aria-valuenow/max`. Largura do fill vem de `:style` dinâmico (percentual de dados) — única exceção aceita a style inline |
 | `.pagina-login` | split: hero com trama weave decorativa + `caixa-login` clay |
 
 ---
@@ -126,6 +127,9 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
 ## 3. Pre-Delivery Checklist (por onda)
 
 - [ ] Nenhum hex/px fora de `tokens.css` (validação: `validate-tokens.cjs` — exceções registradas aqui).
+      Exceções aceitas: constantes de layout não-tokens (largura de container, `max-height` de áreas de
+      rolagem 320/420px, altura de medidor 16px, checkbox 20px/20px, botão limpar 32px) e `:style`
+      dinâmico de percentual em gráficos.
 - [ ] Contraste ≥ 4.5 : 1 texto; 3 : 1 bordas significativas.
 - [ ] Foco visível em todos os controles (`:focus-visible` ring indigo).
 - [ ] `prefers-reduced-motion` respeitado.
@@ -139,4 +143,9 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
 ## 4. Migrações em curso (.Tags por onda)
 
 - **Wave 0 (done):** tokens 3 camadas, base/componentes clay, ícones, StatusPill/AlertMessage com ícone, aliases legados `--spark/--offline/...` (deprecated, remover na wave 6).
-- **Waves seguintes:** shell → auth → núcleo → forms/admin → métricas (bullet/gauge SVG) → QA + remover aliases legados.
+- **Wave 1 (done):** shell — nav clay, ícones Phosphor no menu/sair, aria-states.
+- **Wave 2 (done):** auth — hero com chips, caixa demo, passos em pílulas, OTP tipografado.
+- **Wave 3 (done):** núcleo — dashboard, listas, detalhe (736 linhas), notificações; zero style inline, zero emoji.
+- **Wave 4 (done):** forms/admin — radios, tabela de usuários, categorias, parâmetros de prazo, CampoData.
+- **Wave 5 (done):** métricas — medidores bullet no dashboard do Coordenador (composição por status/tipo e carga por professor) com valor textual + `role="meter"`; sem biblioteca de gráficos.
+- **Wave 6 (pendente):** QA — checklist §3, remover aliases legados de `main.css`, testes 375/768/1024/1440, teclado, reduced-motion.

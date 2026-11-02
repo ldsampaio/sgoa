@@ -535,6 +535,93 @@ a.aba:hover {
   font-size: var(--size-xs);
 }
 
+/* ===== Medidores de composição (bullet bars) =====
+   Valor numérico SEMPRE ao lado da barra: a cor nunca é o único portador.
+   A trilha é role="meter" com aria-valuenow/max; o preenchimento usa o
+   token de status do status correspondente. */
+.medidores {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.medidor {
+  display: grid;
+  grid-template-columns: minmax(110px, 150px) 1fr minmax(72px, auto);
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.medidor-rotulo {
+  font-weight: 600;
+  font-size: var(--size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.medidor-trilha {
+  display: block;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-muted);
+  box-shadow: var(--shadow-flat);
+  overflow: hidden;
+}
+
+.medidor-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-tint);
+  min-width: 4px;
+}
+
+.medidor-em-andamento .medidor-fill {
+  background: var(--color-status-andamento);
+}
+
+.medidor-pendente .medidor-fill {
+  background: var(--color-status-pendente);
+}
+
+.medidor-concluida .medidor-fill {
+  background: var(--color-status-concluida);
+}
+
+.medidor-atrasada .medidor-fill {
+  background: var(--color-status-atrasada);
+}
+
+.medidor-suspensa .medidor-fill {
+  background: var(--color-status-suspensa);
+}
+
+.medidor-cancelada .medidor-fill {
+  background: var(--color-status-cancelada);
+}
+
+.medidor-valor {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--size-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 767px) {
+  .medidor {
+    grid-template-columns: 1fr auto;
+  }
+
+  .medidor-trilha {
+    grid-column: 1 / -1;
+  }
+}
+
 /* ===== Hints ===== */
 .dica-suave {
   font-size: var(--size-sm);
