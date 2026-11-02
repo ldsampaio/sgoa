@@ -186,6 +186,15 @@ a.botao:hover {
   flex: none;
 }
 
+.campo input[type='radio'] {
+  min-height: auto;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  accent-color: var(--color-primary);
+  flex: none;
+}
+
 .campo input[type='file'] {
   border-radius: var(--input-radius);
   padding: 10px 14px;
@@ -231,6 +240,15 @@ a.botao:hover {
 }
 .pilula.Cancelada,
 .pilula.cancelada {
+  background: var(--color-status-cancelada);
+  color: var(--color-text-muted);
+}
+
+.pilula.ativa {
+  background: var(--color-status-concluida);
+}
+
+.pilula.desativada {
   background: var(--color-status-cancelada);
   color: var(--color-text-muted);
 }
@@ -465,6 +483,19 @@ a.aba:hover {
 
 .empurra-esq {
   margin-left: var(--spacing-1);
+}
+
+/* Célula de ações de tabela em uma linha só */
+.sem-quebra {
+  white-space: nowrap;
+}
+
+/* Link de retorno no topo das páginas internas */
+.voltar-topo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--spacing-2);
 }
 
 .span-total {

@@ -1,7 +1,8 @@
 <template>
   <div>
-    <RouterLink :to="{ name: edicao ? 'orientacao-detalhe' : 'orientacoes', params: edicao ? { id: orientacaoState.atual?.id_orientacao } : {} }">
-      ← Voltar
+    <RouterLink :to="{ name: edicao ? 'orientacao-detalhe' : 'orientacoes', params: edicao ? { id: orientacaoState.atual?.id_orientacao } : {} }" class="voltar-topo">
+      <Icon name="arrow-left" :size="14" />
+      Voltar
     </RouterLink>
 
     <Spinner :carregando="orientacaoState.carregando" />
@@ -26,15 +27,15 @@
 
           <div class="campo">
             <label>Tipo de Orientação</label>
-            <div style="display: flex; gap: 1rem">
-              <label v-for="tipo in tipos" :key="tipo" style="font-weight: 400">
+            <div class="grupo-radio">
+              <label v-for="tipo in tipos" :key="tipo">
                 <input v-model="form.tipo" type="radio" :value="tipo" />
                 {{ tipo }}
               </label>
             </div>
           </div>
 
-          <div class="campo" style="grid-column: 1 / -1">
+          <div class="campo span-total">
             <label for="titulo">Título Provisório do Trabalho</label>
             <input id="titulo" v-model="form.titulo_provisorio" type="text" placeholder="Ex: Impacto da IA na Educação Superior" />
           </div>
@@ -59,7 +60,7 @@
 
             <div class="campo">
               <label for="coorientador">Adicionar Co-orientador</label>
-              <div style="display: flex; gap: 0.5rem">
+              <div class="linha-input">
                 <select id="coorientador" v-model="coSelecionado">
                   <option value="" disabled>Selecionar professor...</option>
                   <option v-for="p in professoresDisponiveis" :key="p.id_professor" :value="p.id_professor">
@@ -70,17 +71,19 @@
                   Adicionar
                 </button>
               </div>
-              <div v-if="coAtuais.length" style="margin-top: 0.5rem">
+              <div v-if="coAtuais.length" class="desce-1">
                 <span v-for="co in coAtuais" :key="co.id_professor" class="pilula co-orientador">
                   {{ co.nome }}
-                  <button type="button" class="remover-co" aria-label="Remover co-orientador" @click="removerCoOrientador(co)">✕</button>
+                  <button type="button" class="remover-co" aria-label="Remover co-orientador" @click="removerCoOrientador(co)">
+                    <Icon name="x" :size="14" />
+                  </button>
                 </span>
               </div>
             </div>
           </template>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem">
+        <div class="linha-acoes">
           <button type="submit" class="botao primario" :disabled="orientacaoState.salvando">
             {{ orientacaoState.salvando ? 'Salvando...' : 'Salvar Orientação' }}
           </button>
@@ -103,6 +106,7 @@ import OrientacaoController, { orientacaoState } from '../controllers/Orientacao
 import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
 import CampoData from './components/CampoData.vue';
+import Icon from './components/Icon.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -196,21 +200,64 @@ async function removerCoOrientador(co) {
 </script>
 
 <style scoped>
+/* Grupo de radios do tipo de orientação */
+.grupo-radio {
+  display: flex;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.grupo-radio label {
+  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-min-target);
+  font-size: var(--size-base);
+}
+
+/* Linha select + botão (adicionar co-orientador) */
+.linha-input {
+  display: flex;
+  gap: var(--spacing-1);
+}
+
+.linha-input select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Ações do fim do formulário */
+.linha-acoes {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-1);
+  flex-wrap: wrap;
+}
+
+/* Pílulas de co-orientador já atribuído */
 .co-orientador {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-right: 0.4rem;
+  gap: var(--spacing-1);
+  margin-right: var(--spacing-1);
+  margin-bottom: 4px;
 }
 
 .remover-co {
   background: none;
-  border: none;
-  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 1px;
   cursor: pointer;
-  color: inherit;
-  font-family: inherit;
-  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: var(--size-xs);
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.remover-co:hover {
+  color: var(--color-destructive);
 }
 </style>

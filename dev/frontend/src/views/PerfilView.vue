@@ -54,7 +54,7 @@
 
     <div class="cartao" v-if="authState.user?.tipo_usuario === 'Administrador'">
       <h2>E-mail institucional (conta do projeto)</h2>
-      <p style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+      <p class="metadado">
         Os avisos de prazo e a recuperação de senha partem da conta institucional única,
         configurada via ambiente no servidor (SMTP_USER/SMTP_FROM). Use o botão abaixo para testar o envio.
       </p>
@@ -67,7 +67,7 @@
 
     <div class="cartao" v-if="authState.user?.tipo_usuario === 'Professor'">
       <h2>Prompts de avaliação por IA</h2>
-      <p style="font-size: 0.85rem; color: var(--cor-texto-suave)">
+      <p class="metadado">
         Personalize como o agente de IA avalia os trabalhos dos seus alunos, por categoria.
         Vale para os próximos envios; avaliações já feitas guardam o prompt usado.
       </p>
@@ -77,11 +77,11 @@
       <div v-for="p in promptState.prompts" :key="p.id_tipo" class="campo">
         <label :for="'prompt-' + p.id_tipo">Prompt — {{ p.tipo }}</label>
         <textarea :id="'prompt-' + p.id_tipo" v-model="promptsEdit[p.id_tipo]" rows="6"></textarea>
-        <div style="margin-top: 0.4rem">
+        <div class="desce-1">
           <button type="button" class="botao primario" :disabled="promptState.salvando[p.id_tipo]" @click="salvarPrompt(p)">
             {{ promptState.salvando[p.id_tipo] ? 'Salvando...' : 'Salvar' }}
           </button>
-          <button type="button" class="botao secundario" style="margin-left: 0.5rem" :disabled="promptState.salvando[p.id_tipo]" @click="restaurarPrompt(p)">
+          <button type="button" class="botao secundario empurra-esq" :disabled="promptState.salvando[p.id_tipo]" @click="restaurarPrompt(p)">
             Restaurar padrão
           </button>
         </div>

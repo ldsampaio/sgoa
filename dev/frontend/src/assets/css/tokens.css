@@ -170,6 +170,7 @@
   --input-radius: var(--radius-sm);
   --input-radius-textarea: var(--radius-sm);
   --input-min-height: 44px;
+  --input-width-inline: 96px;
   --input-ring: 0 0 0 3px rgba(79, 70, 229, 0.25);
   --navbar-bg: var(--color-card);
   --navbar-fg: var(--color-text);

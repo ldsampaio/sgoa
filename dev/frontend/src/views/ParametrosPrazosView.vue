@@ -2,7 +2,7 @@
   <div>
     <div class="cartao">
       <h2>Prazos do Regulamento</h2>
-      <p style="color: var(--cor-texto-suave)">
+      <p class="metadado">
         Prazos máximos em meses contados da <strong>data de matrícula</strong> do aluno.
         Vazios (—) significam sem prazo. Alterações valem para os cálculos seguintes.
       </p>
@@ -20,23 +20,23 @@
               <span v-if="editando !== l.nivel">{{ l.prazo_conclusao_meses ?? '—' }}</span>
               <input
                 v-else v-model.number="form.prazo_conclusao_meses" type="number" min="0" step="1"
-                placeholder="—" style="width: 6rem"
+                placeholder="—" class="entrada-meses"
               />
             </td>
             <td>
               <span v-if="editando !== l.nivel">{{ l.prazo_qualificacao_meses ?? '—' }}</span>
               <input
                 v-else v-model.number="form.prazo_qualificacao_meses" type="number" min="0" step="1"
-                placeholder="—" style="width: 6rem"
+                placeholder="—" class="entrada-meses"
               />
             </td>
-            <td style="white-space: nowrap">
+            <td class="sem-quebra">
               <button v-if="editando !== l.nivel" type="button" class="botao secundario" @click="abrirEditar(l)">Editar</button>
               <template v-else>
                 <button type="button" class="botao primario" :disabled="salvando" @click="salvar(l.nivel)">
                   {{ salvando ? 'Salvando...' : 'Salvar' }}
                 </button>
-                <button type="button" class="botao secundario" style="margin-left: 0.4rem" @click="editando = null">Cancelar</button>
+                <button type="button" class="botao secundario empurra-esq" @click="editando = null">Cancelar</button>
               </template>
             </td>
           </tr>
@@ -100,3 +100,25 @@ async function salvar(nivel) {
   }
 }
 </script>
+
+<style scoped>
+/* Coluna de meses: campo estreito inline na tabela (token de componente) */
+.entrada-meses {
+  width: var(--input-width-inline);
+  min-height: var(--input-min-height);
+  padding: 8px 10px;
+  border: var(--input-border-soft);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--input-fg);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.entrada-meses:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--input-ring);
+}
+</style>

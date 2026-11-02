@@ -719,14 +719,6 @@ onMounted(carregarOrientacao);
 </script>
 
 <style scoped>
-/* Link de retorno no topo da página */
-.voltar-topo {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: var(--spacing-2);
-}
-
 /* Parágrafo de metadados sob o título da orientação */
 .p-meta {
   margin: var(--spacing-1) 0;
