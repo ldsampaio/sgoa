@@ -2,7 +2,8 @@
   <div class="pagina-login">
     <aside class="lado-visual">
       <div class="brand">
-        <span class="logo">🎓 SGOA</span>
+        <Icon name="graduation-cap" :size="24" />
+        <span class="logo">SGOA</span>
       </div>
       <h1>Recuperação de senha</h1>
       <p class="resumo">
@@ -37,7 +38,7 @@
               placeholder="voce@instituicao.edu"
             />
           </div>
-          <button class="botao primario" style="width: 100%; justify-content: center" :disabled="carregando">
+          <button class="botao primario botao-bloco" :disabled="carregando">
             {{ carregando ? 'Enviando...' : 'Enviar código' }}
           </button>
         </template>
@@ -59,14 +60,14 @@
               class="codigo-input"
             />
           </div>
-          <button class="botao primario" style="width: 100%; justify-content: center" :disabled="carregando">
+          <button class="botao primario botao-bloco" :disabled="carregando">
             {{ carregando ? 'Verificando...' : 'Verificar código' }}
           </button>
           <div class="acoes-secundarias">
             <button type="button" class="botao secundario" :disabled="carregando || cooldown > 0" @click="reenviar">
               {{ cooldown > 0 ? `Reenviar em ${cooldown}s` : 'Reenviar código' }}
             </button>
-            <button type="button" class="link" :disabled="carregando" @click="voltarEmail">Trocar e-mail</button>
+            <button type="button" class="link-acao" :disabled="carregando" @click="voltarEmail">Trocar e-mail</button>
           </div>
         </template>
 
@@ -97,7 +98,7 @@
             />
           </div>
           <p class="dica">Mínimo 8 caracteres, com maiúsculas, minúsculas, números e caracter especial.</p>
-          <button class="botao primario" style="width: 100%; justify-content: center" :disabled="carregando">
+          <button class="botao primario botao-bloco" :disabled="carregando">
             {{ carregando ? 'Salvando...' : 'Redefinir senha' }}
           </button>
           <div v-if="concluido" class="acoes-secundarias">
@@ -106,7 +107,10 @@
         </template>
 
         <p class="voltar">
-          <RouterLink to="/login">← Voltar ao login</RouterLink>
+          <RouterLink to="/login" class="link-voltar">
+            <Icon name="arrow-left" :size="14" />
+            Voltar ao login
+          </RouterLink>
         </p>
       </form>
     </main>
@@ -117,6 +121,7 @@
 import { ref } from 'vue';
 import AuthModel from '../models/AuthModel.js';
 import AlertMessage from './components/AlertMessage.vue';
+import Icon from './components/Icon.vue';
 
 const etapa = ref(1);
 const email = ref('');
@@ -211,61 +216,91 @@ async function redefinir() {
 </script>
 
 <style scoped>
+/* Passos: pílulas clay (ativo = primário-soft com borda ink) */
 .passos {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-1);
   list-style: none;
-  margin: 0 0 1rem;
+  margin: 0 0 var(--spacing-3);
   padding: 0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--cor-texto-suave);
 }
+
 .passos li {
   flex: 1;
-  padding: 0.35rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid var(--graphite);
-  background: var(--raised-offline);
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--color-border-soft);
+  background: var(--color-card);
   text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
 }
+
 .passos li.ativo {
-  background: var(--spark);
-  border-color: var(--spark);
-  color: var(--offline);
+  background: var(--color-primary-soft);
+  border-color: var(--color-border);
+  color: var(--color-primary-strong);
+  box-shadow: var(--shadow-flat);
 }
+
 .passos li.feito {
-  background: transparent;
-  border-color: var(--spark);
-  color: var(--spark);
+  border-color: var(--color-border-soft);
+  color: var(--color-primary-strong);
 }
+
+/* Código OTP: espaçado e centralizado, DM Sans bold grande */
 .codigo-input {
   letter-spacing: 0.4em;
   text-align: center;
-  font-size: 1.3rem;
+  font-size: var(--size-lg);
   font-weight: 700;
+  font-family: var(--font-display);
 }
+
 .dica {
-  font-size: 0.85rem;
-  color: var(--cor-texto-suave);
+  font-size: var(--size-sm);
+  color: var(--color-text-muted);
 }
+
 .acoes-secundarias {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-1);
   align-items: center;
-  margin-top: 0.75rem;
+  margin-top: var(--spacing-2);
+  flex-wrap: wrap;
 }
-.link {
+
+/* Link-ação (Trocar e-mail): touch target 44px, nunca só pela cor */
+.link-acao {
   background: none;
-  border: none;
-  color: var(--spark);
+  border: 2px solid transparent;
+  color: var(--color-primary-strong);
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  font-family: inherit;
+  min-height: var(--touch-min-target);
+  padding: 0 var(--spacing-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--size-sm);
+  font-weight: 700;
+  font-family: var(--font-display);
 }
+
+.link-acao:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .voltar {
-  margin-top: 1rem;
-  font-size: 0.85rem;
+  margin-top: var(--spacing-3);
+  text-align: center;
+}
+
+/* Link "Voltar ao login" com ícone de seta: flex alinhado */
+.link-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 </style>
+

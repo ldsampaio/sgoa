@@ -1,11 +1,25 @@
 <template>
-  <div class="cartao" style="max-width: 560px; margin: 2rem auto">
-    <h2>Integração com Google Calendar</h2>
+  <div class="cartao cartao-estreito">
+    <h2><Icon name="calendar-check" :size="20" /> Integração com Google Calendar</h2>
     <AlertMessage v-if="erro" :mensagem="erro" tipo="erro" />
     <AlertMessage v-if="sucesso" :mensagem="sucesso" tipo="sucesso" />
-    <RouterLink :to="{ name: 'orientacoes' }" class="botao primario">Voltar para orientações</RouterLink>
+    <RouterLink :to="{ name: 'orientacoes' }" class="botao primario botao-bloco">Voltar para orientações</RouterLink>
   </div>
 </template>
+
+<style scoped>
+.cartao-estreito {
+  max-width: 560px;
+  margin: var(--spacing-4) auto;
+}
+
+.cartao-estreito h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+}
+</style>
 
 <script setup>
 import { ref, onMounted } from 'vue';

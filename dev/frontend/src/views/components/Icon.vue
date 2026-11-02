@@ -16,14 +16,18 @@
  *    Amplie aditivamente por onda, junto ao uso que o pede.
  */
 import {
+  PhArrowLeft,
   PhCalendarBlank,
+  PhCalendarCheck,
   PhCheckCircle,
   PhCircleNotch,
   PhClock,
   PhFile,
+  PhGraduationCap,
   PhInfo,
   PhLightbulb,
   PhList,
+  PhListChecks,
   PhPauseCircle,
   PhPlay,
   PhPlus,
@@ -37,7 +41,11 @@ import {
 import { computed } from 'vue';
 
 const ICONES = {
+  'arrow-left': PhArrowLeft,
   calendar: PhCalendarBlank,
+  'calendar-check': PhCalendarCheck,
+  'graduation-cap': PhGraduationCap,
+  tasks: PhListChecks,
   check: PhCheckCircle,
   'circle-notch': PhCircleNotch,
   clock: PhClock,
