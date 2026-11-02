@@ -1,0 +1,414 @@
+/* ==========================================================================
+   SGOA — Base (reset, tipografia, layout, foco, movimento)
+   Fonte de verdade de tokens: src/assets/css/tokens.css (gerado de design/tokens.json)
+   Design system: design-system/sgoa/MASTER.md (claymorphism light)
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-h) + 24px);
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--size-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Peso forte = "preste atenção aqui" */
+strong,
+b,
+th {
+  font-weight: 700;
+}
+
+em {
+  font-style: italic;
+}
+
+/* ===== Titulos: Space Grotesk 600, ink (clay: hierarquia por tamanho, nao por cor) ===== */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  color: var(--color-text);
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: var(--size-2xl);
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: var(--size-lg);
+}
+h3 {
+  font-size: var(--size-base);
+}
+
+.small,
+small {
+  font-size: var(--size-sm);
+}
+
+/* ===== Links ===== */
+a {
+  color: var(--color-primary-strong);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--color-primary);
+}
+
+/* ===== Foco visivel (teclado) — nunca remover sem substituto ===== */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.22);
+  border-radius: var(--radius-sm);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.5);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--color-primary-tint);
+  color: var(--color-text);
+}
+
+/* ===== Movimento: exit faster than enter, bounce so onde agrega ===== */
+button,
+.botao,
+.pilula,
+a,
+.aba {
+  transition:
+    background-color var(--dur-hover) var(--ease-out),
+    box-shadow var(--dur-hover) var(--ease-out),
+    color var(--dur-hover) var(--ease-out),
+    border-color var(--dur-hover) var(--ease-out),
+    transform var(--dur-press) var(--ease-clay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Layout do aplicativo ===== */
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Nav flutuante como calha de barro: card acima do almofada cream (assinatura clay) */
+.navbar {
+  position: sticky;
+  top: 12px;
+  z-index: 40;
+  padding: 0 16px;
+  background: transparent;
+}
+
+.navbar-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.conteudo {
+  flex: 1;
+  padding: 40px 48px 96px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.cabecalho-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  border-bottom: 2px solid var(--color-border-soft);
+}
+
+.cabecalho-topo h1 {
+  margin: 0;
+}
+
+/* ===== Marcas / nav ===== */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--color-text);
+  font-size: var(--size-lg);
+}
+
+.brand .marca {
+  width: 16px;
+  height: 16px;
+  background: var(--color-brand);
+  transform: rotate(45deg);
+  border-radius: 4px;
+  flex: none;
+  box-shadow: 1.5px 1.5px 0 rgba(27, 27, 47, 0.85);
+}
+
+.brand .logo {
+  letter-spacing: -0.01em;
+}
+
+a.brand {
+  text-decoration: none;
+}
+
+.menu-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.menu-nav a {
+  color: var(--color-text);
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  font-weight: 600;
+  font-size: var(--size-sm);
+  font-family: var(--font-display);
+  white-space: nowrap;
+  min-height: var(--touch-min-target);
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.menu-nav a:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.menu-nav a.router-link-exact-active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary-strong);
+}
+
+.navbar-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.menu-nav + .navbar-acoes {
+  margin-left: 0;
+}
+
+.usuario-atual {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.usuario-atual .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-lilac-soft);
+  border: 2.5px solid var(--color-border);
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--size-sm);
+  font-family: var(--font-display);
+  flex: none;
+}
+
+.usuario-atual .nome-usuario {
+  color: var(--color-text);
+  font-size: var(--size-sm);
+  font-weight: 600;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-toggle {
+  display: none;
+  background: var(--card-bg);
+  border: 2.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--color-text);
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-toggle:active {
+  transform: translateY(2px);
+  box-shadow: var(--button-shadow-press);
+}
+
+/* ===== Responsividade ===== */
+@media (max-width: 1023px) {
+  .conteudo {
+    padding: 24px 24px 64px;
+  }
+
+  .navbar {
+    padding: 0 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: calc(var(--nav-h) + 84px);
+  }
+
+  .navbar {
+    top: 8px;
+  }
+
+  .navbar-inner {
+    padding: 8px 12px;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .usuario-atual .nome-usuario {
+    display: none;
+  }
+
+  .menu-nav {
+    display: none;
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    margin-top: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: var(--spacing-3);
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow-hover);
+  }
+
+  .menu-nav.aberto {
+    display: flex;
+    animation: menu-clay-in var(--dur-enter) var(--ease-clay);
+  }
+
+  .menu-nav a {
+    color: var(--color-text);
+    font-size: var(--size-md);
+    min-height: 48px;
+    border-radius: var(--radius-pill);
+    padding: 12px 16px;
+  }
+
+  .menu-nav a:hover {
+    background: var(--color-surface-muted);
+    color: var(--color-text);
+  }
+
+  .menu-nav a.router-link-exact-active {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary-strong);
+  }
+
+  .navbar-acoes {
+    margin-left: auto;
+  }
+
+  .conteudo {
+    padding: 20px 16px 56px;
+  }
+
+  h1 {
+    font-size: var(--size-xl);
+  }
+}
+
+@keyframes menu-clay-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-nav.aberto {
+    animation: none;
+  }
+}
