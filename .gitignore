@@ -1,0 +1,14 @@
+# Worktrees locais: sao metadado do git (ponteiro para .git/worktrees), nunca codigo.
+.worktrees/
+
+# Artefatos de Python (skills do agente em .opencode/)
+__pycache__/
+*.pyc
+
+# Segredos e ambiente. Os .gitignore de dev/ ja cobrem node_modules, dist, data,
+# uploads e *.log; aqui entra so o que pode aparecer na raiz. NUNCA ignorar
+# .opencode/**/data/ - sao catálogos de dados das skills, parte do repo.
+.env
+.env.*
+!.env.example
+node_modules/
