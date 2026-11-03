@@ -27,6 +27,8 @@ const ICONES_STATUS = {
   cancelada: 'x',
   ativa: 'check',
   desativada: 'pause',
+  vigente: 'link',
+  encerrado: 'x',
 };
 
 function normalizar(status) {

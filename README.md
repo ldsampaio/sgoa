@@ -68,7 +68,7 @@ src/
 └── seeders/       Seed de dados de demonstração
 ```
 
-Entidades implementadas conforme `modelagem-de-dados.md`: `usuarios`, `perfis`, `professores`, `alunos`, `orientacoes`, `co_orientadores`, `reunioes`, `tarefas`, `documentos` (com versionamento), `mensagens` e `notificacoes`.
+Entidades implementadas conforme `modelagem-de-dados.md`: `usuarios`, `perfis`, `professores`, `alunos`, `orientacoes`, `co_orientadores`, `reunioes`, `tarefas`, `documentos` (com versionamento), `mensagens`, `notificacoes` e `enlaces_overleaf` + `enlaces_destacados` (RF.OV, destaque por usuário).
 
 ### Frontend — MVC em SPA
 
@@ -94,6 +94,7 @@ Fluxo típico: **View** (template) → dispara ação do **Controller** → **Co
 | Acompanhamento | Registro de reuniões, tarefas com prazo, marcar concluída, linha do tempo | ✅ RF.AP.001-005 |
 | Comunicação | Mensagens por orientação + notificações (tarefa, prazo, mensagem, documento) | ✅ RF.CO.001-003 |
 | Documentos | Upload, download, histórico de versões (v1, v2, ...) | ✅ RF.GD.001-004 |
+| Enlaces Overleaf | Aluno registra o link do projeto institucional com o tipo de documento; destaque por usuário; notificação | ✅ RF.OV.001-006 |
 | Dashboards | Professor, aluno e coordenador (visão geral, prazos críticos, carga) | ✅ RF.VI.001-003 |
 
 Segurança: autenticação JWT obrigatória (NFR.SEG.001), RBAC por papel (NFR.SEG.002), hash de senha com salt (NFR.SEG.004), validação de complexidade de senha (NFR.SEG.007), uso de queries parametrizadas (NFR.SEG.006).
@@ -117,6 +118,11 @@ PUT  /api/tarefas/:id              Atualizar status da tarefa
 GET|POST /api/orientacoes/:id/reunioes            Listar/Criar reuniões
 GET|POST /api/orientacoes/:id/documentos          Listar/Enviar documentos
 GET  /api/documentos/:id/download  Baixar documento
+GET|POST /api/orientacoes/:id/enlaces            Listar/Registrar links Overleaf (RF.OV)
+GET      /api/enlaces/me                         Links do usuário (todas suas orientações)
+GET      /api/enlaces/categorias                 Tipos de documento do enlace
+PUT|DELETE /api/enlaces/:id                      Atualizar/Remover enlace
+PATCH    /api/enlaces/:id/destacar               Fixar/desfixar para o usuário que chama
 GET|POST /api/orientacoes/:id/mensagens          Listar/Enviar mensagens
 GET  /api/orientacoes/:id/atividades             Linha do tempo / feed
 GET  /api/notificacoes             Notificações do usuário

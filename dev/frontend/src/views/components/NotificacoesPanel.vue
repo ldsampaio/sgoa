@@ -12,7 +12,10 @@
           Marcar lida
         </button>
         <strong>{{ n.titulo }}</strong>
-        <div class="metadado">{{ n.mensagem }}</div>
+        <div v-if="ehLinkOverleaf(n.mensagem)" class="metadado">
+          <a :href="n.mensagem" target="_blank" rel="noopener noreferrer">{{ n.mensagem }}</a>
+        </div>
+        <div v-else class="metadado">{{ n.mensagem }}</div>
         <div class="metadado-xs">{{ formatarDataHora(n.data_criacao) }}</div>
       </li>
     </ul>
@@ -21,6 +24,7 @@
 
 <script setup>
 import { formatarDataHora } from '../../utils/fmt.js';
+import { ehLinkOverleaf } from '../../utils/overleaf.js';
 
 defineProps({ notificacoes: { type: Array, default: () => [] } });
 defineEmits(['ler']);

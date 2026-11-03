@@ -33,6 +33,7 @@ const routes = [
         component: () => import('../views/OrientacaoFormView.vue'),
       },
       { path: 'perfil', name: 'perfil', component: () => import('../views/PerfilView.vue') },
+      { path: 'links-overleaf', name: 'links-overleaf', component: () => import('../views/LinkOverleafView.vue') },
       { path: 'google-ok', name: 'google-ok', component: () => import('../views/GoogleOkView.vue') },
       {
         path: 'usuarios',

@@ -254,6 +254,16 @@ a.botao:hover {
   color: var(--color-text-muted);
 }
 
+/* Enlaces Overleaf (RF.OV): vigente = vivo, encerrado = histórico sem cor como único sinal */
+.pilula.vigente {
+  background: var(--color-status-andamento);
+}
+
+.pilula.encerrado {
+  background: var(--color-status-cancelada);
+  color: var(--color-text-muted);
+}
+
 /* ===== Alertas ===== */
 .alerta {
   display: flex;

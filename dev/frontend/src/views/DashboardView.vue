@@ -40,6 +40,30 @@
           </RouterLink>
         </div>
 
+        <div class="cartao">
+          <h2>
+            Links Overleaf
+            <RouterLink :to="{ name: 'links-overleaf' }" class="botao secundario">
+              Ver todos
+              <Icon name="arrow-right" :size="14" />
+            </RouterLink>
+          </h2>
+          <div v-if="!enlaces.length" class="linha-vazia">Nenhum link registrado.</div>
+          <div v-for="e in enlaces.slice(0, 6)" :key="e.id_enlace" class="item-lista">
+            <div>
+              <span class="pilula">{{ e.categoria }}</span>
+              <StatusPill :status="e.status" />
+              <div class="metadado">
+                {{ e.titulo_provisorio }} · {{ formatarDataHora(e.criado_em) }}
+              </div>
+            </div>
+            <a class="botao primario" :href="e.url" target="_blank" rel="noopener noreferrer">
+              <Icon name="link" :size="14" />
+              Abrir
+            </a>
+          </div>
+        </div>
+
         <div class="grid-2">
           <div class="cartao">
             <h2>Tarefas e Prazos Próximos</h2>
@@ -89,6 +113,30 @@
               Ver detalhes da orientação
             </RouterLink>
           </template>
+        </div>
+
+        <div class="cartao">
+          <h2>
+            Meus Links Overleaf
+            <RouterLink :to="{ name: 'links-overleaf' }" class="botao secundario">
+              Ver todos
+              <Icon name="arrow-right" :size="14" />
+            </RouterLink>
+          </h2>
+          <div v-if="!enlaces.length" class="linha-vazia">Nenhum link registrado.</div>
+          <div v-for="e in enlaces.slice(0, 6)" :key="e.id_enlace" class="item-lista">
+            <div>
+              <span class="pilula">{{ e.categoria }}</span>
+              <StatusPill :status="e.status" />
+              <div class="metadado">
+                {{ e.titulo_provisorio }} · {{ formatarDataHora(e.criado_em) }}
+              </div>
+            </div>
+            <a class="botao primario" :href="e.url" target="_blank" rel="noopener noreferrer">
+              <Icon name="link" :size="14" />
+              Abrir
+            </a>
+          </div>
         </div>
 
         <div class="grid-2">
@@ -225,7 +273,9 @@ import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
 import Icon from './components/Icon.vue';
 import { authState } from '../controllers/AuthController.js';
-import { formatarData } from '../utils/fmt.js';
+import { formatarData, formatarDataHora } from '../utils/fmt.js';
+
+const enlaces = computed(() => dashboardState.dados?.enlaces ?? []);
 
 onMounted(() => {
   DashboardController.carregar();

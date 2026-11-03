@@ -28,6 +28,13 @@ export async function timeline(idOrientacao) {
      WHERE m.id_orientacao = ?`,
     [idOrientacao],
   );
-  const atividades = [...reunioes, ...tarefas, ...documentos, ...mensagens];
+  const enlaces = await all(
+    `SELECT e.criado_em AS quando, 'Enlace Overleaf' AS tipo,
+            e.categoria AS titulo, e.url AS descricao, u.nome AS autor
+     FROM enlaces_overleaf e JOIN usuarios u ON u.id_usuario = e.id_criador
+     WHERE e.id_orientacao = ?`,
+    [idOrientacao],
+  );
+  const atividades = [...reunioes, ...tarefas, ...documentos, ...mensagens, ...enlaces];
   return atividades.sort((a, b) => new Date(b.quando) - new Date(a.quando));
 }
