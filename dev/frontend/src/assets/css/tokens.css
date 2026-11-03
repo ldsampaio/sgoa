@@ -103,6 +103,16 @@
   --color-status-atrasada: #B91C1C;
   --color-status-suspensa: #C4B5FD;
   --color-status-cancelada: #E7E5E4;
+  --color-prioridade-baixa: #BFDBFE;
+  --color-prioridade-media: #FDE68A;
+  --color-prioridade-alta: #B91C1C;
+  --color-on-prioridade-alta: #FFFFFF;
+  --color-card-cor-branco: #FFFFFF;
+  --color-card-cor-azul: #BFDBFE;
+  --color-card-cor-amarelo: #FDE68A;
+  --color-card-cor-lilas: #C4B5FD;
+  --color-card-cor-menta: #A7E8C3;
+  --color-card-cor-neutro: #E7E5E4;
   --color-brand: #EA580C;
   --font-display: 'Space Grotesk', 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;

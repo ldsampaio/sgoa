@@ -103,6 +103,7 @@
 
       <div class="abas">
         <button class="aba" :class="{ ativa: aba === 'visao' }" @click="aba = 'visao'">Visão Geral</button>
+        <button class="aba" :class="{ ativa: aba === 'kanban' }" @click="abrir('kanban')">Kanban</button>
         <button class="aba" :class="{ ativa: aba === 'tarefas' }" @click="abrir('tarefas')">Tarefas</button>
         <button class="aba" :class="{ ativa: aba === 'reunioes' }" @click="abrir('reunioes')">Reuniões</button>
         <button class="aba" :class="{ ativa: aba === 'documentos' }" @click="abrir('documentos')">Documentos</button>
@@ -130,6 +131,18 @@
         <div v-else-if="!orientacaoState.carregando" class="linha-vazia">Nenhuma atividade registrada ainda.</div>
       </div>
 
+      <!-- ===== Aba Kanban ===== -->
+      <div v-else-if="aba === 'kanban'">
+        <TarefaKanban
+          :id-orientacao="id"
+          :tarefas="tarefaState.lista"
+          :responsaveis="responsaveis"
+          :pode-criar="podeCriarTarefa"
+          :carregando="tarefaState.carregando"
+          @arquivado="atualizarAposArquivar"
+        />
+      </div>
+
       <!-- ===== Aba Tarefas ===== -->
       <div v-else-if="aba === 'tarefas'">
         <div class="cartao">
@@ -142,6 +155,10 @@
           </h2>
 
           <form v-if="mostrarFormTarefa" class="grid-2" @submit.prevent="criarTarefa">
+            <div class="campo span-total">
+              <label for="tituloTarefa">Título</label>
+              <input id="tituloTarefa" v-model="formTarefa.titulo" type="text" maxlength="160" required placeholder="Ex: Revisar capítulo 3" />
+            </div>
             <div class="campo">
               <label for="resp">Responsável</label>
               <select id="resp" v-model="formTarefa.id_responsavel" required>
@@ -153,11 +170,19 @@
               <label for="prazo">Data Limite</label>
               <CampoData id="prazo" v-model="formTarefa.data_limite" limpar />
             </div>
+            <div class="campo">
+              <label for="prioridadeTarefa">Prioridade</label>
+              <select id="prioridadeTarefa" v-model="formTarefa.prioridade">
+                <option value="Baixa">Baixa</option>
+                <option value="Média">Média</option>
+                <option value="Alta">Alta</option>
+              </select>
+            </div>
             <div class="campo span-total">
               <label for="desc">Descrição</label>
-              <textarea id="desc" v-model="formTarefa.descricao" rows="2" required placeholder="Ex: Revisar capítulo 3"></textarea>
+              <textarea id="desc" v-model="formTarefa.descricao" rows="2" required placeholder="Ex: Revisar o capítulo e enviar comentários"></textarea>
             </div>
-            <div>
+            <div class="span-total">
               <button type="submit" class="botao primario" :disabled="tarefaState.salvando">Salvar</button>
               <button type="button" class="botao secundario empurra-esq" @click="mostrarFormTarefa = false">Cancelar</button>
             </div>
@@ -181,8 +206,10 @@
               <span v-else class="caixa-check" :class="{ concluida: t.status === 'Concluída' }">
                 <Icon v-if="t.status === 'Concluída'" name="check" :size="14" />
               </span>
-              {{ t.descricao }}
+              <strong>{{ t.titulo || t.descricao }}</strong>
+              <PrioridadePill :prioridade="t.prioridade" />
               <StatusPill :status="t.status" />
+              <div v-if="t.descricao && t.descricao !== t.titulo" class="metadado">{{ t.descricao }}</div>
               <div class="metadado">
                 Responsável: {{ t.nome_responsavel }} · Prazo: {{ formatarData(t.data_limite) }}
                 <span v-if="t.concluida_em"> · Concluída em {{ formatarDataHora(t.concluida_em) }}</span>
@@ -467,6 +494,8 @@ import AlertMessage from './components/AlertMessage.vue';
 import CampoData from './components/CampoData.vue';
 import Icon from './components/Icon.vue';
 import EnlaceItem from './components/EnlaceItem.vue';
+import PrioridadePill from './components/PrioridadePill.vue';
+import TarefaKanban from './components/TarefaKanban.vue';
 import { HOST_OVERLEAF, ehLinkOverleaf } from '../utils/overleaf.js';
 import { formatarData, formatarDataHora } from '../utils/fmt.js';
 
@@ -484,7 +513,7 @@ const novaMensagem = ref('');
 const inputArquivo = ref(null);
 const areaMensagens = ref(null);
 
-const formTarefa = reactive({ id_responsavel: '', descricao: '', data_limite: '' });
+const formTarefa = reactive({ titulo: '', id_responsavel: '', descricao: '', data_limite: '', prioridade: 'Média' });
 const formReuniao = reactive({ data_hora: '', pauta: '', decisoes_proximos_passos: '', link: '', duracaoMinutos: 60, criarNoGoogle: true });
 const formDoc = reactive({ descricao: '', id_tipo: '' });
 const formEnlace = reactive({ categoria: '', url: '', observacao: '' });
@@ -505,9 +534,7 @@ const podeEditar = computed(() =>
 const podeCriarTarefa = computed(() => ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario));
 const podeCriarReuniao = computed(() => podeCriarTarefa.value);
 const podeEnviarDoc = computed(() => true);
-const podeAtualizarTarefa = computed(() =>
-  (t) => ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario) || t.id_responsavel === authState.user?.id_usuario,
-);
+const podeAtualizarTarefa = computed(() => () => Boolean(authState.user));
 
 const podeGerenciarEtapas = computed(() => {
   const o = orientacaoState.atual;
@@ -535,14 +562,19 @@ const responsaveis = computed(() => {
 });
 
 const ordenarTarefas = computed(() => {
-  const ordem = { Pendente: 0, 'Em Andamento': 1, Atrasada: 2, Concluída: 3 };
-  return [...tarefaState.lista].sort((a, b) => (ordem[a.status] ?? 9) - (ordem[b.status] ?? 9));
+  const ordem = { Pendente: 0, Atrasada: 0, 'Em Andamento': 1, Concluída: 2 };
+  return [...tarefaState.lista].sort(
+    (a, b) =>
+      (ordem[a.status] ?? 9) - (ordem[b.status] ?? 9) ||
+      Number(a.ordem) - Number(b.ordem) ||
+      String(a.data_cadastro || '').localeCompare(String(b.data_cadastro || '')),
+  );
 });
 
 async function abrir(nome) {
   aba.value = nome;
   acaoErro.value = '';
-  if (nome === 'tarefas') await TarefaController.carregar(id.value);
+  if (nome === 'tarefas' || nome === 'kanban') await TarefaController.carregar(id.value);
   if (nome === 'reunioes') {
     await ReuniaoController.carregar(id.value);
     if (podeCriarReuniao.value) await GoogleController.carregarStatus().catch(() => {});
@@ -561,15 +593,23 @@ async function criarTarefa() {
   acaoSucesso.value = '';
   try {
     await TarefaController.criar(id.value, { ...formTarefa });
+    formTarefa.titulo = '';
     formTarefa.id_responsavel = '';
     formTarefa.descricao = '';
     formTarefa.data_limite = '';
+    formTarefa.prioridade = 'Média';
     mostrarFormTarefa.value = false;
     acaoSucesso.value = 'Tarefa criada.';
     await TarefaController.carregar(id.value);
   } catch (err) {
     acaoErro.value = err.message;
   }
+}
+
+async function atualizarAposArquivar() {
+  await TarefaController.carregar(id.value);
+  await OrientacaoController.carregarAtividades(id.value);
+  atividades.value = orientacaoState.atividades;
 }
 
 async function avancarStatus(t) {

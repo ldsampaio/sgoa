@@ -72,8 +72,10 @@
             </div>
             <div v-for="t in dashboardState.dados.tarefas_pendentes" :key="t.id_tarefa" class="item-lista">
               <div>
-                {{ t.descricao }}
+                <strong>{{ t.titulo || t.descricao }}</strong>
+                <PrioridadePill :prioridade="t.prioridade" />
                 <StatusPill :status="t.status" />
+                <div v-if="t.descricao && t.descricao !== t.titulo" class="metadado">{{ t.descricao }}</div>
                 <div class="metadado">
                   {{ t.nome_responsavel }} · {{ t.nome_aluno }} ({{ t.tipo }}) · Prazo: {{ formatarData(t.data_limite) }}
                 </div>
@@ -147,8 +149,10 @@
             </div>
             <div v-for="t in dashboardState.dados.tarefas_pendentes" :key="t.id_tarefa" class="item-lista">
               <div>
-                {{ t.descricao }}
+                <strong>{{ t.titulo || t.descricao }}</strong>
+                <PrioridadePill :prioridade="t.prioridade" />
                 <StatusPill :status="t.status" />
+                <div v-if="t.descricao && t.descricao !== t.titulo" class="metadado">{{ t.descricao }}</div>
                 <div class="metadado">
                   Prazo: {{ formatarData(t.data_limite) }}
                 </div>
@@ -269,6 +273,7 @@ import DashboardController, { dashboardState } from '../controllers/DashboardCon
 import NotificacaoController from '../controllers/NotificacaoController.js';
 import NotificacoesPanel from './components/NotificacoesPanel.vue';
 import StatusPill from './components/StatusPill.vue';
+import PrioridadePill from './components/PrioridadePill.vue';
 import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
 import Icon from './components/Icon.vue';

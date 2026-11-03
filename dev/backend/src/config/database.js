@@ -185,11 +185,20 @@ CREATE TABLE IF NOT EXISTS tarefas (
   id_tarefa        TEXT PRIMARY KEY,
   id_orientacao    TEXT NOT NULL REFERENCES orientacoes(id_orientacao) ON DELETE CASCADE,
   id_responsavel   TEXT NOT NULL REFERENCES usuarios(id_usuario),
+  id_criador       TEXT REFERENCES usuarios(id_usuario),
+  titulo           TEXT,
   descricao        TEXT NOT NULL,
+  prioridade       TEXT NOT NULL DEFAULT 'Média'
+                   CHECK (prioridade IN ('Baixa', 'Média', 'Alta')),
+  cor              TEXT NOT NULL DEFAULT 'branco'
+                   CHECK (cor IN ('branco', 'azul', 'amarelo', 'lilas', 'menta', 'neutro')),
+  ordem            REAL NOT NULL DEFAULT 0,
   data_limite      TEXT,
   status           TEXT NOT NULL DEFAULT 'Pendente'
                    CHECK (status IN ('Pendente', 'Em Andamento', 'Concluída', 'Atrasada')),
   concluida_em     TEXT,
+  excluida_em      TEXT,
+  id_excluidor     TEXT REFERENCES usuarios(id_usuario),
   data_cadastro    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   data_atualizacao TEXT
 );
@@ -419,11 +428,20 @@ CREATE TABLE IF NOT EXISTS tarefas (
   id_tarefa        TEXT PRIMARY KEY,
   id_orientacao    TEXT NOT NULL REFERENCES orientacoes(id_orientacao) ON DELETE CASCADE,
   id_responsavel   TEXT NOT NULL REFERENCES usuarios(id_usuario),
+  id_criador       TEXT REFERENCES usuarios(id_usuario),
+  titulo           TEXT,
   descricao        TEXT NOT NULL,
+  prioridade       TEXT NOT NULL DEFAULT 'Média'
+                   CHECK (prioridade IN ('Baixa', 'Média', 'Alta')),
+  cor              TEXT NOT NULL DEFAULT 'branco'
+                   CHECK (cor IN ('branco', 'azul', 'amarelo', 'lilas', 'menta', 'neutro')),
+  ordem            REAL NOT NULL DEFAULT 0,
   data_limite      TEXT,
   status           TEXT NOT NULL DEFAULT 'Pendente'
                    CHECK (status IN ('Pendente', 'Em Andamento', 'Concluída', 'Atrasada')),
   concluida_em     TEXT,
+  excluida_em      TEXT,
+  id_excluidor     TEXT REFERENCES usuarios(id_usuario),
   data_cadastro    TEXT NOT NULL DEFAULT (${PG_NOW}),
   data_atualizacao TEXT
 );
@@ -553,6 +571,7 @@ export async function initDatabase() {
       VALUES ('TCC', NULL, NULL), ('Mestrado', 24, 14), ('Doutorado', 48, 24)
       ON CONFLICT (nivel) DO NOTHING`);
     await migrarTiposDocumentoPg();
+    await migrarTarefasPg();
     return;
   }
   sqliteDb.exec(SCHEMA);
@@ -583,6 +602,9 @@ export async function initDatabase() {
   if (!oriCols.includes('qualificacao_concluida_em')) sqliteDb.exec('ALTER TABLE orientacoes ADD COLUMN qualificacao_concluida_em TEXT');
   if (!oriCols.includes('defesa_concluida_em')) sqliteDb.exec('ALTER TABLE orientacoes ADD COLUMN defesa_concluida_em TEXT');
   if (!oriCols.includes('origem_marcacao')) sqliteDb.exec("ALTER TABLE orientacoes ADD COLUMN origem_marcacao TEXT NOT NULL DEFAULT 'manual'");
+
+  // tarefas: campos do quadro Kanban + arquivamento (soft delete).
+  await migrarTarefas();
 
   // parametros_prazos: garante as 3 linhas (nunca sobrescreve edição do coordenador).
   sqliteDb.exec(`INSERT OR IGNORE INTO parametros_prazos (nivel, prazo_conclusao_meses, prazo_qualificacao_meses)
@@ -615,6 +637,86 @@ export async function ensureTiposBase() {
 // Categorias avaliáveis no Postgres novo: só garante os tipos base.
 async function migrarTiposDocumentoPg() {
   await ensureTiposBase();
+}
+
+// Kanban em bancos Postgres já existentes (CREATE TABLE IF NOT EXISTS não
+// adiciona colunas novas). Idempotente.
+async function migrarTarefasPg() {
+  const pool = await getPool();
+  const { rows } = await pool.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = current_schema() AND table_name = 'tarefas'`,
+  );
+  const cols = rows.map((r) => r.column_name);
+  const add = async (nome, sql) => {
+    if (!cols.includes(nome)) await pool.query(`ALTER TABLE tarefas ${sql}`);
+  };
+  await add('id_criador', 'ADD COLUMN id_criador TEXT REFERENCES usuarios(id_usuario)');
+  await add('titulo', 'ADD COLUMN titulo TEXT');
+  await add('prioridade', "ADD COLUMN prioridade TEXT NOT NULL DEFAULT 'Média'");
+  await add('cor', "ADD COLUMN cor TEXT NOT NULL DEFAULT 'branco'");
+  await add('ordem', 'ADD COLUMN ordem REAL NOT NULL DEFAULT 0');
+  await add('excluida_em', 'ADD COLUMN excluida_em TEXT');
+  await add('id_excluidor', 'ADD COLUMN id_excluidor TEXT REFERENCES usuarios(id_usuario)');
+
+  await pool.query(`UPDATE tarefas SET titulo = LEFT(descricao, 80) WHERE titulo IS NULL OR titulo = ''`);
+
+  if (!cols.includes('ordem')) {
+    await pool.query(`
+      WITH ranked AS (
+        SELECT id_tarefa, ROW_NUMBER() OVER (
+          PARTITION BY id_orientacao, status
+          ORDER BY CASE WHEN data_limite IS NULL THEN 1 ELSE 0 END, data_limite, data_cadastro
+        ) AS rn
+        FROM tarefas
+      )
+      UPDATE tarefas t SET ordem = ranked.rn
+      FROM ranked WHERE ranked.id_tarefa = t.id_tarefa
+    `);
+  }
+
+  await pool.query('CREATE INDEX IF NOT EXISTS idx_tarefas_kanban ON tarefas(id_orientacao, status, ordem)');
+}
+
+// Kanban em bancos SQLite existentes. Migração idempotente.
+async function migrarTarefas() {
+  const cols = colunasDe('tarefas');
+  const add = (nome, sql) => {
+    if (!cols.includes(nome)) sqliteDb.exec(`ALTER TABLE tarefas ${sql}`);
+  };
+  add('id_criador', 'ADD COLUMN id_criador TEXT REFERENCES usuarios(id_usuario)');
+  add('titulo', 'ADD COLUMN titulo TEXT');
+  add('prioridade', "ADD COLUMN prioridade TEXT NOT NULL DEFAULT 'Média'");
+  add('cor', "ADD COLUMN cor TEXT NOT NULL DEFAULT 'branco'");
+  add('ordem', 'ADD COLUMN ordem REAL NOT NULL DEFAULT 0');
+  add('excluida_em', 'ADD COLUMN excluida_em TEXT');
+  add('id_excluidor', 'ADD COLUMN id_excluidor TEXT REFERENCES usuarios(id_usuario)');
+
+  sqliteDb.exec("UPDATE tarefas SET titulo = substr(descricao, 1, 80) WHERE titulo IS NULL OR titulo = ''");
+
+  if (!cols.includes('ordem')) {
+    const tarefas = sqliteDb
+      .prepare(
+        `SELECT id_tarefa, id_orientacao, status FROM tarefas
+         ORDER BY id_orientacao, status,
+                  CASE WHEN data_limite IS NULL THEN 1 ELSE 0 END,
+                  data_limite, data_cadastro`,
+      )
+      .all();
+    const atualizar = sqliteDb.prepare('UPDATE tarefas SET ordem = ? WHERE id_tarefa = ?');
+    let chave = null;
+    let ordem = 0;
+    for (const t of tarefas) {
+      const grupo = `${t.id_orientacao}:${t.status}`;
+      if (grupo !== chave) {
+        chave = grupo;
+        ordem = 0;
+      }
+      atualizar.run(++ordem, t.id_tarefa);
+    }
+  }
+
+  sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_tarefas_kanban ON tarefas(id_orientacao, status, ordem)');
 }
 
 // Categorias avaliáveis: garante a tabela e os tipos base (idempotente).
