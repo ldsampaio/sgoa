@@ -23,6 +23,7 @@ import {
   PhCheckCircle,
   PhCircleNotch,
   PhClock,
+  PhCopy,
   PhFile,
   PhGraduationCap,
   PhInfo,
