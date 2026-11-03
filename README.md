@@ -92,6 +92,7 @@ Fluxo típico: **View** (template) → dispara ação do **Controller** → **Co
 | Gestão de usuários | Cadastro (admin), login, edição de perfil | ✅ RF.GU.001-005 |
 | Gestão de orientações | Criar, listar por papel, adicionar/remover co-orientador, alterar status | ✅ RF.GO.001-005 |
 | Acompanhamento | Registro de reuniões, tarefas com prazo, marcar concluída, linha do tempo | ✅ RF.AP.001-005 |
+| Quadro Kanban | Colunas A fazer/Fazendo/Feito, drag and drop, título, descrição, prioridade, cores, edição e arquivamento | ✅ RF.AP.006-007 |
 | Comunicação | Mensagens por orientação + notificações (tarefa, prazo, mensagem, documento) | ✅ RF.CO.001-003 |
 | Documentos | Upload, download, histórico de versões (v1, v2, ...) | ✅ RF.GD.001-004 |
 | Enlaces Overleaf | Aluno registra o link do projeto institucional com o tipo de documento; destaque por usuário; notificação | ✅ RF.OV.001-006 |
@@ -114,7 +115,8 @@ GET|PUT  /api/orientacoes/:id      Detalhes/Atualizar orientação
 POST /api/orientacoes/:id/coorientadores          Adicionar co-orientador
 DELETE /api/orientacoes/:id/coorientadores/:prof  Remover co-orientador
 GET|POST /api/orientacoes/:id/tarefas             Listar/Criar tarefas
-PUT  /api/tarefas/:id              Atualizar status da tarefa
+PUT  /api/tarefas/:id              Atualizar cartão (título, descrição, prioridade, cor, status, ordem, responsável, prazo)
+DELETE /api/tarefas/:id            Arquivar cartão (soft delete; criador ou gestão)
 GET|POST /api/orientacoes/:id/reunioes            Listar/Criar reuniões
 GET|POST /api/orientacoes/:id/documentos          Listar/Enviar documentos
 GET  /api/documentos/:id/download  Baixar documento
@@ -133,6 +135,7 @@ GET  /api/dashboard/:papel         Dashboard por papel
 ## Notas
 
 - O banco de dev é recriado/limpo a cada `npm run seed` (travado em produção); arquivos enviados vão para `backend/uploads/`.
+- **Kanban**: cartões arquivados saem do quadro, da lista e dos dashboards, mas permanecem no banco e na linha do tempo (rótulo “Arquivada”).
 - **Banco de dados**: SQLite em dev (`DB_PATH`); **PostgreSQL em produção** (`DB_DRIVER=postgres` + `DATABASE_URL`). O CI testa os dois.
 - **Produção**: ver `deploy/README.md` (container único + Postgres + Kafka, nginx + Cloudflared no servidor). Trocar `JWT_SECRET` por valor forte, usar HTTPS (NFR.SEG.003) e ajustar `CORS_ORIGIN`/`MAX_UPLOAD_SIZE`.
 

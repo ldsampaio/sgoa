@@ -8,8 +8,10 @@ export async function timeline(idOrientacao) {
     [idOrientacao],
   );
   const tarefas = await all(
-    `SELECT t.data_cadastro AS quando, 'Tarefa' AS tipo, t.descricao AS titulo,
-            t.status AS descricao, u.nome AS autor
+    `SELECT t.data_cadastro AS quando, 'Tarefa' AS tipo,
+            COALESCE(t.titulo, t.descricao) AS titulo,
+            CASE WHEN t.excluida_em IS NOT NULL THEN 'Arquivada' ELSE t.status END AS descricao,
+            u.nome AS autor
      FROM tarefas t JOIN usuarios u ON u.id_usuario = t.id_responsavel
      WHERE t.id_orientacao = ?`,
     [idOrientacao],

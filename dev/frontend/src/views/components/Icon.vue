@@ -16,8 +16,10 @@
  *    Amplie aditivamente por onda, junto ao uso que o pede.
  */
 import {
+  PhArrowDown,
   PhArrowLeft,
   PhArrowRight,
+  PhArrowUp,
   PhCalendarBlank,
   PhCalendarCheck,
   PhCheckCircle,
@@ -33,6 +35,7 @@ import {
   PhLinkSimple,
   PhPauseCircle,
   PhPaperPlaneRight,
+  PhPencilSimple,
   PhPlay,
   PhPlus,
   PhStar,
@@ -46,8 +49,10 @@ import {
 import { computed } from 'vue';
 
 const ICONES = {
+  'arrow-down': PhArrowDown,
   'arrow-left': PhArrowLeft,
   'arrow-right': PhArrowRight,
+  'arrow-up': PhArrowUp,
   calendar: PhCalendarBlank,
   'calendar-check': PhCalendarCheck,
   copy: PhCopy,
@@ -62,6 +67,7 @@ const ICONES = {
   bulb: PhLightbulb,
   menu: PhList,
   pause: PhPauseCircle,
+  pencil: PhPencilSimple,
   send: PhPaperPlaneRight,
   play: PhPlay,
   plus: PhPlus,

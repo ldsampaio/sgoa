@@ -170,32 +170,84 @@ const oriPedro = await OrientacaoModel.create({
 await TarefaModel.create({
   idOrientacao: oriAna.id_orientacao,
   idResponsavel: ana.user.id_usuario,
-  descricao: 'Revisar Capítulo 3',
+  idCriador: carlos.user.id_usuario,
+  titulo: 'Revisar capítulo 3',
+  descricao: 'Revisar o capítulo 3 da dissertação e enviar os comentários ao orientador.',
+  prioridade: 'Alta',
+  cor: 'amarelo',
   dataLimite: iso(3),
 });
 const tarefaRef = await TarefaModel.create({
   idOrientacao: oriAna.id_orientacao,
   idResponsavel: ana.user.id_usuario,
-  descricao: 'Pesquisar referências',
+  idCriador: carlos.user.id_usuario,
+  titulo: 'Pesquisar referências',
+  descricao: 'Levantar referências atualizadas sobre IA na educação superior.',
+  prioridade: 'Média',
+  cor: 'azul',
   dataLimite: iso(-7),
 });
 await TarefaModel.updateStatus(tarefaRef.id_tarefa, 'Concluída');
 await TarefaModel.create({
   idOrientacao: oriAna.id_orientacao,
   idResponsavel: ana.user.id_usuario,
-  descricao: 'Preparar apresentação para banca',
+  idCriador: carlos.user.id_usuario,
+  titulo: 'Preparar apresentação para banca',
+  descricao: 'Montar os slides da defesa e revisar o roteiro de apresentação.',
+  prioridade: 'Alta',
+  cor: 'lilas',
+  status: 'Em Andamento',
   dataLimite: iso(45),
+});
+await TarefaModel.create({
+  idOrientacao: oriAna.id_orientacao,
+  idResponsavel: ana.user.id_usuario,
+  idCriador: carlos.user.id_usuario,
+  titulo: 'Escrever seção de metodologia',
+  descricao: 'Detalhar o método de coleta e análise dos dados da pesquisa.',
+  prioridade: 'Média',
+  cor: 'menta',
+  status: 'Em Andamento',
+  dataLimite: iso(20),
+});
+await TarefaModel.create({
+  idOrientacao: oriAna.id_orientacao,
+  idResponsavel: ana.user.id_usuario,
+  idCriador: carlos.user.id_usuario,
+  titulo: 'Revisar formatação ABNT',
+  descricao: 'Conferir citações, referências e formatação geral do documento.',
+  prioridade: 'Baixa',
+  cor: 'neutro',
+  dataLimite: iso(60),
 });
 await TarefaModel.create({
   idOrientacao: oriJoao.id_orientacao,
   idResponsavel: joao.user.id_usuario,
-  descricao: 'Pesquisar referências do TCC',
+  idCriador: carlos.user.id_usuario,
+  titulo: 'Pesquisar referências do TCC',
+  descricao: 'Selecionar artigos sobre aprendizado de máquina aplicado à educação.',
+  prioridade: 'Alta',
+  cor: 'menta',
   dataLimite: iso(5),
+});
+await TarefaModel.create({
+  idOrientacao: oriJoao.id_orientacao,
+  idResponsavel: joao.user.id_usuario,
+  idCriador: carlos.user.id_usuario,
+  titulo: 'Definir cronograma',
+  descricao: 'Organizar as etapas restantes do TCC até a entrega final.',
+  prioridade: 'Média',
+  cor: 'amarelo',
+  dataLimite: iso(15),
 });
 await TarefaModel.create({
   idOrientacao: oriPedro.id_orientacao,
   idResponsavel: pedro.user.id_usuario,
-  descricao: 'Entregar capítulo de revisão de literatura',
+  idCriador: carlos.user.id_usuario,
+  titulo: 'Entregar capítulo de revisão de literatura',
+  descricao: 'Enviar a versão revisada do capítulo 2 para avaliação.',
+  prioridade: 'Média',
+  cor: 'neutro',
   dataLimite: iso(10),
 });
 

@@ -43,6 +43,8 @@ As funcionalidades estão agrupadas por módulo principal, conforme definido no 
 *   **RF.AP.003:** Permitir que o aluno marque tarefas como concluídas.
 *   **RF.AP.004:** Exibir uma linha do tempo ou feed de atividades para cada orientação, mostrando reuniões, tarefas criadas/concluídas e uploads de documentos.
 *   **RF.AP.005:** Permitir que o orientador e o aluno visualizem o status de cada tarefa (pendente, em andamento, concluída, atrasada).
+*   **RF.AP.006:** Exibir um quadro Kanban por orientação com as colunas “A fazer”, “Fazendo” e “Feito”, permitindo mover cartões por drag and drop; cada cartão deve ter título, descrição, prioridade (baixa, média ou alta), cor e responsável/prazo.
+*   **RF.AP.007:** Permitir que os participantes editem qualquer cartão e que o criador ou a gestão da orientação arquive cartões; cartões arquivados deixam de aparecer no quadro/lista/dashboards, mas permanecem preservados no histórico.
 
 #### 2.4. Comunicação
 
