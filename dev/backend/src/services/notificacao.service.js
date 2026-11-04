@@ -3,13 +3,13 @@ import { create as createNotif } from '../models/notificacao.model.js';
 
 export async function participantesDaOrientacao(idOrientacao) {
   return await all(
-    `SELECT DISTINCT u.id_usuario FROM (
+    `SELECT DISTINCT u.id AS id_usuario FROM (
        SELECT o.id_orientador AS id_professor FROM orientacoes o WHERE o.id_orientacao = ?
        UNION ALL
        SELECT co.id_professor FROM co_orientadores co WHERE co.id_orientacao = ?
      ) pp
      JOIN professores p ON p.id_professor = pp.id_professor
-     JOIN usuarios u ON u.id_usuario = p.id_usuario
+     JOIN auth.users u ON u.id = p.id_usuario
      UNION
      SELECT a.id_usuario FROM orientacoes o2
      JOIN alunos a ON a.id_aluno = o2.id_aluno

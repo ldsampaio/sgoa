@@ -13,7 +13,7 @@ export default {
     dashboardState.carregando = true;
     dashboardState.erro = null;
     try {
-      dashboardState.dados = await DashboardModel.get(authState.user?.tipo_usuario);
+      dashboardState.dados = await DashboardModel.get(authState.user?.papel);
     } catch (err) {
       dashboardState.erro = err.message;
     } finally {

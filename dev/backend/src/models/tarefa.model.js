@@ -7,10 +7,10 @@ export { STATUS_TAREFA };
 export const STATUS = STATUS_TAREFA; // compatibilidade com imports antigos
 
 const SELECT_BASE = `
-  SELECT t.*, u.nome AS nome_responsavel, uc.nome AS nome_criador
+  SELECT t.*, u.name AS nome_responsavel, uc.name AS nome_criador
   FROM tarefas t
-  JOIN usuarios u ON u.id_usuario = t.id_responsavel
-  LEFT JOIN usuarios uc ON uc.id_usuario = t.id_criador
+  JOIN auth.users u ON u.id = t.id_responsavel
+  LEFT JOIN auth.users uc ON uc.id = t.id_criador
 `;
 
 function mapTarefa(row) {
@@ -146,13 +146,13 @@ export async function listPendentesPorOrientacoes(orientacoesIds) {
   if (!orientacoesIds?.length) return [];
   const params = orientacoesIds;
   const rows = await all(
-    `SELECT t.*, u_resp.nome AS nome_responsavel, u_aluno.nome AS nome_aluno,
+    `SELECT t.*, u_resp.name AS nome_responsavel, u_aluno.name AS nome_aluno,
             o.titulo_provisorio, o.tipo
      FROM tarefas t
      JOIN orientacoes o ON o.id_orientacao = t.id_orientacao
      JOIN alunos a ON a.id_aluno = o.id_aluno
-     JOIN usuarios u_aluno ON u_aluno.id_usuario = a.id_usuario
-     JOIN usuarios u_resp ON u_resp.id_usuario = t.id_responsavel
+     JOIN auth.users u_aluno ON u_aluno.id = a.id_usuario
+     JOIN auth.users u_resp ON u_resp.id = t.id_responsavel
      WHERE t.id_orientacao IN (${orientacoesIds.map(() => '?').join(',')})
        AND t.status <> 'Concluída'
        AND t.excluida_em IS NULL
@@ -171,11 +171,12 @@ export async function listParaDashboard(idUsuario, { orientacoesIds = null } = {
     params.push(...orientacoesIds);
   }
   const rows = await all(
-    `SELECT t.*, o.titulo_provisorio, u_aluno.nome AS nome_aluno, a.curso
+    `SELECT t.*, o.titulo_provisorio, u_aluno.name AS nome_aluno, up_aluno.curso
      FROM tarefas t
      JOIN orientacoes o ON o.id_orientacao = t.id_orientacao
      JOIN alunos a ON a.id_aluno = o.id_aluno
-     JOIN usuarios u_aluno ON u_aluno.id_usuario = a.id_usuario
+     JOIN auth.users u_aluno ON u_aluno.id = a.id_usuario
+     LEFT JOIN auth.user_profiles up_aluno ON up_aluno.user_id = a.id_usuario
      WHERE t.id_responsavel = ? ${extra}
        AND t.excluida_em IS NULL
      ORDER BY (t.status = 'Concluída'), CASE WHEN t.data_limite IS NULL THEN 1 ELSE 0 END, t.data_limite ASC

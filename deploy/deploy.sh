@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SGOA v0.1 — deploy/atualização em produção.
 # Uso (no servidor, na pasta com docker-compose.prod.yml + .env):
-#   ./deploy.sh            # sobe tudo e garante o admin inicial
+#   ./deploy.sh            # sobe tudo (sem bootstrap de admin: a identidade é do saga)
 #   SGOA_IMAGE=ghcr.io/ldsampaio/sgoa:v0.2.0 ./deploy.sh   # atualiza versão
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -24,9 +24,6 @@ for i in $(seq 1 30); do
   [ "$i" = 30 ] && { echo "ERRO: API não ficou saudável."; exit 1; }
   sleep 4
 done
-
-echo "==> Garantindo admin inicial..."
-docker compose -f docker-compose.prod.yml exec -T app npm run create-admin || true
 
 echo "==> Subindo workers (kafka, agent, worker, lembretes)..."
 docker compose -f docker-compose.prod.yml up -d

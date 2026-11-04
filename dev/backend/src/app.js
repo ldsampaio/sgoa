@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { initDatabase } from './config/database.js';
 import routes from './routes/index.js';
+import { rejeitaCredencial } from './middleware/rejeitaCredencial.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -22,6 +23,9 @@ export async function createApp() {
     }),
   );
   app.use(express.json());
+
+  // T10: nenhuma rota aceita campo `senha`/`password`.
+  app.use('/api', rejeitaCredencial);
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', servico: 'SGOA API' }));
 

@@ -6,12 +6,12 @@ import { PROMPTS_PADRAO } from '../services/promptsPadrao.js';
 
 // Resolve o professor-alvo: o próprio (Professor) ou ?id_professor= (Coordenador/Admin).
 async function resolverProfessor(req, res) {
-  if (req.user.tipo_usuario === 'Professor') {
-    const p = await findProfessorByUsuario(req.user.id_usuario);
+  if (req.user.papel === 'Professor') {
+    const p = await findProfessorByUsuario(req.user.id);
     if (!p) return res.status(404).json({ erro: 'Perfil de professor não encontrado.' }), null;
     return p;
   }
-  if (req.user.tipo_usuario === 'Coordenador' || req.user.tipo_usuario === 'Administrador') {
+  if (req.user.papel === 'Coordenador' || req.user.papel === 'Administrador') {
     const { id_professor } = req.query;
     if (!id_professor) return res.status(400).json({ erro: 'Informe id_professor.' }), null;
     const { findById } = await import('../models/professor.model.js');

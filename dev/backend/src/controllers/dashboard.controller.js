@@ -10,7 +10,7 @@ import { anexarPrazos } from './orientacao.controller.js';
 import { diasRestantes } from '../services/prazos.service.js';
 
 export const dashboardProfessor = asyncHandler(async (req, res) => {
-  const prof = await ProfessorModel.findByUsuario(req.user.id_usuario);
+  const prof = await ProfessorModel.findByUsuario(req.user.id);
   if (!prof) return res.status(404).json({ erro: 'Perfil de professor não encontrado.' });
 
   const [orientacoes, coOrientacoes] = await Promise.all([
@@ -24,9 +24,9 @@ export const dashboardProfessor = asyncHandler(async (req, res) => {
 
   const ids = todas.map((o) => o.id_orientacao);
   const tarefas = await TarefaModel.listPendentesPorOrientacoes(ids);
-  const notificacoes = await NotificacaoModel.listForUsuario(req.user.id_usuario);
+  const notificacoes = await NotificacaoModel.listForUsuario(req.user.id);
   // RF.OV.004 — o card do dashboard lista os links (fixados primeiro) de cada orientação.
-  const enlaces = await EnlaceModel.listByOrientacoes(ids, req.user.id_usuario);
+  const enlaces = await EnlaceModel.listByOrientacoes(ids, req.user.id);
 
   return res.json({
     orientacoes: todas,
@@ -38,7 +38,7 @@ export const dashboardProfessor = asyncHandler(async (req, res) => {
 });
 
 export const dashboardAluno = asyncHandler(async (req, res) => {
-  const aluno = await AlunoModel.findByUsuario(req.user.id_usuario);
+  const aluno = await AlunoModel.findByUsuario(req.user.id);
   if (!aluno) return res.status(404).json({ erro: 'Perfil de aluno não encontrado.' });
 
   const orientacoes = await OrientacaoModel.listByAluno(aluno.id_aluno);
@@ -46,11 +46,11 @@ export const dashboardAluno = asyncHandler(async (req, res) => {
 
   const ids = orientacoes.map((o) => o.id_orientacao);
   const [tarefas, notificacoes] = await Promise.all([
-    TarefaModel.listParaDashboard(req.user.id_usuario, { orientacoesIds: ids.length ? ids : null }),
-    NotificacaoModel.listForUsuario(req.user.id_usuario),
+    TarefaModel.listParaDashboard(req.user.id, { orientacoesIds: ids.length ? ids : null }),
+    NotificacaoModel.listForUsuario(req.user.id),
   ]);
   const pendentes = tarefas.filter((t) => t.status !== 'Concluída');
-  const enlaces = await EnlaceModel.listByOrientacoes(ids, req.user.id_usuario);
+  const enlaces = await EnlaceModel.listByOrientacoes(ids, req.user.id);
 
   return res.json({
     orientacao_atual: atual,
@@ -101,16 +101,16 @@ export const dashboardCoordenador = asyncHandler(async (req, res) => {
     .slice(0, 10);
 
   const carga = await all(
-    `SELECT pr.id_professor, u.nome AS nome, COUNT(o.id_orientacao) AS total
+    `SELECT pr.id_professor, u.name AS nome, COUNT(o.id_orientacao) AS total
      FROM professores pr
-     JOIN usuarios u ON u.id_usuario = pr.id_usuario
+     JOIN auth.users u ON u.id = pr.id_usuario
      LEFT JOIN orientacoes o ON o.id_orientador = pr.id_professor AND o.status = 'Em Andamento'
      GROUP BY pr.id_professor
-     ORDER BY total DESC, u.nome`,
+     ORDER BY total DESC, u.name`,
   );
 
-  const notificacoes = await NotificacaoModel.listForUsuario(req.user.id_usuario);
-  const enlaces = await EnlaceModel.listByOrientacoes(orientacoes.map((o) => o.id_orientacao), req.user.id_usuario);
+  const notificacoes = await NotificacaoModel.listForUsuario(req.user.id);
+  const enlaces = await EnlaceModel.listByOrientacoes(orientacoes.map((o) => o.id_orientacao), req.user.id);
   return res.json({
     total: orientacoes.length,
     por_status: porStatus,

@@ -5,7 +5,7 @@ import { all } from '../utils/query.js';
 
 export const listar = asyncHandler(async (req, res) => {
   const incluirInativos =
-    req.query.todos === '1' && ['Coordenador', 'Administrador'].includes(req.user.tipo_usuario);
+    req.query.todos === '1' && ['Coordenador', 'Administrador'].includes(req.user.papel);
   return res.json(await TipoModel.listAtivos(incluirInativos));
 });
 

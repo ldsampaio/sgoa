@@ -1,13 +1,11 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { esqueciSenha, login, me, redefinirSenha, verificarCodigo } from '../controllers/auth.controller.js';
+import { me } from '../controllers/auth.controller.js';
 
 const router = Router();
 
-router.post('/login', login);
+// Só leitura de sessão. Login e recuperação de senha não existem no sgoa:
+// a autenticação é do saga.
 router.get('/me', authenticate, me);
-router.post('/esqueci-senha', esqueciSenha);
-router.post('/verificar-codigo', verificarCodigo);
-router.post('/redefinir-senha', redefinirSenha);
 
 export default router;

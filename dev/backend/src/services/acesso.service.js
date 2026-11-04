@@ -10,13 +10,13 @@ import { findByUsuario as findProfessorByUsuario } from '../models/professor.mod
 import { findByUsuario as findAlunoByUsuario } from '../models/aluno.model.js';
 
 export async function perfilDoUsuario(user) {
-  if (user.tipo_usuario === 'Professor') {
-    const p = await findProfessorByUsuario(user.id_usuario);
-    return p ? { ...p, nome: user.nome } : null;
+  if (user.papel === 'Professor') {
+    const p = await findProfessorByUsuario(user.id);
+    return p ? { ...p, nome: user.name } : null;
   }
-  if (user.tipo_usuario === 'Aluno') {
-    const a = await findAlunoByUsuario(user.id_usuario);
-    return a ? { ...a, nome: user.nome } : null;
+  if (user.papel === 'Aluno') {
+    const a = await findAlunoByUsuario(user.id);
+    return a ? { ...a, nome: user.name } : null;
   }
   return null;
 }
@@ -28,11 +28,11 @@ export async function canAcessarOrientacao(user, idOrientacao) {
   );
   if (!orientacao) return null;
 
-  if (user.tipo_usuario === 'Coordenador' || user.tipo_usuario === 'Administrador') {
+  if (user.papel === 'Coordenador' || user.papel === 'Administrador') {
     return orientacao;
   }
-  if (user.tipo_usuario === 'Professor') {
-    const p = await findProfessorByUsuario(user.id_usuario);
+  if (user.papel === 'Professor') {
+    const p = await findProfessorByUsuario(user.id);
     if (p && orientacao.id_orientador === p.id_professor) return orientacao;
     if (p) {
       const co = await get(
@@ -42,8 +42,8 @@ export async function canAcessarOrientacao(user, idOrientacao) {
       if (co) return orientacao;
     }
   }
-  if (user.tipo_usuario === 'Aluno') {
-    const a = await findAlunoByUsuario(user.id_usuario);
+  if (user.papel === 'Aluno') {
+    const a = await findAlunoByUsuario(user.id);
     if (a && orientacao.id_aluno === a.id_aluno) return orientacao;
   }
   return false;
@@ -54,11 +54,11 @@ export async function canAcessarOrientacao(user, idOrientacao) {
  * usada pelas listagens agregadas — ex. a página consolidada de links Overleaf.
  */
 export async function orientacoesDoUsuario(user) {
-  if (user.tipo_usuario === 'Coordenador' || user.tipo_usuario === 'Administrador') {
+  if (user.papel === 'Coordenador' || user.papel === 'Administrador') {
     return await listOrientacoesAll();
   }
-  if (user.tipo_usuario === 'Professor') {
-    const p = await findProfessorByUsuario(user.id_usuario);
+  if (user.papel === 'Professor') {
+    const p = await findProfessorByUsuario(user.id);
     if (!p) return [];
     const propias = await listOrientacoesByProfessor(p.id_professor);
     const co = await listOrientacoesByCoOrientador(p.id_professor);
@@ -66,8 +66,8 @@ export async function orientacoesDoUsuario(user) {
     for (const o of [...propias, ...co]) mapa.set(o.id_orientacao, o);
     return [...mapa.values()];
   }
-  if (user.tipo_usuario === 'Aluno') {
-    const a = await findAlunoByUsuario(user.id_usuario);
+  if (user.papel === 'Aluno') {
+    const a = await findAlunoByUsuario(user.id);
     return a ? await listOrientacoesByAluno(a.id_aluno) : [];
   }
   return [];
@@ -84,30 +84,6 @@ export async function requireAcesso(req, res, idOrientacao) {
     return false;
   }
   return true;
-}
-
-/**
- * Professor só edita dados de aluno quando é orientador (ou co-orientador) de
- * ao menos uma orientação daquele aluno. Sem isso, liberar PUT /usuarios/:id
- * para Professor daria edição de qualquer aluno do sistema.
- */
-export async function professorPodeEditarAluno(user, idAlunoUsuario) {
-  if (user.tipo_usuario !== 'Professor') return true;
-  const p = await findProfessorByUsuario(user.id_usuario);
-  if (!p) return false;
-  const row = await get(
-    `SELECT 1 AS ok FROM orientacoes o
-     WHERE o.id_aluno = (
-       SELECT a.id_aluno FROM alunos a WHERE a.id_usuario = ?
-     )
-       AND (o.id_orientador = ?
-            OR o.id_orientacao IN (
-                  SELECT c.id_orientacao FROM co_orientadores c WHERE c.id_professor = ?
-                ))
-     LIMIT 1`,
-    [idAlunoUsuario, p.id_professor, p.id_professor],
-  );
-  return !!row;
 }
 
 export { findOrientacao };

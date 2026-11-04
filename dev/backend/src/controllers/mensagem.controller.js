@@ -19,15 +19,15 @@ export const create = asyncHandler(async (req, res) => {
   }
   const mensagem = await MensagemModel.create({
     idOrientacao: id,
-    idRemetente: req.user.id_usuario,
+    idRemetente: req.user.id,
     conteudo: conteudo.trim(),
   });
   await notificarParticipantes(
     id,
     'mensagem',
     'Nova mensagem',
-    `${req.user.nome} enviou uma mensagem na orientação.`,
-    req.user.id_usuario,
+    `${req.user.name} enviou uma mensagem na orientação.`,
+    req.user.id,
   );
   return res.status(201).json(mensagem);
 });

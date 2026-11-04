@@ -1,25 +1,32 @@
-import { verifyToken } from '../utils/jwt.js';
-import { findById } from '../models/usuario.model.js';
+import { criarVerificador } from '../services/sessionVerifier.js';
+import { portRedis } from '../config/redis.js';
+import { papelDe } from '../models/perfil.model.js';
 
-export async function authenticate(req, res, next) {
-  const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token) {
-    return res.status(401).json({ erro: 'Acesso não autorizado. Token não informado.' });
-  }
-  try {
-    const payload = verifyToken(token);
-    const user = await findById(payload.id_usuario);
-    if (!user) {
-      return res.status(401).json({ erro: 'Usuário não encontrado.' });
+// Middleware de verificação de sessão compartilhada. O sgoa não autentica
+// credencial: ele confirma no Redis que a sessão do saga está viva.
+//
+// 401 e 503 são caminhos distintos — o frontend trata cada um de forma diferente
+// (401 → redirect para o saga; 503 → página de erro própria).
+export function criarMiddlewareAuth({ redis, resolverChave, papelDe: papelDoSistema = papelDe, env = process.env } = {}) {
+  const verificar = criarVerificador({
+    redis: redis || portRedis(),
+    resolverChave,
+    papelDe: papelDoSistema,
+    env,
+  });
+
+  return async function authenticate(req, res, next) {
+    const resultado = await verificar(req);
+
+    if (!resultado.ok) {
+      for (const [chave, valor] of Object.entries(resultado.headers || {})) res.set(chave, valor);
+      return res.status(resultado.status).json(resultado.body);
     }
-    if (!user.ativo) {
-      return res.status(403).json({ erro: 'Usuário inativo. Contate o administrador.' });
-    }
-    req.user = user;
-    req.token = token;
+
+    // req.user vem do Redis (nunca do banco). O token nunca é logado.
+    req.user = resultado.user;
     next();
-  } catch (err) {
-    return res.status(401).json({ erro: 'Sessão inválida ou expirada. Faça login novamente.' });
-  }
+  };
 }
+
+export const authenticate = criarMiddlewareAuth();

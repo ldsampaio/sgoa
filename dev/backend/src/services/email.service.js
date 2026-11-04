@@ -1,6 +1,5 @@
 import nodemailer from 'nodemailer';
 import { decryptSmtpPass } from '../utils/cryptoTokens.js';
-import { CODIGO_VALIDADE_MIN } from './passwordReset.service.js';
 
 // Envio de e-mails do projeto com a conta institucional única configurada
 // via env (SMTP_USER/SMTP_FROM + SMTP_PASS_ENC cifrada com SMTP_TOKEN_KEY).
@@ -62,18 +61,5 @@ export async function enviarEmail({ para, assunto, texto }) {
   return enviar({ cred, para, assunto, texto });
 }
 
-// Recuperação de senha (RF.GU.003): remetente = conta única do projeto.
-export async function enviarEmailRecuperacao({ para, codigo }) {
-  const assunto = 'SGOA: código de recuperação de senha';
-  const texto =
-    `Seu código de recuperação de senha do SGOA é: ${codigo}\n\n` +
-    `Ele é válido por ${CODIGO_VALIDADE_MIN} minutos e só pode ser usado uma vez.\n` +
-    `Se você não solicitou, ignore esta mensagem.`;
-
-  const cred = credencialGlobal();
-  if (!cred) {
-    console.log(`[EMAIL-STUB] para=${para} assunto=${assunto} codigo=${codigo}`);
-    return { enviado: false, motivo: 'SMTP não configurado (modo stub).', modoStub: true };
-  }
-  return enviar({ cred, para, assunto, texto });
-}
+// Recuperação de senha não existe no sgoa (a autenticação é do saga): só envio
+// de avisos do projeto.

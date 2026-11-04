@@ -6,10 +6,10 @@ import { now } from '../config/database.js';
 // e ordena os destacados primeiro. `CASE ... THEN 1 ELSE 0` mantém o flag INTEGER nos
 // dois drivers (no Postgres `IS NOT NULL` viraria booleano e divergiria do SQLite).
 const SELECT_BASE = `
-  SELECT e.*, u.nome AS nome_criador, o.titulo_provisorio, o.tipo AS tipo_orientacao,
+  SELECT e.*, u.name AS nome_criador, o.titulo_provisorio, o.tipo AS tipo_orientacao,
          CASE WHEN d.id_destacado IS NOT NULL THEN 1 ELSE 0 END AS destacado
   FROM enlaces_overleaf e
-  JOIN usuarios u ON u.id_usuario = e.id_criador
+  JOIN auth.users u ON u.id = e.id_criador
   JOIN orientacoes o ON o.id_orientacao = e.id_orientacao
   LEFT JOIN enlaces_destacados d ON d.id_enlace = e.id_enlace AND d.id_usuario = ?
 `;

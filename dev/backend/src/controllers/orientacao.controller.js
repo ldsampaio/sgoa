@@ -32,13 +32,13 @@ export async function anexarPrazos(orientacoes, parametros) {
 }
 
 export const list = asyncHandler(async (req, res) => {
-  const { tipo_usuario } = req.user;
+  const papel = req.user.papel;
 
-  if (tipo_usuario === 'Coordenador' || tipo_usuario === 'Administrador') {
+  if (papel === 'Coordenador' || papel === 'Administrador') {
     return res.json(await anexarPrazos(await OrientacaoModel.listAll()));
   }
-  if (tipo_usuario === 'Professor') {
-    const prof = await ProfessorModel.findByUsuario(req.user.id_usuario);
+  if (papel === 'Professor') {
+    const prof = await ProfessorModel.findByUsuario(req.user.id);
     if (!prof) return res.status(404).json({ erro: 'Perfil de professor não encontrado.' });
     const [comoOrientador, comoCoOrientador] = await Promise.all([
       OrientacaoModel.listByProfessor(prof.id_professor),
@@ -48,8 +48,8 @@ export const list = asyncHandler(async (req, res) => {
     for (const o of [...comoOrientador, ...comoCoOrientador]) mapa.set(o.id_orientacao, o);
     return res.json(await anexarPrazos([...mapa.values()]));
   }
-  if (tipo_usuario === 'Aluno') {
-    const aluno = await AlunoModel.findByUsuario(req.user.id_usuario);
+  if (papel === 'Aluno') {
+    const aluno = await AlunoModel.findByUsuario(req.user.id);
     if (!aluno) return res.status(404).json({ erro: 'Perfil de aluno não encontrado.' });
     return res.json(await anexarPrazos(await OrientacaoModel.listByAluno(aluno.id_aluno)));
   }
@@ -68,7 +68,7 @@ export const detail = asyncHandler(async (req, res) => {
 });
 
 export const create = asyncHandler(async (req, res) => {
-  if (req.user.tipo_usuario !== 'Professor' && req.user.tipo_usuario !== 'Administrador') {
+  if (req.user.papel !== 'Professor' && req.user.papel !== 'Administrador') {
     return res.status(403).json({ erro: 'Apenas professores podem criar orientações.' });
   }
   const { id_aluno, tipo, titulo_provisorio, data_inicio, data_previsao_fim } = req.body;
@@ -85,7 +85,7 @@ export const create = asyncHandler(async (req, res) => {
   }
 
   const professor =
-    req.user.tipo_usuario === 'Professor' ? await ProfessorModel.findByUsuario(req.user.id_usuario) : null;
+    req.user.papel === 'Professor' ? await ProfessorModel.findByUsuario(req.user.id) : null;
   const idOrientador = professor?.id_professor ?? req.body.id_orientador;
   if (!idOrientador) {
     return res.status(400).json({ erro: 'Orientador não identificado.' });
@@ -108,7 +108,7 @@ export const create = asyncHandler(async (req, res) => {
     'orientacao',
     'Nova orientação criada',
     `Uma nova orientação (${tipo}) foi criada.`,
-    req.user.id_usuario,
+    req.user.id,
   );
 
   return res.status(201).json(await anexarPrazos(orientacao));
@@ -117,17 +117,17 @@ export const create = asyncHandler(async (req, res) => {
 export const update = asyncHandler(async (req, res) => {
   const id = req.params.id;
   if (
-    req.user.tipo_usuario !== 'Coordenador' &&
-    req.user.tipo_usuario !== 'Administrador' &&
-    req.user.tipo_usuario !== 'Professor'
+    req.user.papel !== 'Coordenador' &&
+    req.user.papel !== 'Administrador' &&
+    req.user.papel !== 'Professor'
   ) {
     return res.status(403).json({ erro: 'Sem permissão para editar orientações.' });
   }
   const orientacao = await OrientacaoModel.findById(id);
   if (!orientacao) return res.status(404).json({ erro: 'Orientação não encontrada.' });
 
-  if (req.user.tipo_usuario === 'Professor') {
-    const prof = await ProfessorModel.findByUsuario(req.user.id_usuario);
+  if (req.user.papel === 'Professor') {
+    const prof = await ProfessorModel.findByUsuario(req.user.id);
     if (!prof || prof.id_professor !== orientacao.orientador.id_professor) {
       return res.status(403).json({ erro: 'Apenas o orientador pode editar esta orientação.' });
     }
@@ -145,7 +145,7 @@ export const addCoOrientador = asyncHandler(async (req, res) => {
   const id = req.params.id;
   if (!(await requireAcesso(req, res, id))) return;
 
-  if (req.user.tipo_usuario !== 'Professor' && req.user.tipo_usuario !== 'Coordenador') {
+  if (req.user.papel !== 'Professor' && req.user.papel !== 'Coordenador') {
     return res.status(403).json({ erro: 'Sem permissão para adicionar co-orientadores.' });
   }
   const { id_professor } = req.body;
@@ -164,7 +164,7 @@ export const addCoOrientador = asyncHandler(async (req, res) => {
     'orientacao',
     'Novo co-orientador',
     `${professor.nome ?? ''} foi adicionado(a) como co-orientador(a).`,
-    req.user.id_usuario,
+    req.user.id,
   );
   return res.status(201).json(co);
 });
@@ -173,7 +173,7 @@ export const removeCoOrientador = asyncHandler(async (req, res) => {
   const id = req.params.id;
   if (!(await requireAcesso(req, res, id))) return;
 
-  if (req.user.tipo_usuario !== 'Professor' && req.user.tipo_usuario !== 'Coordenador') {
+  if (req.user.papel !== 'Professor' && req.user.papel !== 'Coordenador') {
     return res.status(403).json({ erro: 'Sem permissão para remover co-orientadores.' });
   }
   const { id_professor } = req.params;

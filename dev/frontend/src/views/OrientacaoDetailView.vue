@@ -455,7 +455,7 @@
               v-for="m in mensagemState.lista"
               :key="m.id_mensagem"
               class="mensagem-balao"
-              :class="{ minha: m.id_remetente === authState.user?.id_usuario }"
+              :class="{ minha: m.id_remetente === authState.user?.id }"
             >
               <div class="autor">{{ m.nome_remetente }} · {{ formatarDataHora(m.data_envio) }}</div>
               {{ m.conteudo }}
@@ -529,18 +529,20 @@ function textoDias(dias) {
 }
 
 const podeEditar = computed(() =>
-  ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario),
+  ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.papel),
 );
-const podeCriarTarefa = computed(() => ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario));
+const podeCriarTarefa = computed(() => ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.papel));
 const podeCriarReuniao = computed(() => podeCriarTarefa.value);
 const podeEnviarDoc = computed(() => true);
-const podeAtualizarTarefa = computed(() => () => Boolean(authState.user));
+const podeAtualizarTarefa = computed(() =>
+  (t) => ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.papel) || t.id_responsavel === authState.user?.id,
+);
 
 const podeGerenciarEtapas = computed(() => {
   const o = orientacaoState.atual;
   if (!o) return false;
-  if (['Coordenador', 'Administrador'].includes(authState.user?.tipo_usuario)) return true;
-  return authState.user?.tipo_usuario === 'Professor' && o.orientador?.id_usuario === authState.user?.id_usuario;
+  if (['Coordenador', 'Administrador'].includes(authState.user?.papel)) return true;
+  return authState.user?.papel === 'Professor' && o.orientador?.id_usuario === authState.user?.id;
 });
 
 const formEtapas = reactive({ qualificacao_concluida_em: '', defesa_concluida_em: '' });

@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { authorize } from '../middleware/authorize.js';
 import {
-  createUsuario,
   listUsuarios,
   updateMe,
   updateUsuario,
@@ -14,13 +13,12 @@ const router = Router();
 
 router.use(authenticate);
 
+// O sgoa não cria usuário: o cadastro é do saga. Só leitura + situação da conta.
 router.get('/professores', listProfessores);
 router.get('/alunos', listAlunos);
 router.put('/me', updateMe);
 
 router.get('/', authorize('Administrador', 'Coordenador'), listUsuarios);
-router.post('/', authorize('Administrador', 'Coordenador', 'Professor'), createUsuario);
-// Professor edita apenas dados acadêmicos dos alunos que orienta (validado no controller).
-router.put('/:id', authorize('Coordenador', 'Administrador', 'Professor'), updateUsuario);
+router.put('/:id', authorize('Coordenador', 'Administrador'), updateUsuario);
 
 export default router;

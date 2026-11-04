@@ -56,7 +56,7 @@ export const uploadDocumento = asyncHandler(async (req, res) => {
 
   const doc = await DocumentoModel.create({
     idOrientacao: id,
-    idUploader: req.user.id_usuario,
+    idUploader: req.user.id,
     idTipoDocumento: tipoDoc?.id_tipo || null,
     nomeArquivo: nomeExibicao,
     tipoArquivo: ext.replace('.', '') || 'bin',
@@ -69,14 +69,14 @@ export const uploadDocumento = asyncHandler(async (req, res) => {
     id,
     'documento',
     'Novo documento enviado',
-    `${req.user.nome} enviou "${nomeExibicao}" (v${versao}).`,
-    req.user.id_usuario,
+    `${req.user.name} enviou "${nomeExibicao}" (v${versao}).`,
+    req.user.id,
   );
 
   // Submissão de aluno → cria avaliação por IA (fila Kafka). Upload de professor = apoio, sem avaliação.
   // Categoria: escolhida no upload; fallback = tipo da orientação (TCC/Mestrado/Doutorado).
   let avaliacao = null;
-  if (req.user.tipo_usuario === 'Aluno') {
+  if (req.user.papel === 'Aluno') {
     try {
       const orientacao = await OrientacaoModel.findById(id);
       const categoria = tipoDoc || (orientacao?.tipo ? await findTipoByNome(orientacao.tipo) : null);

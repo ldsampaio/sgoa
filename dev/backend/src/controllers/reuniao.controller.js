@@ -71,7 +71,7 @@ export const create = asyncHandler(async (req, res) => {
   const id = req.params.id;
   if (!(await requireAcesso(req, res, id))) return;
 
-  if (req.user.tipo_usuario === 'Aluno') {
+  if (req.user.papel === 'Aluno') {
     return res.status(403).json({ erro: 'Somente orientador ou coordenador podem registrar reuniões.' });
   }
   const {
@@ -98,7 +98,7 @@ export const create = asyncHandler(async (req, res) => {
 
   if (criarNoGoogle === true || criarNoGoogle === 'true' || criarNoGoogle === 1) {
     const duracao = normalizarDuracao(duracaoMinutos);
-    const sessao = await getClientParaUsuario(req.user.id_usuario).catch((err) => {
+    const sessao = await getClientParaUsuario(req.user.id).catch((err) => {
       if (String(err?.message || '').includes('GOOGLE_TOKEN_KEY')) {
         const e = new Error('Integração Google mal configurada no servidor (GOOGLE_TOKEN_KEY).');
         e.status = 500;
@@ -135,7 +135,7 @@ export const create = asyncHandler(async (req, res) => {
       googleEventId = ev.eventId;
     } catch (err) {
       if (isInvalidGrant(err)) {
-        await IntegracaoModel.removeByUsuario(req.user.id_usuario);
+        await IntegracaoModel.removeByUsuario(req.user.id);
         return res
           .status(409)
           .json({ erro: 'Conexão Google expirada ou revogada. Reconecte sua conta.', code: 'GOOGLE_RECONECTAR' });
@@ -162,7 +162,7 @@ export const create = asyncHandler(async (req, res) => {
     'reuniao',
     'Nova reunião registrada',
     `Reunião ${pauta ? `"${pauta}"` : ''} registrada em ${quando}.${link ? ` Entrar: ${link}` : ''}`,
-    req.user.id_usuario,
+    req.user.id,
   );
   return res.status(201).json(reuniao);
 });
@@ -173,20 +173,20 @@ export const remove = asyncHandler(async (req, res) => {
   const id = req.params.id;
   const idReuniao = req.params.idReuniao;
   if (!(await requireAcesso(req, res, id))) return;
-  if (req.user.tipo_usuario === 'Aluno') {
+  if (req.user.papel === 'Aluno') {
     return res.status(403).json({ erro: 'Somente orientador ou coordenador podem excluir reuniões.' });
   }
   const reuniao = await ReuniaoModel.findByIdInOrientacao(idReuniao, id);
   if (!reuniao) return res.status(404).json({ erro: 'Reunião não encontrada.' });
 
   if (reuniao.google_event_id) {
-    const sessao = await getClientParaUsuario(req.user.id_usuario).catch(() => null);
+    const sessao = await getClientParaUsuario(req.user.id).catch(() => null);
     if (sessao) {
       try {
         await excluirEvento(sessao.client, reuniao.google_event_id);
       } catch (err) {
         if (isInvalidGrant(err)) {
-          await IntegracaoModel.removeByUsuario(req.user.id_usuario);
+          await IntegracaoModel.removeByUsuario(req.user.id);
           return res
             .status(409)
             .json({ erro: 'Conexão Google expirada. Reconecte e tente excluir novamente.', code: 'GOOGLE_RECONECTAR' });

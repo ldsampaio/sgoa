@@ -289,8 +289,8 @@ async function salvar() {
 function podeArquivar(tarefa) {
   const usuario = authState.user;
   if (!usuario || !tarefa) return false;
-  if (['Professor', 'Coordenador', 'Administrador'].includes(usuario.tipo_usuario)) return true;
-  return Boolean(tarefa.id_criador) && tarefa.id_criador === usuario.id_usuario;
+  if (['Professor', 'Coordenador', 'Administrador'].includes(usuario.papel)) return true;
+  return Boolean(tarefa.id_criador) && tarefa.id_criador === usuario.id;
 }
 
 async function arquivar(tarefa) {

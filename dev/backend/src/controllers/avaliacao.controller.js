@@ -25,7 +25,7 @@ export const reenviar = asyncHandler(async (req, res) => {
   const avaliacao = await AvaliacaoModel.findById(req.params.id);
   if (!avaliacao) return res.status(404).json({ erro: 'Avaliação não encontrada.' });
   if (!(await requireAcesso(req, res, avaliacao.id_orientacao))) return;
-  if (req.user.tipo_usuario === 'Aluno') {
+  if (req.user.papel === 'Aluno') {
     return res.status(403).json({ erro: 'Somente orientador ou coordenador podem reenviar avaliações.' });
   }
   const atualizada = await AvaliacaoModel.reenviar(req.params.id);

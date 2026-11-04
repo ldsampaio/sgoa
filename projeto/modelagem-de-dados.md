@@ -5,6 +5,10 @@
 **Data:** 12 de setembro de 2026
 **Versão:** 1.0
 
+> **Superado (identidade unificada):** `senha_hash` e os campos de credencial do dicionário de
+> dados não existem mais. A identidade vive em `auth.users` / `auth.user_profiles` (dono: saga)
+> e o papel por sistema em `sgoa.perfis`. Não há coluna de senha em nenhum schema (T10).
+
 ---
 
 ### 1. Introdução

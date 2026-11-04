@@ -10,12 +10,12 @@ import {
 } from '../services/googleCalendar.service.js';
 
 export const authUrl = asyncHandler(async (req, res) => {
-  const url = getAuthUrl(req.user.id_usuario);
+  const url = getAuthUrl(req.user.id);
   return res.json({ url });
 });
 
 export const status = asyncHandler(async (req, res) => {
-  const integracao = await IntegracaoModel.findByUsuario(req.user.id_usuario);
+  const integracao = await IntegracaoModel.findByUsuario(req.user.id);
   if (!integracao) return res.json({ conectado: false, email_google: null });
   return res.json({ conectado: true, email_google: integracao.email_google });
 });
@@ -53,7 +53,7 @@ export const callback = asyncHandler(async (req, res) => {
 });
 
 export const disconnect = asyncHandler(async (req, res) => {
-  const integracao = await IntegracaoModel.findByUsuario(req.user.id_usuario);
+  const integracao = await IntegracaoModel.findByUsuario(req.user.id);
   if (integracao?.refresh_token_enc) {
     try {
       await revogarRefreshToken(decryptRefreshToken(integracao.refresh_token_enc));
@@ -61,6 +61,6 @@ export const disconnect = asyncHandler(async (req, res) => {
       // Segue com a remoção local mesmo se a revogação falhar.
     }
   }
-  await IntegracaoModel.removeByUsuario(req.user.id_usuario);
+  await IntegracaoModel.removeByUsuario(req.user.id);
   return res.status(204).end();
 });

@@ -2,11 +2,18 @@
 
 Implementação de desenvolvimento do **Sistema de Gerenciamento de Orientações Acadêmicas (SGOA)**, criada a partir dos documentos em `../projeto/` (visão e escopo, requisitos funcionais e não funcionais, modelagem de dados e wireframes).
 
+> **Superado pelos documentos de `projeto/`:** os requisitos de credencial (login por senha,
+> recuperação de senha, políticas de complexidade, `senha_hash` na modelagem de dados) não
+> valem mais para o sgoa. Desde a identidade unificada o sgoa **não autentica credencial** —
+> ele verifica a sessão compartilhada do saga. Ver §Sessão e identidade e
+> `../docs/session-contract.md`. O que permanece dos documentos originais é o domínio
+> (orientações, prazos, avaliação) e o RBAC por papel em `sgoa.perfis`.
+
 ## Estrutura
 
 ```
 dev/
-├── backend/    API REST (Node.js + Express + SQLite)
+├── backend/    API REST (Node.js + Express + Postgres)
 └── frontend/   Aplicação web SPA (Vue 3 + Vite) com arquitetura MVC
 ```
 
@@ -14,10 +21,10 @@ dev/
 
 | Camada | Tecnologia | Observações |
 | :----- | :--------- | :---------- |
-| Backend  | Node.js (≥ 22.5), Express 5 | Usa `node:sqlite` (SQLite nativo, sem dependências binárias) |
-| Banco    | SQLite (arquivo `backend/data/sgoa.sqlite`) | Schema segue a modelagem de dados; pronto para migrar a PostgreSQL/MySQL |
-| Auth     | JWT + `crypto.scrypt` | Senhas com salt, segundo NFR.SEG.004 |
-| Frontend | Vue 3 + Vue Router + Vite | SPA com padrão MVC |
+| Backend  | Node.js (≥ 22.5), Express 5 | Único driver: Postgres |
+| Banco    | Postgres compartilhado, schema `sgoa` | `auth.*` é do saga: o sgoa só lê, nunca migra tabela em `auth` |
+| Auth     | Sessão compartilhada do saga (cookie `saga_session` + JWT-ponteiro `ES256`) | O sgoa não autentica credencial e não guarda senha — verifica liveness no Redis |
+| Frontend | Vue 3 + Vue Router + Vite | SPA com padrão MVC, cookie-based (`credentials: 'include'`) |
 
 ## Como rodar
 
@@ -44,13 +51,39 @@ Acesse `http://localhost:5173`.
 
 ### Acessos de demonstração (seed)
 
-| Perfil | E-mail | Senha |
-| :----- | :----- | :---- |
-| Administrador | admin@sgoa.dev | Admin@123 |
-| Professor | carlos@sgoa.dev | Prof@1234 |
-| Coordenadora | silvia@sgoa.dev | Coord@1234 |
-| Aluna | ana@sgoa.dev | Aluno@1234 |
-| Aluno | joao@sgoa.dev | Aluno@1234 |
+Não há senha: o cadastro e a autenticação são do saga. Em dev o seed registra a
+identidade em `auth.users` / `auth.user_profiles` (exceção de dev, travada em produção)
+e o papel no sgoa (`sgoa.perfis`). Entre no portal do saga com um destes logins e o
+sgoa reconhece a sessão sem novo login.
+
+| Perfil | Login | Papel no sgoa |
+| :----- | :---- | :------------ |
+| Administrador | `adm001` | Administrador |
+| Professor | `p1001` | Professor |
+| Coordenadora | `c1001` | Coordenador |
+| Aluna | `a234562` | Aluno |
+| Aluno | `a234561` | Aluno |
+
+## Sessão e identidade (contrato compartilhado)
+
+Autoridade: `../docs/session-contract.md`. Resumo do que vale para o sgoa:
+
+- O sgoa **não autentica credencial**. Sem sessão, o frontend redireciona para o saga.
+- O middleware lê `saga:heartbeat` e `saga:sess:{sid}:meta` no Redis. Sem heartbeat
+  → **503** (`IDENTITY_UNAVAILABLE`), sem fallback, mesmo com token válido e JWKS
+  cacheado. 401 e 503 são caminhos distintos no frontend.
+- `req.user` vem do Redis. O papel por sistema vem de `sgoa.perfis`, nunca do claim
+  `role` do JWT.
+- O `sid` do token é opaco e tem charset restrito (`^[A-Za-z0-9_-]{8,64}$`): o verifier nunca
+  monta o nome de chave Redis a partir do conteúdo do token. Fora do charset → `BAD_TOKEN`.
+- **Regra de propriedade de schema:** o sgoa é dono de `sgoa.*`. O schema `auth` é do
+  saga — o sgoa nunca cria nem altera tabela em `auth`. Em runtime o sgoa só **lê** `auth`;
+  a única escrita é o seed de demonstração (`src/seeders/seed.js`), que insere linhas e é
+  travado em produção (`NODE_ENV=production` recusa). Em produção a identidade é criada
+  pelo saga no primeiro login.
+- O sgoa conecta no Redis pelo usuário ACL `saga_readonly`: lê só
+  `saga:sess:*:meta` e `saga:heartbeat`; não lê o payload upstream e não escreve.
+- Só o saga renova `last_seen_at`. O sgoa só lê.
 
 ## Arquitetura
 
@@ -63,8 +96,8 @@ src/
 ├── controllers/   HTTP handlers (recebem/sanitizam entrada, delegam aos models)
 ├── routes/        Rotas Express por recurso
 ├── services/      Regras de negócio transversais (acesso, notificações)
-├── middleware/    Autenticação (JWT), autorização (RBAC), tratamento de erros
-├── utils/         Hash de senha, token, helpers de query
+├── middleware/    Verificação de sessão compartilhada, autorização (RBAC), tratamento de erros
+├── utils/         Criptografia de segredos (AES-GCM), ids, helpers de query
 └── seeders/       Seed de dados de demonstração
 ```
 
@@ -89,7 +122,7 @@ Fluxo típico: **View** (template) → dispara ação do **Controller** → **Co
 
 | Módulo | Requisito | Status |
 | :----- | :--------- | :----- |
-| Gestão de usuários | Cadastro (admin), login, edição de perfil | ✅ RF.GU.001-005 |
+| Gestão de usuários | Edição de perfil e de papel por sistema (não há cadastro nem login — são do saga) | ✅ RF.GU.001-005 |
 | Gestão de orientações | Criar, listar por papel, adicionar/remover co-orientador, alterar status | ✅ RF.GO.001-005 |
 | Acompanhamento | Registro de reuniões, tarefas com prazo, marcar concluída, linha do tempo | ✅ RF.AP.001-005 |
 | Quadro Kanban | Colunas A fazer/Fazendo/Feito, drag and drop, título, descrição, prioridade, cores, edição e arquivamento | ✅ RF.AP.006-007 |
@@ -98,16 +131,15 @@ Fluxo típico: **View** (template) → dispara ação do **Controller** → **Co
 | Enlaces Overleaf | Aluno registra o link do projeto institucional com o tipo de documento; destaque por usuário; notificação | ✅ RF.OV.001-006 |
 | Dashboards | Professor, aluno e coordenador (visão geral, prazos críticos, carga) | ✅ RF.VI.001-003 |
 
-Segurança: autenticação JWT obrigatória (NFR.SEG.001), RBAC por papel (NFR.SEG.002), hash de senha com salt (NFR.SEG.004), validação de complexidade de senha (NFR.SEG.007), uso de queries parametrizadas (NFR.SEG.006).
+Segurança: sessão verificada contra o Redis do saga (NFR.SEG.001), RBAC por papel na tabela `sgoa.perfis` (NFR.SEG.002), **nenhuma credencial armazenada ou aceita** (T10 — nenhuma rota recebe campo `senha`/`password`, nenhuma coluna de senha existe no schema), queries parametrizadas (NFR.SEG.006). Sem `saga:heartbeat` no Redis o sgoa rejeita com 503 e serve página de erro própria — sem redirecionar para o serviço que caiu.
 
 ## API — endpoints principais
 
 ```
-POST /api/auth/login               Login (email + senha)
-GET  /api/auth/me                  Perfil do usuário autenticado
-POST /api/usuarios                 (admin) Criar usuário
-GET  /api/usuarios                 (coord/admin) Listar usuários
+GET  /api/auth/me                  Identidade da sessão compartilhada (401 ou 503)
+GET  /api/usuarios                 (coord/admin) Listar usuários (lê `auth.users`)
 PUT  /api/usuarios/me              Atualizar próprio perfil
+PUT  /api/usuarios/:id             (coord/admin) Atualizar usuário
 GET  /api/usuarios/professores     Listar professores (para seleção)
 GET  /api/usuarios/alunos          Listar alunos (para seleção)
 GET|POST /api/orientacoes          Listar/Criar orientações (filtro por papel)
@@ -132,12 +164,26 @@ PUT  /api/notificacoes/:id/lida    Marcar como lida
 GET  /api/dashboard/:papel         Dashboard por papel
 ```
 
+Não há `POST /api/usuarios` nem rota de login: o sgoa não cria identidade nem aceita
+credencial. O papel por sistema (`sgoa.perfis`) é atribuído pelo seed de dev ou pela UI de
+admin; a identidade nasce no primeiro login do saga. A página de erro própria
+(`/indisponivel`) é rota do **frontend**, não da API.
+
 ## Notas
 
 - O banco de dev é recriado/limpo a cada `npm run seed` (travado em produção); arquivos enviados vão para `backend/uploads/`.
 - **Kanban**: cartões arquivados saem do quadro, da lista e dos dashboards, mas permanecem no banco e na linha do tempo (rótulo “Arquivada”).
-- **Banco de dados**: SQLite em dev (`DB_PATH`); **PostgreSQL em produção** (`DB_DRIVER=postgres` + `DATABASE_URL`). O CI testa os dois.
-- **Produção**: ver `deploy/README.md` (container único + Postgres + Kafka, nginx + Cloudflared no servidor). Trocar `JWT_SECRET` por valor forte, usar HTTPS (NFR.SEG.003) e ajustar `CORS_ORIGIN`/`MAX_UPLOAD_SIZE`.
+- **Banco de dados**: Postgres é o único driver, em dev e em produção (`DATABASE_URL`) — a
+  dualidade SQLite/Postgres acabou. O schema `sgoa` é criado pelo próprio sgoa no boot
+  (`src/config/database.js`); o schema `auth` é do saga (`saga/db/schema.sql`).
+- **Produção**: ver `deploy/README.md` (container único + Postgres + Kafka, nginx +
+  Cloudflared no servidor). O que precisa ser seguro aqui é o acesso ao Redis compartilhado
+  (usuário ACL `saga_readonly`) e o JWKS do saga — o sgoa não assina token de sessão. O boot de
+  produção recusa ambiente inseguro (`src/config/gateProducao.js`, SEC-02 — mesma forma do gate
+  do sgrf): `REDIS_URL` fora da ACL, `SAGA_JWKS_URL`, `SAGA_LOGIN_URL` ou a allowlist de
+  redirect vazios ou com placeholder. `JWT_SECRET` segue obrigatória só para o state anti-CSRF
+  da integração Google (`src/services/googleCalendar.service.js`). Ajustar
+  `CORS_ORIGIN`/`MAX_UPLOAD_SIZE`.
 
 ## Branches e releases
 
