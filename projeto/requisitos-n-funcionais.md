@@ -5,6 +5,12 @@
 **Data:** 12 de setembro de 2026
 **Versão:** 1.0
 
+> **Superado (identidade unificada):** NFR.SEG.001, .004 e .007 (autenticação por senha,
+> criptografia de senhas em repouso, políticas de complexidade) não valem mais para o sgoa —
+> ele não autentica credencial. O que permanece: controle de acesso por papel, cookies
+> HttpOnly/Secure/SameSite, expiração de sessão (decisão do saga), validação de uploads e logs
+> sem credenciais.
+
 ---
 
 ### 1. Introdução

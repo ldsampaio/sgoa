@@ -20,8 +20,8 @@ export async function create({ idOrientacao, idUploader, idTipoDocumento, nomeAr
 
 export async function findById(id) {
   return await get(
-    `SELECT d.*, u.nome AS nome_uploader, t.nome AS categoria FROM documentos d
-     JOIN usuarios u ON u.id_usuario = d.id_uploader
+    `SELECT d.*, u.name AS nome_uploader, t.nome AS categoria FROM documentos d
+     JOIN auth.users u ON u.id = d.id_uploader
      LEFT JOIN tipos_documento t ON t.id_tipo = d.id_tipo_documento
      WHERE d.id_documento = ?`,
     [id],
@@ -30,8 +30,8 @@ export async function findById(id) {
 
 export async function listByOrientacao(idOrientacao) {
   return await all(
-    `SELECT d.*, u.nome AS nome_uploader, t.nome AS categoria FROM documentos d
-     JOIN usuarios u ON u.id_usuario = d.id_uploader
+    `SELECT d.*, u.name AS nome_uploader, t.nome AS categoria FROM documentos d
+     JOIN auth.users u ON u.id = d.id_uploader
      LEFT JOIN tipos_documento t ON t.id_tipo = d.id_tipo_documento
      WHERE d.id_orientacao = ? ORDER BY d.data_upload DESC`,
     [idOrientacao],

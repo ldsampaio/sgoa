@@ -1,64 +1,48 @@
 import { reactive } from 'vue';
 import AuthModel from '../models/AuthModel.js';
 import UsuarioModel from '../models/UsuarioModel.js';
-import { setToken, clearToken } from '../models/api.js';
 import NotificacaoModel from '../models/NotificacaoModel.js';
 
-const USER_KEY = 'sgoa_user';
-
-function loadStoredUser() {
-  try {
-    return JSON.parse(localStorage.getItem(USER_KEY)) ?? null;
-  } catch {
-    return null;
-  }
-}
-
+// Estado de sessão em memória, nunca em localStorage: a fonte da verdade é o
+// Redis do saga. Se o saga derruba a sessão, o próximo request 401 e o guard
+// manda o usuário para o saga.
 export const authState = reactive({
-  user: loadStoredUser(),
+  user: null,
   carregando: false,
   naoLidas: 0,
 });
-
-function persistUser(user) {
-  authState.user = user;
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
-  else localStorage.removeItem(USER_KEY);
-}
 
 export const AuthController = {
   get isAutenticado() {
     return !!authState.user;
   },
 
-  async login(email, senha) {
+  async me() {
     authState.carregando = true;
     try {
-      const { token, usuario } = await AuthModel.login(email, senha);
-      setToken(token);
-      persistUser(usuario);
-      await this.atualizarNaoLidas();
-      return usuario;
+      const me = await AuthModel.me();
+      authState.user = me;
+      return me;
     } finally {
       authState.carregando = false;
     }
   },
 
-  logout() {
-    clearToken();
-    persistUser(null);
+  limpar() {
+    authState.user = null;
     authState.naoLidas = 0;
   },
 
-  async carregarPerfil() {
-    const me = await AuthModel.me();
-    persistUser(me);
-    return me;
+  // O logout é do saga (ele derruba a sessão no Redis e remove o cookie). O sgoa
+  // só limpa o estado local e manda o usuário para o `login_url` da resposta.
+  redirectToSaga(loginUrl) {
+    this.limpar();
+    if (loginUrl) window.location.assign(loginUrl);
   },
 
   async atualizarPerfil(dados) {
     const me = await UsuarioModel.updateProfile(dados);
-    persistUser(me);
+    authState.user = me;
     return me;
   },
 

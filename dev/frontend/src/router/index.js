@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { authState } from '../controllers/AuthController.js';
+import { authState, AuthController } from '../controllers/AuthController.js';
+import { decidirAcao } from '../plugins/decisaoErro.js';
 
 const routes = [
   {
@@ -9,9 +10,11 @@ const routes = [
     meta: { publico: true },
   },
   {
-    path: '/recuperar-senha',
-    name: 'recuperar-senha',
-    component: () => import('../views/RecuperarSenhaView.vue'),
+    // Página de erro própria (503 IDENTITY_UNAVAILABLE). Não é o caminho do 401:
+    // redirecionar para o serviço que caiu é o loop que se quer evitar.
+    path: '/indisponivel',
+    name: 'indisponivel',
+    component: () => import('../views/IndisponivelView.vue'),
     meta: { publico: true },
   },
   {
@@ -63,13 +66,30 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to) => {
-  const autenticado = !!authState.user;
+router.beforeEach(async (to) => {
+  if (to.meta.publico) {
+    if (authState.user) return { name: 'dashboard' };
+    return true;
+  }
 
-  if (to.meta.publico && autenticado) return { name: 'dashboard' };
-  if (!to.meta.publico && !autenticado) return { name: 'login', query: { redirect: to.fullPath } };
+  if (!authState.user) {
+    try {
+      await AuthController.me();
+    } catch (err) {
+      // 401 e 503 são caminhos distintos: o 503 nunca vira redirect.
+      const acao = decidirAcao(err.status, err.data);
+      if (acao.tipo === 'pagina') {
+        return { name: acao.rota, query: acao.retryAfter ? { retry_after: String(acao.retryAfter) } : {} };
+      }
+      if (acao.tipo === 'redirect' && acao.url) {
+        window.location.assign(acao.url);
+        return false;
+      }
+      return { name: 'login', query: { redirect: to.fullPath } };
+    }
+  }
 
-  if (to.meta.roles && !to.meta.roles.includes(authState.user?.tipo_usuario)) {
+  if (to.meta.roles && !to.meta.roles.includes(authState.user?.papel)) {
     return { name: 'dashboard' };
   }
   return true;

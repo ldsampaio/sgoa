@@ -4,9 +4,6 @@ export default {
   async list() {
     return api.get('/usuarios');
   },
-  async create(data) {
-    return api.post('/usuarios', data);
-  },
   async update(id, data) {
     return api.put(`/usuarios/${id}`, data);
   },

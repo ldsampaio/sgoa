@@ -1,28 +1,10 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
-const TOKEN_KEY = 'sgoa_token';
-
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setToken(token) {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
-}
-
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
-}
-
-export function getDownloadUrl(path) {
-  return `${API_URL}${path}`;
-}
-
+// Não há token em localStorage: a sessão é o cookie compartilhado `saga_session`,
+// definido pelo saga. O fetch sempre manda `credentials: 'include'` para que o
+// cookie vá junto, e o backend decide se a sessão está viva.
 async function request(path, { method = 'GET', body, headers = {}, isForm = false } = {}) {
-  const opts = { method, headers: { ...headers } };
-  const token = getToken();
-  if (token) opts.headers.Authorization = `Bearer ${token}`;
+  const opts = { method, credentials: 'include', headers: { ...headers } };
 
   if (body !== undefined) {
     if (isForm) {
@@ -34,16 +16,18 @@ async function request(path, { method = 'GET', body, headers = {}, isForm = fals
   }
 
   const res = await fetch(`${API_URL}${path}`, opts);
+  const data = res.status === 204 ? null : await res.json().catch(() => null);
 
-  if (res.status === 401) {
-    clearToken();
-    window.dispatchEvent(new Event('sgoa:unauthorized'));
+  // 401 e 503 são caminhos distintos: o plugin decide o que fazer com cada um
+  // (401 → redirect para o saga; 503 → página de erro própria).
+  if (res.status === 401 || res.status === 503) {
+    window.dispatchEvent(new CustomEvent('sgoa:auth', { detail: { status: res.status, body: data } }));
   }
 
-  const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
-    const err = new Error(data?.erro || `Erro ${res.status} na requisição a ${path}`);
+    const err = new Error(data?.message || data?.erro || `Erro ${res.status} na requisição a ${path}`);
     err.status = res.status;
+    err.code = data?.code;
     err.data = data;
     throw err;
   }
@@ -58,3 +42,7 @@ export const api = {
   del: (path) => request(path, { method: 'DELETE' }),
   upload: (path, formData) => request(path, { method: 'POST', body: formData, isForm: true }),
 };
+
+export function getDownloadUrl(path) {
+  return `${API_URL}${path}`;
+}

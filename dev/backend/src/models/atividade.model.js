@@ -11,29 +11,29 @@ export async function timeline(idOrientacao) {
     `SELECT t.data_cadastro AS quando, 'Tarefa' AS tipo,
             COALESCE(t.titulo, t.descricao) AS titulo,
             CASE WHEN t.excluida_em IS NOT NULL THEN 'Arquivada' ELSE t.status END AS descricao,
-            u.nome AS autor
-     FROM tarefas t JOIN usuarios u ON u.id_usuario = t.id_responsavel
+            u.name AS autor
+     FROM tarefas t JOIN auth.users u ON u.id = t.id_responsavel
      WHERE t.id_orientacao = ?`,
     [idOrientacao],
   );
   const documentos = await all(
     `SELECT d.data_upload AS quando, 'Documento' AS tipo, d.nome_arquivo AS titulo,
-            d.descricao AS descricao, u.nome AS autor
-     FROM documentos d JOIN usuarios u ON u.id_usuario = d.id_uploader
+            d.descricao AS descricao, u.name AS autor
+     FROM documentos d JOIN auth.users u ON u.id = d.id_uploader
      WHERE d.id_orientacao = ?`,
     [idOrientacao],
   );
   const mensagens = await all(
     `SELECT m.data_envio AS quando, 'Mensagem' AS tipo, m.conteudo AS titulo,
-            NULL AS descricao, u.nome AS autor
-     FROM mensagens m JOIN usuarios u ON u.id_usuario = m.id_remetente
+            NULL AS descricao, u.name AS autor
+     FROM mensagens m JOIN auth.users u ON u.id = m.id_remetente
      WHERE m.id_orientacao = ?`,
     [idOrientacao],
   );
   const enlaces = await all(
     `SELECT e.criado_em AS quando, 'Enlace Overleaf' AS tipo,
-            e.categoria AS titulo, e.url AS descricao, u.nome AS autor
-     FROM enlaces_overleaf e JOIN usuarios u ON u.id_usuario = e.id_criador
+            e.categoria AS titulo, e.url AS descricao, u.name AS autor
+     FROM enlaces_overleaf e JOIN auth.users u ON u.id = e.id_criador
      WHERE e.id_orientacao = ?`,
     [idOrientacao],
   );

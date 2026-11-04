@@ -7,7 +7,7 @@
       <h2>
         Orientações
         <RouterLink
-          v-if="['Professor', 'Administrador'].includes(authState.user?.tipo_usuario)"
+          v-if="['Professor', 'Administrador'].includes(authState.user?.papel)"
           :to="{ name: 'orientacao-nova' }"
           class="botao primario"
         >

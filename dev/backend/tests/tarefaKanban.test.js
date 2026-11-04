@@ -63,11 +63,13 @@ test('status e ordem: validam os tipos aceitos', () => {
 });
 
 test('arquivamento: criador ou gestão pode arquivar; demais não', () => {
+  // req.user tem a forma do contrato de sessão: { id, ..., papel } — o papel vem de
+  // sgoa.perfis, nunca do claim `role` do JWT.
   const tarefa = { id_criador: 'u-1' };
-  assert.equal(podeArquivarTarefa({ id_usuario: 'u-1', tipo_usuario: 'Aluno' }, tarefa), true);
-  assert.equal(podeArquivarTarefa({ id_usuario: 'u-2', tipo_usuario: 'Aluno' }, tarefa), false);
-  assert.equal(podeArquivarTarefa({ id_usuario: 'u-2', tipo_usuario: 'Professor' }, tarefa), true);
-  assert.equal(podeArquivarTarefa({ id_usuario: 'u-2', tipo_usuario: 'Coordenador' }, tarefa), true);
-  assert.equal(podeArquivarTarefa({ id_usuario: 'u-2', tipo_usuario: 'Administrador' }, tarefa), true);
-  assert.equal(podeArquivarTarefa({ id_usuario: 'u-2', tipo_usuario: 'Aluno' }, { id_criador: null }), false);
+  assert.equal(podeArquivarTarefa({ id: 'u-1', papel: 'Aluno' }, tarefa), true);
+  assert.equal(podeArquivarTarefa({ id: 'u-2', papel: 'Aluno' }, tarefa), false);
+  assert.equal(podeArquivarTarefa({ id: 'u-2', papel: 'Professor' }, tarefa), true);
+  assert.equal(podeArquivarTarefa({ id: 'u-2', papel: 'Coordenador' }, tarefa), true);
+  assert.equal(podeArquivarTarefa({ id: 'u-2', papel: 'Administrador' }, tarefa), true);
+  assert.equal(podeArquivarTarefa({ id: 'u-2', papel: 'Aluno' }, { id_criador: null }), false);
 });

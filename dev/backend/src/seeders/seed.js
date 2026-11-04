@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { execScript, initDatabase, ensureTiposBase } from '../config/database.js';
-import { hashPassword } from '../utils/password.js';
-import * as UsuarioModel from '../models/usuario.model.js';
+import { run } from '../utils/query.js';
+import { uuid } from '../utils/id.js';
 import * as ProfessorModel from '../models/professor.model.js';
 import * as AlunoModel from '../models/aluno.model.js';
 import * as OrientacaoModel from '../models/orientacao.model.js';
@@ -11,55 +11,60 @@ import * as MensagemModel from '../models/mensagem.model.js';
 import * as EnlaceModel from '../models/enlaceOverleaf.model.js';
 import { garantirPadroes } from '../models/promptAvaliacao.model.js';
 
-// NUNCA rode em produção: apaga todas as tabelas. Em prod use
-// scripts/create-admin.js (bootstrap) — o schema é criado no boot.
+// NUNCA rode em produção: apaga todas as tabelas. Em prod o seed não existe —
+// o cadastro de usuário é do saga (schema `auth`), e o sgoa não tem senha.
+// Regra de propriedade: o seed INSERTA linhas em `auth`, nunca cria nem altera
+// tabela desse schema.
 if (String(process.env.NODE_ENV ?? '').toLowerCase() === 'production' && !process.env.ALLOW_SEED) {
-  console.error('[SEED] recusado: NODE_ENV=production. Use scripts/create-admin.js para bootstrap.');
+  console.error('[SEED] recusado: NODE_ENV=production. O cadastro de usuário é do saga.');
   process.exit(1);
 }
 
 await initDatabase();
 
 await execScript(`
-  DELETE FROM notificacoes;
-  DELETE FROM recuperacoes_senha;
-  DELETE FROM mensagens;
-  DELETE FROM enlaces_destacados;
-  DELETE FROM enlaces_overleaf;
-  DELETE FROM documentos;
-  DELETE FROM tarefas;
-  DELETE FROM reunioes;
-  DELETE FROM co_orientadores;
-  DELETE FROM orientacoes;
-  DELETE FROM integracoes_google;
-  DELETE FROM avaliacoes;
-  DELETE FROM prompts_avaliacao;
-  DELETE FROM tipos_documento;
-  DELETE FROM documentos;
-  DELETE FROM alunos;
-  DELETE FROM professores;
-  DELETE FROM perfis;
-  DELETE FROM usuarios;
+  DELETE FROM sgoa.notificacoes;
+  DELETE FROM sgoa.mensagens;
+  DELETE FROM sgoa.enlaces_destacados;
+  DELETE FROM sgoa.enlaces_overleaf;
+  DELETE FROM sgoa.documentos;
+  DELETE FROM sgoa.tarefas;
+  DELETE FROM sgoa.reunioes;
+  DELETE FROM sgoa.co_orientadores;
+  DELETE FROM sgoa.orientacoes;
+  DELETE FROM sgoa.integracoes_google;
+  DELETE FROM sgoa.avaliacoes;
+  DELETE FROM sgoa.prompts_avaliacao;
+  DELETE FROM sgoa.tipos_documento;
+  DELETE FROM sgoa.alunos;
+  DELETE FROM sgoa.professores;
+  DELETE FROM sgoa.perfis;
+  DELETE FROM auth.user_profiles;
+  DELETE FROM auth.users;
 `);
 
 await ensureTiposBase();
 
-async function criarUsuario({ nome, email, senha, tipo, matricula, departamento, curso, programaPos, dataMatricula }) {
-  const user = await UsuarioModel.create({
-    nome,
-    email,
-    senhaHash: hashPassword(senha),
-    tipoUsuario: tipo,
-  });
-  if (tipo === 'Professor') {
-    return { user, professor: await ProfessorModel.create({ idUsuario: user.id_usuario, matricula, departamento }) };
-  }
-  if (tipo === 'Aluno') {
-    return {
-      user,
-      aluno: await AlunoModel.create({ idUsuario: user.id_usuario, matricula, curso, programaPos, dataMatricula }),
-    };
-  }
+// Sem senha: o sgoa não autentica credencial. Login explícito por usuário
+// (o saga infere ALUNO por ^a\d+$; os demais papéis vêm de sgoa.perfis).
+async function criarUsuario({ login, name, email, roleBase, papel, matricula, departamento, curso, programaPos, dataMatricula }) {
+  const id = uuid();
+  await run(
+    `INSERT INTO auth.users (id, login, name, email, role_base, profile_complete)
+     VALUES (?, ?, ?, ?, ?, true)`,
+    [id, login, name, email, roleBase],
+  );
+  await run(
+    `INSERT INTO auth.user_profiles (user_id, matricula, curso, programa_pos, departamento, data_matricula)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, matricula ?? null, curso ?? null, programaPos ?? null, departamento ?? null, dataMatricula ?? null],
+  );
+  await run('INSERT INTO sgoa.perfis (id_perfil, id_usuario, papel) VALUES (?, ?, ?)', [uuid(), id, papel]);
+
+  const user = { id, login, name, email, role_base: roleBase, papel };
+
+  if (papel === 'Professor') return { user, professor: await ProfessorModel.criar({ idUsuario: id }) };
+  if (papel === 'Aluno') return { user, aluno: await AlunoModel.criar({ idUsuario: id }) };
   return { user };
 }
 
@@ -73,52 +78,58 @@ function iso(dias) {
 }
 
 const admin = await criarUsuario({
-  nome: 'Administrador do Sistema',
+  login: 'adm001',
+  name: 'Administrador do Sistema',
   email: 'admin@sgoa.dev',
-  senha: 'Admin@123',
-  tipo: 'Administrador',
+  roleBase: 'UNDEFINIDO',
+  papel: 'Administrador',
 });
 
 const carlos = await criarUsuario({
-  nome: 'Prof. Carlos Almeida',
+  login: 'p1001',
+  name: 'Prof. Carlos Almeida',
   email: 'carlos@sgoa.dev',
-  senha: 'Prof@1234',
-  tipo: 'Professor',
+  roleBase: 'PROFESSOR',
+  papel: 'Professor',
   matricula: 'P1001',
   departamento: 'Ciência da Computação',
 });
 
 const maria = await criarUsuario({
-  nome: 'Prof. Maria Silva',
+  login: 'p1002',
+  name: 'Prof. Maria Silva',
   email: 'maria@sgoa.dev',
-  senha: 'Prof@1234',
-  tipo: 'Professor',
+  roleBase: 'PROFESSOR',
+  papel: 'Professor',
   matricula: 'P1002',
   departamento: 'Educação',
 });
 
 const silvia = await criarUsuario({
-  nome: 'Dra. Silvia Nogueira',
+  login: 'c1001',
+  name: 'Dra. Silvia Nogueira',
   email: 'silvia@sgoa.dev',
-  senha: 'Coord@1234',
-  tipo: 'Coordenador',
+  roleBase: 'UNDEFINIDO',
+  papel: 'Coordenador',
 });
 
 const joao = await criarUsuario({
-  nome: 'João Silva',
+  login: 'a234561',
+  name: 'João Silva',
   email: 'joao@sgoa.dev',
-  senha: 'Aluno@1234',
-  tipo: 'Aluno',
+  roleBase: 'ALUNO',
+  papel: 'Aluno',
   matricula: 'A2001',
   curso: 'Ciência da Computação',
   dataMatricula: '2024-03-15',
 });
 
 const ana = await criarUsuario({
-  nome: 'Ana Paula',
+  login: 'a234562',
+  name: 'Ana Paula',
   email: 'ana@sgoa.dev',
-  senha: 'Aluno@1234',
-  tipo: 'Aluno',
+  roleBase: 'ALUNO',
+  papel: 'Aluno',
   matricula: 'A2002',
   curso: 'Pós-graduação em Educação',
   programaPos: 'Mestrado em Educação',
@@ -126,10 +137,11 @@ const ana = await criarUsuario({
 });
 
 const pedro = await criarUsuario({
-  nome: 'Pedro Costa',
+  login: 'a234563',
+  name: 'Pedro Costa',
   email: 'pedro@sgoa.dev',
-  senha: 'Aluno@1234',
-  tipo: 'Aluno',
+  roleBase: 'ALUNO',
+  papel: 'Aluno',
   matricula: 'A2003',
   curso: 'Pós-graduação em Ciência da Computação',
   programaPos: 'Doutorado em Ciência da Computação',
@@ -169,8 +181,8 @@ const oriPedro = await OrientacaoModel.create({
 
 await TarefaModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idResponsavel: ana.user.id_usuario,
-  idCriador: carlos.user.id_usuario,
+  idResponsavel: ana.user.id,
+  idCriador: carlos.user.id,
   titulo: 'Revisar capítulo 3',
   descricao: 'Revisar o capítulo 3 da dissertação e enviar os comentários ao orientador.',
   prioridade: 'Alta',
@@ -179,8 +191,8 @@ await TarefaModel.create({
 });
 const tarefaRef = await TarefaModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idResponsavel: ana.user.id_usuario,
-  idCriador: carlos.user.id_usuario,
+  idResponsavel: ana.user.id,
+  idCriador: carlos.user.id,
   titulo: 'Pesquisar referências',
   descricao: 'Levantar referências atualizadas sobre IA na educação superior.',
   prioridade: 'Média',
@@ -190,8 +202,8 @@ const tarefaRef = await TarefaModel.create({
 await TarefaModel.updateStatus(tarefaRef.id_tarefa, 'Concluída');
 await TarefaModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idResponsavel: ana.user.id_usuario,
-  idCriador: carlos.user.id_usuario,
+  idResponsavel: ana.user.id,
+  idCriador: carlos.user.id,
   titulo: 'Preparar apresentação para banca',
   descricao: 'Montar os slides da defesa e revisar o roteiro de apresentação.',
   prioridade: 'Alta',
@@ -201,8 +213,8 @@ await TarefaModel.create({
 });
 await TarefaModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idResponsavel: ana.user.id_usuario,
-  idCriador: carlos.user.id_usuario,
+  idResponsavel: ana.user.id,
+  idCriador: carlos.user.id,
   titulo: 'Escrever seção de metodologia',
   descricao: 'Detalhar o método de coleta e análise dos dados da pesquisa.',
   prioridade: 'Média',
@@ -212,8 +224,8 @@ await TarefaModel.create({
 });
 await TarefaModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idResponsavel: ana.user.id_usuario,
-  idCriador: carlos.user.id_usuario,
+  idResponsavel: ana.user.id,
+  idCriador: carlos.user.id,
   titulo: 'Revisar formatação ABNT',
   descricao: 'Conferir citações, referências e formatação geral do documento.',
   prioridade: 'Baixa',
@@ -222,8 +234,8 @@ await TarefaModel.create({
 });
 await TarefaModel.create({
   idOrientacao: oriJoao.id_orientacao,
-  idResponsavel: joao.user.id_usuario,
-  idCriador: carlos.user.id_usuario,
+  idResponsavel: joao.user.id,
+  idCriador: carlos.user.id,
   titulo: 'Pesquisar referências do TCC',
   descricao: 'Selecionar artigos sobre aprendizado de máquina aplicado à educação.',
   prioridade: 'Alta',
@@ -232,8 +244,8 @@ await TarefaModel.create({
 });
 await TarefaModel.create({
   idOrientacao: oriJoao.id_orientacao,
-  idResponsavel: joao.user.id_usuario,
-  idCriador: carlos.user.id_usuario,
+  idResponsavel: joao.user.id,
+  idCriador: carlos.user.id,
   titulo: 'Definir cronograma',
   descricao: 'Organizar as etapas restantes do TCC até a entrega final.',
   prioridade: 'Média',
@@ -242,8 +254,8 @@ await TarefaModel.create({
 });
 await TarefaModel.create({
   idOrientacao: oriPedro.id_orientacao,
-  idResponsavel: pedro.user.id_usuario,
-  idCriador: carlos.user.id_usuario,
+  idResponsavel: pedro.user.id,
+  idCriador: carlos.user.id,
   titulo: 'Entregar capítulo de revisão de literatura',
   descricao: 'Enviar a versão revisada do capítulo 2 para avaliação.',
   prioridade: 'Média',
@@ -256,41 +268,41 @@ await ReuniaoModel.create({
   dataHora: iso(7) + 'T10:00:00',
   pauta: 'Revisão do capítulo de metodologia e próximos passos da escrita',
   decisoes: 'Ana deve enviar o capítulo 3 até a próxima sexta-feira.',
-  participantes: [carlos.user.id_usuario, ana.user.id_usuario, maria.user.id_usuario],
+  participantes: [carlos.user.id, ana.user.id, maria.user.id],
 });
 
 // Enlaces Overleaf (RF.OV) — o aluno registra o link do projeto institucional.
 const enlaceDissertacao = await EnlaceModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idCriador: ana.user.id_usuario,
+  idCriador: ana.user.id,
   categoria: 'Dissertação',
   url: 'https://overleaf.utfpr.edu.br/project/demo-dissertacao-ana',
   observacao: 'Capítulos 1 a 3 em revisão.',
 });
 await EnlaceModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idCriador: ana.user.id_usuario,
+  idCriador: ana.user.id,
   categoria: 'Projeto de Mestrado',
   url: 'https://overleaf.utfpr.edu.br/read/demo-projeto-mestrado-ana',
   status: 'Encerrado',
 });
 await EnlaceModel.create({
   idOrientacao: oriJoao.id_orientacao,
-  idCriador: joao.user.id_usuario,
+  idCriador: joao.user.id,
   categoria: 'TCC1',
   url: 'https://overleaf.utfpr.edu.br/project/demo-tcc1-joao',
 });
 // Destaque é por usuário: fixar para o professor não muda a lista da aluna.
-await EnlaceModel.alternarDestaque(enlaceDissertacao.id_enlace, carlos.user.id_usuario);
+await EnlaceModel.alternarDestaque(enlaceDissertacao.id_enlace, carlos.user.id);
 
 await MensagemModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idRemetente: ana.user.id_usuario,
+  idRemetente: ana.user.id,
   conteudo: 'Professor, enviei o capítulo 2 para revisão. Aguardando feedback.',
 });
 await MensagemModel.create({
   idOrientacao: oriAna.id_orientacao,
-  idRemetente: carlos.user.id_usuario,
+  idRemetente: carlos.user.id,
   conteudo: 'Perfeito Ana, vou revisar até o final da semana.',
 });
 
@@ -299,13 +311,13 @@ await garantirPadroes(carlos.professor.id_professor);
 await garantirPadroes(maria.professor.id_professor);
 
 console.log('Seed concluído com sucesso.');
-console.log('Acessos de exemplo:');
-for (const [nome, email, senha] of [
-  ['Administrador', 'admin@sgoa.dev', 'Admin@123'],
-  ['Professor Carlos', 'carlos@sgoa.dev', 'Prof@1234'],
-  ['Coordenadora Silvia', 'silvia@sgoa.dev', 'Coord@1234'],
-  ['Aluna Ana Paula', 'ana@sgoa.dev', 'Aluno@1234'],
-  ['Aluno João Silva', 'joao@sgoa.dev', 'Aluno@1234'],
+console.log('Logins de exemplo (a sessão vem do saga — não há senha no sgoa):');
+for (const [nome, login] of [
+  ['Administrador', 'adm001'],
+  ['Professor Carlos', 'p1001'],
+  ['Coordenadora Silvia', 'c1001'],
+  ['Aluna Ana Paula', 'a234562'],
+  ['Aluno João Silva', 'a234561'],
 ]) {
-  console.log(`  ${nome.padEnd(20)} ${email.padEnd(22)} ${senha}`);
+  console.log(`  ${nome.padEnd(20)} ${login}`);
 }

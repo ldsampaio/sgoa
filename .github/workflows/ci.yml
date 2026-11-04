@@ -1,5 +1,6 @@
-# CI: smoke nos dois drivers (SQLite dev + Postgres prod) + build do frontend.
-# Roda em push para main/develop e em PRs.
+# CI: smoke do contrato de sessão contra Postgres + build do frontend.
+# Postgres é o único driver (decisão do plano de identidade unificada) — a perna
+# SQLite foi removida. Roda em push para main/develop e em PRs.
 name: ci
 
 on:
@@ -10,12 +11,6 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - driver: sqlite
-          - driver: postgres
     services:
       postgres:
         image: postgres:17-alpine
@@ -41,15 +36,27 @@ jobs:
         working-directory: dev/backend
         run: npm ci
 
-      - name: Smoke (SQLite)
-        if: matrix.driver == 'sqlite'
+      # O schema `auth` é do saga: o sgoa só lê. Em CI o saga não roda, então o fixture
+      # cria `auth` no banco de teste (mesma DDL de saga/db/schema.sql) antes do boot —
+      # as FK do schema sgoa referenciam auth.users.
+      - name: "Schema auth (fixture, dono: saga)"
         working-directory: dev/backend
-        run: DB_PATH=':memory:' npm run smoke
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sgoa_test
+        run: psql "$DATABASE_URL" -f tests/fixtures/auth-schema.sql
 
+      # Sem Redis no runner, o verifier não confirma liveness e responde 503 —
+      # que é exatamente o caminho que o smoke aceita (falha fechada). Isso só vale
+      # porque a reconexão do cliente é limitada: sem limite o connect() pendura.
       - name: Smoke (Postgres)
-        if: matrix.driver == 'postgres'
         working-directory: dev/backend
-        run: DB_DRIVER=postgres DATABASE_URL='postgres://postgres:postgres@localhost:5432/sgoa_test' npm run smoke
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sgoa_test
+        run: npm run smoke
+
+      - name: Testes do contrato de sessão
+        working-directory: dev/backend
+        run: npm test
 
       - name: Frontend build
         working-directory: dev/frontend

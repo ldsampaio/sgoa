@@ -16,12 +16,8 @@
             <input id="email" v-model="form.email" type="email" required placeholder="nome@utfpr.edu.br" />
           </div>
           <div class="campo">
-            <label for="senha">Nova senha (deixe vazio para manter)</label>
-            <input id="senha" v-model="form.senha" type="password" autocomplete="new-password" placeholder="••••••••" />
-          </div>
-          <div class="campo">
-            <label>Tipo de Usuário</label>
-            <input :value="authState.user?.tipo_usuario" type="text" disabled />
+            <label>Papel no SGOA</label>
+            <input :value="authState.user?.papel" type="text" disabled />
           </div>
         </div>
         <button type="submit" class="botao primario" :disabled="salvando">{{ salvando ? 'Salvando...' : 'Salvar alterações' }}</button>
@@ -52,11 +48,11 @@
       </table>
     </div>
 
-    <div class="cartao" v-if="authState.user?.tipo_usuario === 'Administrador'">
+    <div class="cartao" v-if="authState.user?.papel === 'Administrador'">
       <h2>E-mail institucional (conta do projeto)</h2>
       <p class="metadado">
-        Os avisos de prazo e a recuperação de senha partem da conta institucional única,
-        configurada via ambiente no servidor (SMTP_USER/SMTP_FROM). Use o botão abaixo para testar o envio.
+        Os avisos de prazo partem da conta institucional única, configurada via ambiente no servidor
+        (SMTP_USER/SMTP_FROM). Use o botão abaixo para testar o envio.
       </p>
       <AlertMessage :mensagem="emailErro" tipo="erro" />
       <AlertMessage :mensagem="emailSucesso" tipo="sucesso" />
@@ -65,7 +61,7 @@
       </button>
     </div>
 
-    <div class="cartao" v-if="authState.user?.tipo_usuario === 'Professor'">
+    <div class="cartao" v-if="authState.user?.papel === 'Professor'">
       <h2>Prompts de avaliação por IA</h2>
       <p class="metadado">
         Personalize como o agente de IA avalia os trabalhos dos seus alunos, por categoria.
@@ -99,9 +95,8 @@ import AlertMessage from './components/AlertMessage.vue';
 import Spinner from './components/Spinner.vue';
 
 const form = reactive({
-  nome: authState.user?.nome || '',
+  nome: authState.user?.name || '',
   email: authState.user?.email || '',
-  senha: '',
 });
 const erro = ref('');
 const sucesso = ref('');
@@ -118,10 +113,7 @@ async function salvar() {
   sucesso.value = '';
   salvando.value = true;
   try {
-    const dados = { nome: form.nome, email: form.email };
-    if (form.senha) dados.senha = form.senha;
-    await AuthController.atualizarPerfil(dados);
-    form.senha = '';
+    await AuthController.atualizarPerfil({ nome: form.nome, email: form.email });
     sucesso.value = 'Perfil atualizado com sucesso.';
   } catch (err) {
     erro.value = err.message;
@@ -131,7 +123,7 @@ async function salvar() {
 }
 
 onMounted(async () => {
-  if (authState.user?.tipo_usuario === 'Professor') {
+  if (authState.user?.papel === 'Professor') {
     await PromptAvaliacaoController.carregar();
     for (const p of promptState.prompts) promptsEdit[p.id_tipo] = p.prompt;
   }

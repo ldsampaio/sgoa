@@ -16,9 +16,9 @@ function dataValida(valor) {
 }
 
 async function podeGerenciarEtapas(req, orientacao) {
-  if (['Coordenador', 'Administrador'].includes(req.user?.tipo_usuario)) return true;
-  if (req.user?.tipo_usuario !== 'Professor') return false;
-  const prof = await ProfessorModel.findByUsuario(req.user.id_usuario);
+  if (['Coordenador', 'Administrador'].includes(req.user?.papel)) return true;
+  if (req.user?.papel !== 'Professor') return false;
+  const prof = await ProfessorModel.findByUsuario(req.user.id);
   return !!prof && prof.id_professor === orientacao.orientador.id_professor;
 }
 

@@ -8,8 +8,8 @@ export async function create({ idOrientacao, idRemetente, conteudo }) {
     [id, idOrientacao, idRemetente, conteudo],
   );
   return await get(
-    `SELECT m.*, u.nome AS nome_remetente FROM mensagens m
-     JOIN usuarios u ON u.id_usuario = m.id_remetente
+    `SELECT m.*, u.name AS nome_remetente FROM mensagens m
+     JOIN auth.users u ON u.id = m.id_remetente
      WHERE m.id_mensagem = ?`,
     [id],
   );
@@ -17,8 +17,8 @@ export async function create({ idOrientacao, idRemetente, conteudo }) {
 
 export async function listByOrientacao(idOrientacao) {
   return await all(
-    `SELECT m.*, u.nome AS nome_remetente FROM mensagens m
-     JOIN usuarios u ON u.id_usuario = m.id_remetente
+    `SELECT m.*, u.name AS nome_remetente FROM mensagens m
+     JOIN auth.users u ON u.id = m.id_remetente
      WHERE m.id_orientacao = ? ORDER BY m.data_envio ASC`,
     [idOrientacao],
   );

@@ -5,6 +5,12 @@
 **Data:** 12 de setembro de 2026
 **Versão:** 1.0
 
+> **Superado (identidade unificada):** os requisitos de credencial deste documento — login por
+> senha, recuperação de senha, convite por e-mail, bloqueio por tentativas — não valem mais
+> para o sgoa. O sgoa não autentica credencial: verifica a sessão compartilhada do saga
+> (`../../docs/session-contract.md`). O domínio (orientações, prazos, avaliação) e o RBAC por
+> papel em `sgoa.perfis` permanecem.
+
 ---
 
 ### 1. Introdução

@@ -9,7 +9,7 @@
 
     <template v-if="dashboardState.dados && !dashboardState.carregando">
       <!-- ===== Dashboard do Professor ===== -->
-      <div v-if="authState.user?.tipo_usuario === 'Professor'">
+      <div v-if="authState.user?.papel === 'Professor'">
         <div class="cartao">
           <h2>
             Minhas Orientações Ativas
@@ -91,7 +91,7 @@
       </div>
 
       <!-- ===== Dashboard do Aluno ===== -->
-      <div v-else-if="authState.user?.tipo_usuario === 'Aluno'">
+      <div v-else-if="authState.user?.papel === 'Aluno'">
         <div class="cartao">
           <h2>Minha Orientação Atual</h2>
           <div v-if="!dashboardState.dados.orientacao_atual" class="linha-vazia">
@@ -168,7 +168,7 @@
       </div>
 
       <!-- ===== Dashboard do Coordenador ===== -->
-      <div v-else-if="authState.user?.tipo_usuario === 'Coordenador'">
+      <div v-else-if="authState.user?.papel === 'Coordenador'">
         <div class="grid-2">
           <div class="cartao">
             <h2>Visão Geral das Orientações</h2>

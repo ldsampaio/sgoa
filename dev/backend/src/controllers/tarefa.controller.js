@@ -23,7 +23,7 @@ export const listByOrientacao = asyncHandler(async (req, res) => {
 export const create = asyncHandler(async (req, res) => {
   const id = req.params.id;
   if (!(await requireAcesso(req, res, id))) return;
-  if (!PAPEIS_CRIACAO.includes(req.user.tipo_usuario)) {
+  if (!PAPEIS_CRIACAO.includes(req.user.papel)) {
     return res.status(403).json({ erro: 'Apenas professor, coordenador ou administrador pode criar cartões.' });
   }
 
@@ -35,7 +35,7 @@ export const create = asyncHandler(async (req, res) => {
   const tarefa = await TarefaModel.create({
     idOrientacao: id,
     idResponsavel: id_responsavel,
-    idCriador: req.user.id_usuario,
+    idCriador: req.user.id,
     titulo: normalizarTitulo(titulo),
     descricao: normalizarDescricao(descricao, { obrigatoria: true }),
     dataLimite: data_limite ?? null,
@@ -49,7 +49,7 @@ export const create = asyncHandler(async (req, res) => {
     'tarefa',
     'Nova tarefa atribuída',
     `Tarefa "${tarefa.titulo}" atribuída a ${responsavel}.`,
-    req.user.id_usuario,
+    req.user.id,
   );
   return res.status(201).json(tarefa);
 });
@@ -60,6 +60,12 @@ export const update = asyncHandler(async (req, res) => {
   if (!tarefa) return res.status(404).json({ erro: 'Tarefa não encontrada.' });
 
   if (!(await requireAcesso(req, res, tarefa.id_orientacao))) return;
+
+  // Papel por sistema: o aluno só mexe nos próprios cartões (req.user.papel vem de
+  // sgoa.perfis, nunca do claim `role` do JWT).
+  if (req.user.papel === 'Aluno' && tarefa.id_responsavel !== req.user.id) {
+    return res.status(403).json({ erro: 'Você só pode atualizar as próprias tarefas.' });
+  }
 
   const dados = {};
   if (req.body.titulo !== undefined) dados.titulo = normalizarTitulo(req.body.titulo);
@@ -95,7 +101,7 @@ export const update = asyncHandler(async (req, res) => {
       'tarefa',
       'Tarefa atualizada',
       `Tarefa "${atualizada.titulo}" está "${atualizada.status}".`,
-      req.user.id_usuario,
+      req.user.id,
     );
   }
   return res.json(atualizada);
@@ -112,7 +118,7 @@ export const arquivar = asyncHandler(async (req, res) => {
     return res.status(403).json({ erro: 'Você não pode arquivar esta tarefa.' });
   }
 
-  const arquivada = await TarefaModel.arquivar(id, req.user.id_usuario);
+  const arquivada = await TarefaModel.arquivar(id, req.user.id);
   if (!arquivada) return res.status(404).json({ erro: 'Tarefa não encontrada.' });
   return res.status(204).send();
 });

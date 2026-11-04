@@ -29,8 +29,8 @@
 
         <div class="navbar-acoes">
           <div class="usuario-atual">
-            <span class="nome-usuario">{{ authState.user?.nome }}</span>
-            <span class="avatar" :title="authState.user?.nome">{{ inicial(authState.user?.nome) }}</span>
+            <span class="nome-usuario">{{ authState.user?.name }}</span>
+            <span class="avatar" :title="authState.user?.name">{{ inicial(authState.user?.name) }}</span>
           </div>
           <button class="botao secundario sair" @click="sair">
             <Icon name="signout" :size="16" />
@@ -69,7 +69,7 @@ import Icon from './components/Icon.vue';
 const router = useRouter();
 const menuAberto = ref(false);
 
-const tipo = computed(() => authState.user?.tipo_usuario);
+const tipo = computed(() => authState.user?.papel);
 const ehAdministrador = computed(() => tipo.value === 'Administrador');
 const ehCoordenador = computed(() => tipo.value === 'Coordenador');
 const ehCoordenadorOuAdmin = computed(() => ['Coordenador', 'Administrador'].includes(tipo.value));
@@ -96,8 +96,11 @@ watch(() => router.currentRoute.value.fullPath, () => {
   menuAberto.value = false;
 });
 
+// O logout é do saga (derruba a sessão no Redis e remove o cookie compartilhado).
+// O sgoa limpa o estado local e vai para a página de redirecionamento, que usa o
+// login_url do corpo do 401.
 function sair() {
-  AuthController.logout();
+  AuthController.limpar();
   router.push({ name: 'login' });
 }
 </script>

@@ -5,16 +5,19 @@ import { now } from '../config/database.js';
 export const SELECT_BASE = `
   SELECT
     o.*,
-    u_aluno.nome AS nome_aluno,
+    u_aluno.name AS nome_aluno,
     a.id_usuario AS id_usuario_aluno,
-    a.data_matricula AS data_matricula_aluno,
-    u_orient.nome AS nome_orientador,
-    u_orient.id_usuario AS id_usuario_orientador
+    up_aluno.matricula AS matricula_aluno,
+    up_aluno.curso AS curso_aluno,
+    up_aluno.data_matricula AS data_matricula_aluno,
+    u_orient.name AS nome_orientador,
+    u_orient.id AS id_usuario_orientador
   FROM orientacoes o
   JOIN alunos a ON a.id_aluno = o.id_aluno
-  JOIN usuarios u_aluno ON u_aluno.id_usuario = a.id_usuario
+  JOIN auth.users u_aluno ON u_aluno.id = a.id_usuario
+  LEFT JOIN auth.user_profiles up_aluno ON up_aluno.user_id = a.id_usuario
   JOIN professores pr ON pr.id_professor = o.id_orientador
-  JOIN usuarios u_orient ON u_orient.id_usuario = pr.id_usuario
+  JOIN auth.users u_orient ON u_orient.id = pr.id_usuario
 `;
 
 function mapOrientacao(row) {
@@ -37,6 +40,8 @@ function mapOrientacao(row) {
       id_aluno: row.id_aluno,
       id_usuario: row.id_usuario_aluno,
       nome: row.nome_aluno,
+      matricula: row.matricula_aluno ?? null,
+      curso: row.curso_aluno ?? null,
       data_matricula: row.data_matricula_aluno ?? null,
     },
     orientador: {
@@ -52,10 +57,11 @@ async function attachCoOrientadores(orientacoes) {
   if (ids.length === 0) return orientacoes;
   const placeholders = ids.map(() => '?').join(',');
   const cos = await all(
-    `SELECT co.id_orientacao, p.id_professor, p.matricula, u.id_usuario, u.nome AS nome
+    `SELECT co.id_orientacao, p.id_professor, up.matricula, u.id AS id_usuario, u.name AS nome
      FROM co_orientadores co
      JOIN professores p ON p.id_professor = co.id_professor
-     JOIN usuarios u ON u.id_usuario = p.id_usuario
+     JOIN auth.users u ON u.id = p.id_usuario
+     LEFT JOIN auth.user_profiles up ON up.user_id = p.id_usuario
      WHERE co.id_orientacao IN (${placeholders})`,
     ids,
   );
@@ -146,9 +152,9 @@ export async function addCoOrientador(idOrientacao, idProfessor) {
     [id, idOrientacao, idProfessor],
   );
   return await get(
-    `SELECT p.id_professor, u.id_usuario, u.nome AS nome FROM co_orientadores co
+    `SELECT p.id_professor, u.id AS id_usuario, u.name AS nome FROM co_orientadores co
      JOIN professores p ON p.id_professor = co.id_professor
-     JOIN usuarios u ON u.id_usuario = p.id_usuario
+     JOIN auth.users u ON u.id = p.id_usuario
      WHERE co.id_co_orientador = ?`,
     [id],
   );
