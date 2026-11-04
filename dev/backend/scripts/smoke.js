@@ -44,3 +44,7 @@ try {
 } finally {
   server.close();
 }
+
+// O cliente de Redis mantém o event loop vivo (conexão aberta). Sem isto o processo
+// fica pendurado depois das asserts — em CI sem Redis ele encerra sozinho.
+process.exit(0);

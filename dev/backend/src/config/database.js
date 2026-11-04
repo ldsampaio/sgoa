@@ -251,7 +251,6 @@ CREATE TABLE IF NOT EXISTS ${SCHEMA_SGOA}.avaliacoes (
 
 CREATE INDEX IF NOT EXISTS idx_tarefas_orientacao ON ${SCHEMA_SGOA}.tarefas(id_orientacao);
 CREATE INDEX IF NOT EXISTS idx_tarefas_responsavel ON ${SCHEMA_SGOA}.tarefas(id_responsavel);
-CREATE INDEX IF NOT EXISTS idx_tarefas_kanban ON ${SCHEMA_SGOA}.tarefas(id_orientacao, status, ordem);
 CREATE INDEX IF NOT EXISTS idx_reunioes_orientacao ON ${SCHEMA_SGOA}.reunioes(id_orientacao);
 CREATE INDEX IF NOT EXISTS idx_reunioes_google_event ON ${SCHEMA_SGOA}.reunioes(google_event_id);
 CREATE INDEX IF NOT EXISTS idx_documentos_orientacao ON ${SCHEMA_SGOA}.documentos(id_orientacao);
@@ -312,6 +311,12 @@ async function migrarTarefasPg() {
 
   await pool.query(
     `UPDATE ${SCHEMA_SGOA}.tarefas SET titulo = LEFT(descricao, 80) WHERE titulo IS NULL OR titulo = ''`,
+  );
+
+  // O índice do quadro depende das colunas acima: criar depois do ADD COLUMN, não no
+  // script do schema (CREATE TABLE IF NOT EXISTS não acrescenta coluna a banco existente).
+  await pool.query(
+    `CREATE INDEX IF NOT EXISTS idx_tarefas_kanban ON ${SCHEMA_SGOA}.tarefas(id_orientacao, status, ordem)`,
   );
 
   if (!cols.includes('ordem')) {

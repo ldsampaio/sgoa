@@ -36,6 +36,15 @@ jobs:
         working-directory: dev/backend
         run: npm ci
 
+      # O schema `auth` é do saga: o sgoa só lê. Em CI o saga não roda, então o fixture
+      # cria `auth` no banco de teste (mesma DDL de saga/db/schema.sql) antes do boot —
+      # as FK do schema sgoa referenciam auth.users.
+      - name: Schema auth (fixture, dono: saga)
+        working-directory: dev/backend
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sgoa_test
+        run: psql "$DATABASE_URL" -f tests/fixtures/auth-schema.sql
+
       # Sem Redis no runner, o verifier não confirma liveness e responde 503 —
       # que é exatamente o caminho que o smoke aceita (falha fechada).
       - name: Smoke (Postgres)
