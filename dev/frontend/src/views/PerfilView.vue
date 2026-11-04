@@ -20,6 +20,13 @@
             <input :value="authState.user?.papel" type="text" disabled />
           </div>
         </div>
+        <p class="metadado">
+          Conta no SGOA: <strong>{{ authState.user?.papel || 'não identificada' }}</strong>
+          <template v-if="authState.user?.conta">
+            · id {{ authState.user.conta.id_aluno || authState.user.conta.id_professor }}
+          </template>
+          <template v-else>· sem conta vinculada a este papel</template>
+        </p>
         <button type="submit" class="botao primario" :disabled="salvando">{{ salvando ? 'Salvando...' : 'Salvar alterações' }}</button>
       </form>
     </div>

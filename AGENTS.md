@@ -42,6 +42,12 @@ Kafka e workers só quando a avaliação IA entra em jogo (`dev/docker-compose.y
 - **Credencial (T10):** `src/middleware/rejeitaCredencial.js` recusa campo de credencial em
   corpo de qualquer rota `/api`. Não há coluna de senha, nem rota de login/reset.
 - **Papel por sistema** vive em `sgoa.perfis`; o claim `role` do JWT nunca é usado.
+- **A conta do usuário é find-or-create no `me`** (`src/services/conta.service.js`): papel em
+  `sgoa.perfis` + entidade em `sgoa.alunos`/`sgoa.professores`. Sem isto o logado entra e não
+  encontra conta carregada — `perfil.id_aluno`/`id_professor` ficam null e nada se monta em
+  torno dele. Só `ALUNO`/`PROFESSOR` são deriváveis de `role_base`; Coordenador e Administrador
+  continuam sendo atribuídos pela gestão, e uma linha existente nunca é sobrescrita. Regressão
+  em `tests/conta.test.js`.
 - **`sid` com charset inesperado → `BAD_TOKEN`** (contrato, passo 3): o verifier não monta
   nome de chave Redis a partir do conteúdo do token. Por isso os testes usam sids de 8+
   caracteres (`sid-0001`); um `sid` curto como `s1` agora é rejeitado.
