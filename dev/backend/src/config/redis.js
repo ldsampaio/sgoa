@@ -9,10 +9,22 @@ import { createClient } from 'redis';
 // sem confirmar liveness, o verifier rejeita (503).
 let client = null;
 
+// Falha fechada precisa ser RÁPIDA: sem um limite de reconexão, connect() nunca resolve
+// quando o Redis está fora e o request pendura em vez de responder 503. O verifier já
+// trata o erro como "liveness não confirmada", então o limite de tentativas é o que
+// transforma "Redis indisponível" em 503 de fato (regressão no CI, que não tem Redis).
+const MAX_RECONNECTS = 3;
+
+export function estrategiaReconexao(retries) {
+  if (retries >= MAX_RECONNECTS) return new Error('redis: reconexão esgotada');
+  return Math.min(retries * 100, 500);
+}
+
 export async function getRedis() {
   if (!client) {
     client = createClient({
       url: process.env.REDIS_URL || 'redis://saga_readonly:saga-dev-ro@localhost:6379/0',
+      socket: { connectTimeout: 5000, reconnectStrategy: estrategiaReconexao },
     });
     client.on('error', () => {
       // O verifier trata a falha como "liveness não confirmada" → 503.

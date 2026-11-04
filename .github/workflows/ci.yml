@@ -46,7 +46,8 @@ jobs:
         run: psql "$DATABASE_URL" -f tests/fixtures/auth-schema.sql
 
       # Sem Redis no runner, o verifier não confirma liveness e responde 503 —
-      # que é exatamente o caminho que o smoke aceita (falha fechada).
+      # que é exatamente o caminho que o smoke aceita (falha fechada). Isso só vale
+      # porque a reconexão do cliente é limitada: sem limite o connect() pendura.
       - name: Smoke (Postgres)
         working-directory: dev/backend
         env:

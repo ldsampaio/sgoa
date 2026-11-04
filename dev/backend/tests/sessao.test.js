@@ -9,6 +9,7 @@ import { rejeitaCredencial } from '../src/middleware/rejeitaCredencial.js';
 import { SCHEMA } from '../src/config/database.js';
 import authRoutes from '../src/routes/auth.routes.js';
 import { decidirAcao } from '../../frontend/src/plugins/decisaoErro.js';
+import { estrategiaReconexao } from '../src/config/redis.js';
 
 // Wiring do middleware + caminhos do frontend, exercitado com fakes em memória
 // (Redis e repositório). O JWKS usa o cliente real (jwks-rsa) com cache por `kid`
@@ -232,4 +233,14 @@ test('erro de autenticação não revela se o login existe', async () => {
   assert.equal(morto.captura.body.message, inexistente.captura.body.message);
   assert.ok(!JSON.stringify(morto.captura.body).includes('a234561'), 'a resposta não revela o login');
   assert.ok(!JSON.stringify(inexistente.captura.body).includes('u9'), 'a resposta não revela o usuário');
+});
+
+test('Redis fora: a reconexão é limitada, então o request responde 503 em vez de pendurar', () => {
+  // Sem limite de reconexão, connect() nunca resolve quando o Redis está fora: o request
+  // pendura e o 503 do contrato nunca chega (foi o que o smoke mostrou no CI, que não tem
+  // Redis). O verifier já trata o erro como "liveness não confirmada"; aqui se prova que o
+  // cliente desiste e entrega o erro.
+  assert.equal(typeof estrategiaReconexao(0), 'number');
+  assert.ok(estrategiaReconexao(2) > 0, 'antes do limite: tenta de novo');
+  assert.ok(estrategiaReconexao(3) instanceof Error, 'no limite: entrega erro, não atraso');
 });

@@ -36,6 +36,9 @@ Kafka e workers só quando a avaliação IA entra em jogo (`dev/docker-compose.y
   mesmo com JWT válido e JWKS cacheado — não há cache de sessão em processo nem fallback.
   O acesso ao Redis é pelo usuário ACL `saga_readonly` (`redis.acl` na raiz do projeto):
   só lê `saga:sess:*:meta` e `saga:heartbeat`, não lê o payload upstream e não escreve.
+  A reconexão do cliente é **limitada** (`estrategiaReconexao`, 3 tentativas): sem limite
+  `connect()` nunca resolve quando o Redis está fora e o request pendura em vez de responder
+  503 — foi o que o smoke mostrou no CI, que não tem Redis.
 - **Credencial (T10):** `src/middleware/rejeitaCredencial.js` recusa campo de credencial em
   corpo de qualquer rota `/api`. Não há coluna de senha, nem rota de login/reset.
 - **Papel por sistema** vive em `sgoa.perfis`; o claim `role` do JWT nunca é usado.
