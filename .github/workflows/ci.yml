@@ -39,7 +39,7 @@ jobs:
       # O schema `auth` é do saga: o sgoa só lê. Em CI o saga não roda, então o fixture
       # cria `auth` no banco de teste (mesma DDL de saga/db/schema.sql) antes do boot —
       # as FK do schema sgoa referenciam auth.users.
-      - name: Schema auth (fixture, dono: saga)
+      - name: "Schema auth (fixture, dono: saga)"
         working-directory: dev/backend
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/sgoa_test
