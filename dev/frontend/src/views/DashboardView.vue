@@ -9,7 +9,7 @@
 
     <template v-if="dashboardState.dados && !dashboardState.carregando">
       <!-- ===== Dashboard do Professor ===== -->
-      <div v-if="authState.user?.papel === 'Professor'">
+      <div v-if="tela === 'professor'">
         <div class="cartao">
           <h2>
             Minhas Orientações Ativas
@@ -91,7 +91,7 @@
       </div>
 
       <!-- ===== Dashboard do Aluno ===== -->
-      <div v-else-if="authState.user?.papel === 'Aluno'">
+      <div v-else-if="tela === 'aluno'">
         <div class="cartao">
           <h2>Minha Orientação Atual</h2>
           <div v-if="!dashboardState.dados.orientacao_atual" class="linha-vazia">
@@ -167,8 +167,8 @@
         </div>
       </div>
 
-      <!-- ===== Dashboard do Coordenador ===== -->
-      <div v-else-if="authState.user?.papel === 'Coordenador'">
+      <!-- ===== Dashboard da gestão (Coordenador / Administrador) ===== -->
+      <div v-else-if="tela === 'gestao'">
         <div class="grid-2">
           <div class="cartao">
             <h2>Visão Geral das Orientações</h2>
@@ -278,7 +278,17 @@ import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
 import Icon from './components/Icon.vue';
 import { authState } from '../controllers/AuthController.js';
+import { temPapel } from '../utils/papeis.js';
 import { formatarData, formatarDataHora } from '../utils/fmt.js';
+
+// Tela do painel: gestão primeiro, porque um usuário pode ter mais de um papel
+// (Administrador e Professor) e o dado carregado é o da gestão.
+const tela = computed(() => {
+  if (temPapel(authState.user, 'Administrador', 'Coordenador')) return 'gestao';
+  if (temPapel(authState.user, 'Professor')) return 'professor';
+  if (temPapel(authState.user, 'Aluno')) return 'aluno';
+  return null;
+});
 
 const enlaces = computed(() => dashboardState.dados?.enlaces ?? []);
 

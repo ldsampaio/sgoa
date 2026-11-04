@@ -105,7 +105,7 @@ export const dashboardCoordenador = asyncHandler(async (req, res) => {
      FROM professores pr
      JOIN auth.users u ON u.id = pr.id_usuario
      LEFT JOIN orientacoes o ON o.id_orientador = pr.id_professor AND o.status = 'Em Andamento'
-     GROUP BY pr.id_professor
+     GROUP BY pr.id_professor, u.name
      ORDER BY total DESC, u.name`,
   );
 

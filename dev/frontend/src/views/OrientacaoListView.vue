@@ -7,7 +7,7 @@
       <h2>
         Orientações
         <RouterLink
-          v-if="['Professor', 'Administrador'].includes(authState.user?.papel)"
+          v-if="temPapel(authState.user, 'Professor', 'Administrador')"
           :to="{ name: 'orientacao-nova' }"
           class="botao primario"
         >
@@ -47,6 +47,7 @@ import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
 import Icon from './components/Icon.vue';
 import { authState } from '../controllers/AuthController.js';
+import { temPapel } from '../utils/papeis.js';
 import { formatarData } from '../utils/fmt.js';
 
 onMounted(() => {

@@ -54,7 +54,7 @@ function fakeRedis({ heartbeat = '1' } = {}) {
 }
 
 function fakeRepositorio(papeis) {
-  return async (idUsuario) => papeis.get(idUsuario) || null;
+  return async (idUsuario) => papeis.get(idUsuario) || [];
 }
 
 function requisicao(cookie, host = 'localhost') {
@@ -108,7 +108,7 @@ function sessaoViva(redis, { sid = 'sid-0001', user = 'u1', login = 'a234561' } 
 
 test('heartbeat ausente → 503 mesmo com JWT válido e JWKS cacheado', async () => {
   const redis = fakeRedis();
-  const middleware = criarMiddlewareAuth({ redis, resolverChave, papelDe: fakeRepositorio(new Map([['u1', 'Aluno']])), env: ENV });
+  const middleware = criarMiddlewareAuth({ redis, resolverChave, papeisDe: fakeRepositorio(new Map([['u1', ['Aluno']]])), env: ENV });
   const token = sessaoViva(redis);
 
   // Popula o cache de chave (único cache permitido) e confirma que o acesso passa
@@ -188,7 +188,7 @@ test('coluna de senha não existe no schema do sgoa', () => {
 
 test('o token de sessão nunca é escrito em log', async () => {
   const redis = fakeRedis();
-  const middleware = criarMiddlewareAuth({ redis, resolverChave, papelDe: fakeRepositorio(new Map()), env: ENV });
+  const middleware = criarMiddlewareAuth({ redis, resolverChave, papeisDe: fakeRepositorio(new Map()), env: ENV });
   const token = sessaoViva(redis);
 
   const original = { log: console.log, error: console.error, warn: console.warn };
@@ -213,7 +213,7 @@ test('o token de sessão nunca é escrito em log', async () => {
 
 test('erro de autenticação não revela se o login existe', async () => {
   const redis = fakeRedis();
-  const middleware = criarMiddlewareAuth({ redis, resolverChave, papelDe: fakeRepositorio(new Map()), env: ENV });
+  const middleware = criarMiddlewareAuth({ redis, resolverChave, papeisDe: fakeRepositorio(new Map()), env: ENV });
 
   const semSessao = respostaCapturada();
   await middleware(requisicao(''), semSessao, () => {});

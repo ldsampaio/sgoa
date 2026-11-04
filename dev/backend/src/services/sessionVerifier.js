@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 import { resolverChave } from './jwks.js';
-import { papelDoPapelBase } from '../models/perfil.model.js';
+import { papelDoPapelBase, papelPrincipal, papeisDe } from '../models/perfil.model.js';
 
 // Contrato de verificação de sessão (docs/session-contract.md — autoridade,
 // não negociável). Ordem exata:
@@ -79,7 +79,7 @@ function naoAutorizado(code, loginUrl) {
   return { ok: false, status: 401, body: { code, message: MENSAGEM_SESSAO, login_url: loginUrl } };
 }
 
-export function criarVerificador({ redis, resolverChave: resolver = resolverChave, papelDe, env = process.env }) {
+export function criarVerificador({ redis, resolverChave: resolver = resolverChave, papeisDe, env = process.env }) {
   const retryAfter = Number(env.IDENTITY_RETRY_AFTER) || 30;
 
   return async function verificar(req) {
@@ -131,8 +131,13 @@ export function criarVerificador({ redis, resolverChave: resolver = resolverChav
       role_base: meta.role_base,
     };
 
-    // 6. Papel por sistema: tabela de extensão do sgoa.
-    user.papel = (await papelDe(user.id)) || papelDoPapelBase(user.role_base);
+    // 6. Papel por sistema: tabela de extensão do sgoa. Um usuário pode ter mais de
+    //    um papel (ex. Administrador e Professor), então `papeis` é lista e `papel`
+    //    é o principal pela precedência de gestão.
+    const registrados = await papeisDe(user.id);
+    const derivado = papelDoPapelBase(user.role_base);
+    user.papeis = registrados.length ? registrados : derivado === 'UNDEFINIDO' ? [] : [derivado];
+    user.papel = papelPrincipal(user.papeis);
 
     return { ok: true, user };
   };

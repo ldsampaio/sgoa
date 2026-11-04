@@ -488,6 +488,7 @@ import MensagemController, { mensagemState } from '../controllers/MensagemContro
 import EnlaceController, { enlaceState } from '../controllers/EnlaceOverleafController.js';
 import LembreteModel from '../models/LembreteModel.js';
 import { authState } from '../controllers/AuthController.js';
+import { temPapel } from '../utils/papeis.js';
 import StatusPill from './components/StatusPill.vue';
 import Spinner from './components/Spinner.vue';
 import AlertMessage from './components/AlertMessage.vue';
@@ -528,21 +529,19 @@ function textoDias(dias) {
   return `${dias} dias restantes`;
 }
 
-const podeEditar = computed(() =>
-  ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.papel),
-);
-const podeCriarTarefa = computed(() => ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.papel));
+const podeEditar = computed(() => temPapel(authState.user, 'Professor', 'Coordenador', 'Administrador'));
+const podeCriarTarefa = computed(() => temPapel(authState.user, 'Professor', 'Coordenador', 'Administrador'));
 const podeCriarReuniao = computed(() => podeCriarTarefa.value);
 const podeEnviarDoc = computed(() => true);
 const podeAtualizarTarefa = computed(() =>
-  (t) => ['Professor', 'Coordenador', 'Administrador'].includes(authState.user?.papel) || t.id_responsavel === authState.user?.id,
+  (t) => temPapel(authState.user, 'Professor', 'Coordenador', 'Administrador') || t.id_responsavel === authState.user?.id,
 );
 
 const podeGerenciarEtapas = computed(() => {
   const o = orientacaoState.atual;
   if (!o) return false;
-  if (['Coordenador', 'Administrador'].includes(authState.user?.papel)) return true;
-  return authState.user?.papel === 'Professor' && o.orientador?.id_usuario === authState.user?.id;
+  if (temPapel(authState.user, 'Coordenador', 'Administrador')) return true;
+  return temPapel(authState.user, 'Professor') && o.orientador?.id_usuario === authState.user?.id;
 });
 
 const formEtapas = reactive({ qualificacao_concluida_em: '', defesa_concluida_em: '' });

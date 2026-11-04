@@ -9,7 +9,9 @@ import { identificarConta } from '../services/conta.service.js';
 // a conta do sgoa (papel em sgoa.perfis + entidade em sgoa.alunos / sgoa.professores).
 // Sem isto o usuário logado entra e não encontra conta carregada.
 export const me = asyncHandler(async (req, res) => {
-  const { papel, conta } = await identificarConta(req.user.id, req.user.role_base);
+  const { papel, papeis, conta } = await identificarConta(req.user.id, req.user.role_base, {
+    login: req.user.login,
+  });
 
   return res.json({
     id: req.user.id,
@@ -18,6 +20,7 @@ export const me = asyncHandler(async (req, res) => {
     email: req.user.email,
     role_base: req.user.role_base,
     papel,
+    papeis,
     perfil: await perfilAcademico(req.user.id),
     conta,
   });

@@ -8,13 +8,14 @@ import {
 } from '../models/orientacao.model.js';
 import { findByUsuario as findProfessorByUsuario } from '../models/professor.model.js';
 import { findByUsuario as findAlunoByUsuario } from '../models/aluno.model.js';
+import { temPapel } from '../models/perfil.model.js';
 
 export async function perfilDoUsuario(user) {
-  if (user.papel === 'Professor') {
+  if (temPapel(user, 'Professor')) {
     const p = await findProfessorByUsuario(user.id);
     return p ? { ...p, nome: user.name } : null;
   }
-  if (user.papel === 'Aluno') {
+  if (temPapel(user, 'Aluno')) {
     const a = await findAlunoByUsuario(user.id);
     return a ? { ...a, nome: user.name } : null;
   }
@@ -28,10 +29,10 @@ export async function canAcessarOrientacao(user, idOrientacao) {
   );
   if (!orientacao) return null;
 
-  if (user.papel === 'Coordenador' || user.papel === 'Administrador') {
+  if (temPapel(user, 'Coordenador', 'Administrador')) {
     return orientacao;
   }
-  if (user.papel === 'Professor') {
+  if (temPapel(user, 'Professor')) {
     const p = await findProfessorByUsuario(user.id);
     if (p && orientacao.id_orientador === p.id_professor) return orientacao;
     if (p) {
@@ -42,7 +43,7 @@ export async function canAcessarOrientacao(user, idOrientacao) {
       if (co) return orientacao;
     }
   }
-  if (user.papel === 'Aluno') {
+  if (temPapel(user, 'Aluno')) {
     const a = await findAlunoByUsuario(user.id);
     if (a && orientacao.id_aluno === a.id_aluno) return orientacao;
   }
@@ -54,10 +55,10 @@ export async function canAcessarOrientacao(user, idOrientacao) {
  * usada pelas listagens agregadas — ex. a página consolidada de links Overleaf.
  */
 export async function orientacoesDoUsuario(user) {
-  if (user.papel === 'Coordenador' || user.papel === 'Administrador') {
+  if (temPapel(user, 'Coordenador', 'Administrador')) {
     return await listOrientacoesAll();
   }
-  if (user.papel === 'Professor') {
+  if (temPapel(user, 'Professor')) {
     const p = await findProfessorByUsuario(user.id);
     if (!p) return [];
     const propias = await listOrientacoesByProfessor(p.id_professor);
@@ -66,7 +67,7 @@ export async function orientacoesDoUsuario(user) {
     for (const o of [...propias, ...co]) mapa.set(o.id_orientacao, o);
     return [...mapa.values()];
   }
-  if (user.papel === 'Aluno') {
+  if (temPapel(user, 'Aluno')) {
     const a = await findAlunoByUsuario(user.id);
     return a ? await listOrientacoesByAluno(a.id_aluno) : [];
   }

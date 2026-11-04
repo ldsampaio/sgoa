@@ -61,11 +61,11 @@ function requisicao(cookie, headers = {}) {
   };
 }
 
-function ambienteBase({ redis, papel = null } = {}) {
+function ambienteBase({ redis, papeis = [] } = {}) {
   return {
     redis: redis || new RedisFake(),
     resolverChave: resolverDeChaveCacheada(CHAVES.publicKey),
-    papelDe: async () => papel,
+    papeisDe: async () => papeis,
     env: {
       SAGA_LOGIN_URL: 'http://localhost:8000/login',
       SAGA_JWKS_URL: 'http://localhost:8000/.well-known/jwks.json',
@@ -222,13 +222,14 @@ test('req.user vem do Redis e o papel vem da tabela do sgoa, não do claim role'
     gen: '1',
   });
   // Claim `role` do JWT diz outra coisa — o contrato ignora o claim.
-  const resultado = await criarVerificador(ambienteBase({ redis, papel: 'Coordenador' }))(
+  const resultado = await criarVerificador(ambienteBase({ redis, papeis: ['Coordenador'] }))(
     requisicao(`saga_session=${tokenDe({ iss: 'saga', sub: 'u1', sid: 'sid-0009', gen: 1, role: 'PROFESSOR' })}`),
   );
   assert.equal(resultado.ok, true);
   assert.equal(resultado.user.id, 'u1');
   assert.equal(resultado.user.login, 'a234561');
   assert.equal(resultado.user.papel, 'Coordenador');
+  assert.deepEqual(resultado.user.papeis, ['Coordenador']);
 });
 
 // ── 5. T10 — nenhuma credencial em corpo, schema, log ou erro ────────────────

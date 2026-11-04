@@ -1,17 +1,17 @@
 import { criarVerificador } from '../services/sessionVerifier.js';
 import { portRedis } from '../config/redis.js';
-import { papelDe } from '../models/perfil.model.js';
+import { papeisDe } from '../models/perfil.model.js';
 
 // Middleware de verificação de sessão compartilhada. O sgoa não autentica
 // credencial: ele confirma no Redis que a sessão do saga está viva.
 //
 // 401 e 503 são caminhos distintos — o frontend trata cada um de forma diferente
 // (401 → redirect para o saga; 503 → página de erro própria).
-export function criarMiddlewareAuth({ redis, resolverChave, papelDe: papelDoSistema = papelDe, env = process.env } = {}) {
+export function criarMiddlewareAuth({ redis, resolverChave, papeisDe: papeisDoSistema = papeisDe, env = process.env } = {}) {
   const verificar = criarVerificador({
     redis: redis || portRedis(),
     resolverChave,
-    papelDe: papelDoSistema,
+    papeisDe: papeisDoSistema,
     env,
   });
 

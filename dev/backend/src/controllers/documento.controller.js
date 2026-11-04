@@ -10,6 +10,7 @@ import { resolverPrompt } from '../models/promptAvaliacao.model.js';
 import { findById as findProfessorById } from '../models/professor.model.js';
 import { findById as findTipoById, findByNome as findTipoByNome } from '../models/tipoDocumento.model.js';
 import { montarPedido, publicarPedidoAvaliacao } from '../services/filaAvaliacao.service.js';
+import { temPapel } from '../models/perfil.model.js';
 import { isAgentToken } from '../middleware/agentAuth.js';
 import { notificarParticipantes } from '../services/notificacao.service.js';
 import { uuid } from '../utils/id.js';
@@ -76,7 +77,7 @@ export const uploadDocumento = asyncHandler(async (req, res) => {
   // Submissão de aluno → cria avaliação por IA (fila Kafka). Upload de professor = apoio, sem avaliação.
   // Categoria: escolhida no upload; fallback = tipo da orientação (TCC/Mestrado/Doutorado).
   let avaliacao = null;
-  if (req.user.papel === 'Aluno') {
+  if (temPapel(req.user, 'Aluno')) {
     try {
       const orientacao = await OrientacaoModel.findById(id);
       const categoria = tipoDoc || (orientacao?.tipo ? await findTipoByNome(orientacao.tipo) : null);

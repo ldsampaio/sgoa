@@ -4,6 +4,7 @@ import * as AvaliacaoModel from '../models/avaliacao.model.js';
 import * as DocumentoModel from '../models/documento.model.js';
 import { montarPedido, publicarPedidoAvaliacao } from '../services/filaAvaliacao.service.js';
 import { findById as findOrientacao } from '../models/orientacao.model.js';
+import { temPapel } from '../models/perfil.model.js';
 
 export const listByOrientacao = asyncHandler(async (req, res) => {
   const id = req.params.id;
@@ -25,7 +26,7 @@ export const reenviar = asyncHandler(async (req, res) => {
   const avaliacao = await AvaliacaoModel.findById(req.params.id);
   if (!avaliacao) return res.status(404).json({ erro: 'Avaliação não encontrada.' });
   if (!(await requireAcesso(req, res, avaliacao.id_orientacao))) return;
-  if (req.user.papel === 'Aluno') {
+  if (temPapel(req.user, 'Aluno')) {
     return res.status(403).json({ erro: 'Somente orientador ou coordenador podem reenviar avaliações.' });
   }
   const atualizada = await AvaliacaoModel.reenviar(req.params.id);
