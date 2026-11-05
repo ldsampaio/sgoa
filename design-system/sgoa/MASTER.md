@@ -117,7 +117,8 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
 | `.tabela` | th com bg canvas + upper-case; hairline `border-soft`; hover indigo .06 |
 | `.abas` | pílulas com border soft → border ink + shadow flat na ativa |
 | `.mensagem-balao` | clay bubble, border-2.5; "minha" = sky |
-| `.navbar` | **floating clay card** (sticky top 12px), bg card, border-3, nav items pill; ativo = primary-soft + border primary |
+| `.navbar` | **floating clay card** (sticky top 12px), bg card, border-3, nav items pill; ativo = primary-soft + border primary. **Teto de largura**: `calc(--content-max-width + 2×--spacing-6)`, centralizado — alinha com o conteúdo em vez de esticar até a tela |
+| `.conteudo` | coluna central limitada pelo mesmo teto. `--content-max-width` = soma dos componentes da linha mais larga do dashboard: 2 cartões de 480 + 1 gap de 16 = **976** (+ padding 2×48). Login fica fora do teto (split hero + caixa) |
 | `.pilula-flutuante` | pílula CTA **fixa à esquerda** (centro vertical; canto inferior em ≤767 px), ícone 24 + rótulo — o ícone nunca é o único portador de informação. Dimensões de token, sem px cru fora de `@media` |
 | `.linha-tempo` | diamantes primário com border ink |
 | `.medidores` | bullet bar clay: trilha 16px border-2 ink + fill do token de status; **valor numérico sempre ao lado** (cor nunca é o único portador); trilha com `role="meter"` + `aria-valuenow/max`. Largura do fill vem de `:style` dinâmico (percentual de dados) — única exceção aceita a style inline |
