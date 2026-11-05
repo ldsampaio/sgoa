@@ -13,10 +13,6 @@
           <RouterLink :to="{ name: 'orientacoes' }" @click="menuAberto = false">Orientações</RouterLink>
           <RouterLink :to="{ name: 'links-overleaf' }" @click="menuAberto = false">Links Overleaf</RouterLink>
           <RouterLink :to="{ name: 'perfil' }" @click="menuAberto = false">Meu Perfil</RouterLink>
-          <!-- Onda 7 do plano ../SGTU.md: o link de ticket da interface. É outro
-               sistema (não rota do SPA), então é <a> com URL montada por
-               URLSearchParams — nunca a query bruta. -->
-          <a :href="urlTicket(router.currentRoute.value.path)" @click="menuAberto = false">Tickets</a>
           <RouterLink v-if="ehAdministrador" :to="{ name: 'usuarios' }" @click="menuAberto = false">
             Usuários
           </RouterLink>
@@ -52,6 +48,15 @@
         </div>
       </div>
     </header>
+
+    <!-- Onda 7 do plano ../SGTU.md: o ponto de entrada do ticket saiu do menu.
+         Pílula fixa à esquerda com rótulo sempre visível — o ícone nunca é o único
+         portador de informação. É outro sistema (não rota do SPA), então é <a> com
+         URL montada por URLSearchParams — nunca a query bruta. -->
+    <a class="pilula-flutuante" :href="urlTicket(router.currentRoute.value.path)">
+      <Icon name="ticket" :size="24" />
+      Ticket
+    </a>
 
     <main class="conteudo">
       <header class="cabecalho-topo">
@@ -111,6 +116,48 @@ function sair() {
 </script>
 
 <style scoped>
+/* Pílula flutuante (ponto de entrada do SGTU, onda 7 do plano ../SGTU.md).
+   Dimensões de token — sem px cru; foco e movimento são os globais de base.css
+   (:focus-visible, prefers-reduced-motion). */
+.pilula-flutuante {
+  position: fixed;
+  left: var(--spacing-4);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-height: var(--pill-min-height);
+  padding: var(--spacing-1) var(--spacing-3);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-fg);
+  border: var(--button-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-cta);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--size-base);
+  text-decoration: none;
+  z-index: 2;
+}
+
+.pilula-flutuante:hover {
+  background: var(--button-primary-bg-hover);
+}
+
+/* Estreito: desce para o canto inferior esquerdo, onde não cobre texto. */
+@media (max-width: 767px) {
+  .pilula-flutuante {
+    top: auto;
+    bottom: var(--spacing-4);
+    transform: none;
+  }
+
+  .conteudo {
+    padding-bottom: var(--spacing-7);
+  }
+}
+
 /* Sair: botão de nav, menor que o CTA de página mas mantendo o target de toque */
 .sair {
   font-size: var(--size-sm);
