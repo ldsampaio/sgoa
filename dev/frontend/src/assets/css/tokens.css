@@ -182,6 +182,7 @@
   --input-min-height: 44px;
   --input-width-inline: 96px;
   --input-ring: 0 0 0 3px rgba(79, 70, 229, 0.25);
+  --content-max-width: 976px;
   --navbar-bg: var(--color-card);
   --navbar-fg: var(--color-text);
   --navbar-border: 3px solid var(--color-border);
