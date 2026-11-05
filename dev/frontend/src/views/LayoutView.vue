@@ -13,6 +13,10 @@
           <RouterLink :to="{ name: 'orientacoes' }" @click="menuAberto = false">Orientações</RouterLink>
           <RouterLink :to="{ name: 'links-overleaf' }" @click="menuAberto = false">Links Overleaf</RouterLink>
           <RouterLink :to="{ name: 'perfil' }" @click="menuAberto = false">Meu Perfil</RouterLink>
+          <!-- Onda 7 do plano ../SGTU.md: o link de ticket da interface. É outro
+               sistema (não rota do SPA), então é <a> com URL montada por
+               URLSearchParams — nunca a query bruta. -->
+          <a :href="urlTicket(router.currentRoute.value.path)" @click="menuAberto = false">Tickets</a>
           <RouterLink v-if="ehAdministrador" :to="{ name: 'usuarios' }" @click="menuAberto = false">
             Usuários
           </RouterLink>
@@ -65,6 +69,7 @@ import { useRouter } from 'vue-router';
 import { authState, AuthController } from '../controllers/AuthController.js';
 import { inicial } from '../utils/fmt.js';
 import { temPapel } from '../utils/papeis.js';
+import { urlTicket } from '../utils/sgtu.js';
 import Icon from './components/Icon.vue';
 
 const router = useRouter();
