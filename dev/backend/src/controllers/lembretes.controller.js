@@ -6,6 +6,7 @@ import * as LembreteModel from '../models/lembrete.model.js';
 import { verificarOrientacao, verificarTodas } from '../services/lembretes.service.js';
 import { anexarPrazos } from './orientacao.controller.js';
 import { requireAcesso } from '../services/acesso.service.js';
+import { temPapel } from '../models/perfil.model.js';
 
 function dataValida(valor) {
   if (typeof valor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return false;
@@ -16,8 +17,8 @@ function dataValida(valor) {
 }
 
 async function podeGerenciarEtapas(req, orientacao) {
-  if (['Coordenador', 'Administrador'].includes(req.user?.papel)) return true;
-  if (req.user?.papel !== 'Professor') return false;
+  if (temPapel(req.user, 'Coordenador', 'Administrador')) return true;
+  if (!temPapel(req.user, 'Professor')) return false;
   const prof = await ProfessorModel.findByUsuario(req.user.id);
   return !!prof && prof.id_professor === orientacao.orientador.id_professor;
 }

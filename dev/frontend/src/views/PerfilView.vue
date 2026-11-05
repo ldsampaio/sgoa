@@ -17,11 +17,11 @@
           </div>
           <div class="campo">
             <label>Papel no SGOA</label>
-            <input :value="authState.user?.papel" type="text" disabled />
+            <input :value="papeisNaTela" type="text" disabled />
           </div>
         </div>
         <p class="metadado">
-          Conta no SGOA: <strong>{{ authState.user?.papel || 'não identificada' }}</strong>
+          Conta no SGOA: <strong>{{ papeisNaTela }}</strong>
           <template v-if="authState.user?.conta">
             · id {{ authState.user.conta.id_aluno || authState.user.conta.id_professor }}
           </template>
@@ -55,7 +55,7 @@
       </table>
     </div>
 
-    <div class="cartao" v-if="authState.user?.papel === 'Administrador'">
+    <div class="cartao" v-if="temPapel(authState.user, 'Administrador')">
       <h2>E-mail institucional (conta do projeto)</h2>
       <p class="metadado">
         Os avisos de prazo partem da conta institucional única, configurada via ambiente no servidor
@@ -68,7 +68,7 @@
       </button>
     </div>
 
-    <div class="cartao" v-if="authState.user?.papel === 'Professor'">
+    <div class="cartao" v-if="temPapel(authState.user, 'Professor')">
       <h2>Prompts de avaliação por IA</h2>
       <p class="metadado">
         Personalize como o agente de IA avalia os trabalhos dos seus alunos, por categoria.
@@ -94,8 +94,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { authState, AuthController } from '../controllers/AuthController.js';
+import { temPapel } from '../utils/papeis.js';
 import PromptAvaliacaoController, { promptState } from '../controllers/PromptAvaliacaoController.js';
 import EmailModel from '../models/EmailModel.js';
 import AlertMessage from './components/AlertMessage.vue';
@@ -104,6 +105,13 @@ import Spinner from './components/Spinner.vue';
 const form = reactive({
   nome: authState.user?.name || '',
   email: authState.user?.email || '',
+});
+
+// Um usuário pode ter mais de um papel no sgoa (ex. Administrador + Professor).
+const papeisNaTela = computed(() => {
+  const p = authState.user?.papeis;
+  const lista = (Array.isArray(p) && p.length ? p : [authState.user?.papel]).filter(Boolean);
+  return lista.join(' + ') || 'não identificada';
 });
 const erro = ref('');
 const sucesso = ref('');
@@ -130,7 +138,7 @@ async function salvar() {
 }
 
 onMounted(async () => {
-  if (authState.user?.papel === 'Professor') {
+  if (temPapel(authState.user, 'Professor')) {
     await PromptAvaliacaoController.carregar();
     for (const p of promptState.prompts) promptsEdit[p.id_tipo] = p.prompt;
   }

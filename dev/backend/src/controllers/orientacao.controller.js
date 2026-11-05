@@ -6,6 +6,7 @@ import * as ParametrosModel from '../models/parametros.model.js';
 import { calcularPrazos, diasRestantes } from '../services/prazos.service.js';
 import { canAcessarOrientacao, requireAcesso } from '../services/acesso.service.js';
 import { notificarParticipantes } from '../services/notificacao.service.js';
+import { temPapel } from '../models/perfil.model.js';
 
 const TIPOS = ['TCC', 'Mestrado', 'Doutorado'];
 const STATUS = ['Em Andamento', 'Concluída', 'Suspensa', 'Cancelada'];
@@ -32,12 +33,11 @@ export async function anexarPrazos(orientacoes, parametros) {
 }
 
 export const list = asyncHandler(async (req, res) => {
-  const papel = req.user.papel;
-
-  if (papel === 'Coordenador' || papel === 'Administrador') {
+  // Gestão primeiro: um usuário pode ter mais de um papel (Administrador + Professor).
+  if (temPapel(req.user, 'Coordenador', 'Administrador')) {
     return res.json(await anexarPrazos(await OrientacaoModel.listAll()));
   }
-  if (papel === 'Professor') {
+  if (temPapel(req.user, 'Professor')) {
     const prof = await ProfessorModel.findByUsuario(req.user.id);
     if (!prof) return res.status(404).json({ erro: 'Perfil de professor não encontrado.' });
     const [comoOrientador, comoCoOrientador] = await Promise.all([
@@ -48,7 +48,7 @@ export const list = asyncHandler(async (req, res) => {
     for (const o of [...comoOrientador, ...comoCoOrientador]) mapa.set(o.id_orientacao, o);
     return res.json(await anexarPrazos([...mapa.values()]));
   }
-  if (papel === 'Aluno') {
+  if (temPapel(req.user, 'Aluno')) {
     const aluno = await AlunoModel.findByUsuario(req.user.id);
     if (!aluno) return res.status(404).json({ erro: 'Perfil de aluno não encontrado.' });
     return res.json(await anexarPrazos(await OrientacaoModel.listByAluno(aluno.id_aluno)));
@@ -68,7 +68,7 @@ export const detail = asyncHandler(async (req, res) => {
 });
 
 export const create = asyncHandler(async (req, res) => {
-  if (req.user.papel !== 'Professor' && req.user.papel !== 'Administrador') {
+  if (!temPapel(req.user, 'Professor', 'Administrador')) {
     return res.status(403).json({ erro: 'Apenas professores podem criar orientações.' });
   }
   const { id_aluno, tipo, titulo_provisorio, data_inicio, data_previsao_fim } = req.body;

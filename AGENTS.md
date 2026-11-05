@@ -41,13 +41,18 @@ Kafka e workers só quando a avaliação IA entra em jogo (`dev/docker-compose.y
   503 — foi o que o smoke mostrou no CI, que não tem Redis.
 - **Credencial (T10):** `src/middleware/rejeitaCredencial.js` recusa campo de credencial em
   corpo de qualquer rota `/api`. Não há coluna de senha, nem rota de login/reset.
-- **Papel por sistema** vive em `sgoa.perfis`; o claim `role` do JWT nunca é usado.
+- **Papel por sistema** vive em `sgoa.perfis`; o claim `role` do JWT nunca é usado. `sgoa.perfis`
+  aceita **mais de um papel por usuário** (UNIQUE é `(id_usuario, papel)`), então a checagem é por
+  lista (`temPapel`) e `req.user.papel` é o principal pela precedência de gestão
+  (`Administrador > Coordenador > Professor > Aluno`). Comparar `user.papel === 'X'` perde um papel
+  de quem tem dois. Regressão em `tests/papeis.test.js`.
 - **A conta do usuário é find-or-create no `me`** (`src/services/conta.service.js`): papel em
   `sgoa.perfis` + entidade em `sgoa.alunos`/`sgoa.professores`. Sem isto o logado entra e não
   encontra conta carregada — `perfil.id_aluno`/`id_professor` ficam null e nada se monta em
   torno dele. Só `ALUNO`/`PROFESSOR` são deriváveis de `role_base`; Coordenador e Administrador
-  continuam sendo atribuídos pela gestão, e uma linha existente nunca é sobrescrita. Regressão
-  em `tests/conta.test.js`.
+  continuam sendo atribuídos pela gestão, e uma linha existente nunca é sobrescrita. A única
+  atribuição automática é o admin do sistema (`INITIAL_ADMIN_LOGIN`, default `ldsampaio`): ele é
+  Administrador **e** o papel derivado. Regressão em `tests/conta.test.js`.
 - **`sid` com charset inesperado → `BAD_TOKEN`** (contrato, passo 3): o verifier não monta
   nome de chave Redis a partir do conteúdo do token. Por isso os testes usam sids de 8+
   caracteres (`sid-0001`); um `sid` curto como `s1` agora é rejeitado.

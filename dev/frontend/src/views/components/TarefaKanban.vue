@@ -161,6 +161,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import TarefaController, { tarefaState } from '../../controllers/TarefaController.js';
 import { authState } from '../../controllers/AuthController.js';
+import { temPapel } from '../../utils/papeis.js';
 import {
   COLUNAS_KANBAN,
   CORES_KANBAN,
@@ -289,7 +290,7 @@ async function salvar() {
 function podeArquivar(tarefa) {
   const usuario = authState.user;
   if (!usuario || !tarefa) return false;
-  if (['Professor', 'Coordenador', 'Administrador'].includes(usuario.papel)) return true;
+  if (temPapel(usuario, 'Professor', 'Coordenador', 'Administrador')) return true;
   return Boolean(tarefa.id_criador) && tarefa.id_criador === usuario.id;
 }
 

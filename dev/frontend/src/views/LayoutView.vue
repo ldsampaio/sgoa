@@ -64,16 +64,16 @@ import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { authState, AuthController } from '../controllers/AuthController.js';
 import { inicial } from '../utils/fmt.js';
+import { temPapel } from '../utils/papeis.js';
 import Icon from './components/Icon.vue';
 
 const router = useRouter();
 const menuAberto = ref(false);
 
-const tipo = computed(() => authState.user?.papel);
-const ehAdministrador = computed(() => tipo.value === 'Administrador');
-const ehCoordenador = computed(() => tipo.value === 'Coordenador');
-const ehCoordenadorOuAdmin = computed(() => ['Coordenador', 'Administrador'].includes(tipo.value));
-const ehProfessorOuCoordenador = computed(() => ['Coordenador', 'Professor'].includes(tipo.value));
+const ehAdministrador = computed(() => temPapel(authState.user, 'Administrador'));
+const ehCoordenador = computed(() => temPapel(authState.user, 'Coordenador'));
+const ehCoordenadorOuAdmin = computed(() => temPapel(authState.user, 'Coordenador', 'Administrador'));
+const ehProfessorOuCoordenador = computed(() => temPapel(authState.user, 'Coordenador', 'Professor'));
 
 const titulo = computed(() => {
   const mapa = {
