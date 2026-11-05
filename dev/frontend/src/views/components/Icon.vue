@@ -42,6 +42,8 @@ import {
   PhSignOut,
   PhSparkle,
   PhTag,
+  // Ampliado aditivamente pela onda 7 do plano ../SGTU.md (pílula flutuante de ticket).
+  PhTicket,
   PhUserCircle,
   PhWarning,
   PhXCircle,
@@ -74,6 +76,7 @@ const ICONES = {
   signout: PhSignOut,
   sparkle: PhSparkle,
   tag: PhTag,
+  ticket: PhTicket,
   'user-circle': PhUserCircle,
   warning: PhWarning,
   x: PhXCircle,
