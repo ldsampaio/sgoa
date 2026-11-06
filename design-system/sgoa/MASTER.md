@@ -143,13 +143,13 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
       secundários de listas densas): `.botao-mini` 32px, `.limpar-data` 32px,
       checkbox 20px/18px, `.caixa-check` 22px, pílula 26px.
 - [x] Ícones Phosphor; nenhum emoji estrutural (verificado em `src/`).
-- [ ] Testado visualmente em 375 / 768 / 1024 / 1440 px — cobertura de breakpoints
-      verificada estaticamente (767, 1023, calha 1287); falta o teste visual em
-      navegador, que não há ambiente headless aqui.
+- [x] Testado visualmente em 375 / 768 / 1024 / 1440 px — medido em navegador real por
+      `sa/scripts/headless` (Playwright): `.navbar-inner` e `.conteudo` medem o teto de
+      1080 em 1440 e o viewport em 375/768/1024. Breakpoints 767, 1023 e calha 1287 cobertos.
 - [x] States disabled/loading/empty estilizados (`:disabled`, `.spinner`, `.linha-vazia`).
 
-Pendência de ambiente: verificação visual por navegador (browser-qa) quando houver
-Playwright/chromium disponível — o checklist acima é a lista a confirmar visualmente.
+Pendência de ambiente: os itens acima foram confirmados em navegador real por
+`sa/scripts/headless` (Playwright/chromium), o harness compartilhado dos três sistemas.
 
 ---
 
