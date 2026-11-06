@@ -117,13 +117,15 @@ function sair() {
 
 <style scoped>
 /* Pílula flutuante (ponto de entrada do SGTU, onda 7 do plano ../SGTU.md).
-   Dimensões de token — sem px cru; foco e movimento são os globais de base.css
-   (:focus-visible, prefers-reduced-motion). */
+   Dentro do teto de largura: o lado direito encosta na coluna de conteúdo, então a
+   pílula fica à esquerda do bloco e não no extremo da tela. Dimensões de token — sem
+   px cru; foco e movimento são os globais de base.css (:focus-visible,
+   prefers-reduced-motion). */
 .pilula-flutuante {
   position: fixed;
-  left: var(--spacing-4);
+  left: calc((100vw - var(--content-ceiling)) / 2 - var(--spacing-2));
   top: 50%;
-  transform: translateY(-50%);
+  transform: translate(-100%, -50%);
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-1);
@@ -145,16 +147,22 @@ function sair() {
   background: var(--button-primary-bg-hover);
 }
 
-/* Estreito: desce para o canto inferior esquerdo, onde não cobre texto. */
-@media (max-width: 767px) {
+/* Calha estreita: abaixo de 1288 px a calha esquerda não comporta a pílula
+   (~100 px + folga sobre o teto de 1080), então ela desce para o canto inferior da
+   coluna, onde não cobre texto. O lado esquerdo continua o teto, nunca o extremo
+   da tela. */
+@media (max-width: 1287px) {
   .pilula-flutuante {
+    left: max(var(--spacing-4), calc((100vw - var(--content-ceiling)) / 2));
     top: auto;
     bottom: var(--spacing-4);
     transform: none;
   }
 
+  /* Folga embaixo: a pílula no canto inferior cruza a coluna de conteúdo. É maior
+     que o padding base (96px) para não reduzir a folga quando a pílula desce. */
   .conteudo {
-    padding-bottom: var(--spacing-7);
+    padding-bottom: calc(var(--spacing-7) + var(--spacing-5));
   }
 }
 

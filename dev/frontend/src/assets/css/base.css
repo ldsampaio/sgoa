@@ -151,10 +151,9 @@ a,
 }
 
 .navbar-inner {
-  /* Teto de largura: soma dos componentes da linha mais larga do dashboard
-     (2 cartoes de 480 + 1 gap de 16 = 976) mais o padding lateral do conteudo.
-     O cabecalho alinha com a coluna de conteudo em vez de esticar ate a tela. */
-  max-width: calc(var(--content-max-width) + 2 * var(--spacing-6));
+  /* Teto de largura compartilhado (1080 px, o mesmo de sgrf e sgtu): o cabeçalho
+     alinha com a coluna de conteúdo em vez de esticar até a tela. */
+  max-width: var(--content-ceiling);
   margin: 0 auto;
   min-height: var(--navbar-height);
   display: flex;
@@ -170,7 +169,7 @@ a,
 .conteudo {
   flex: 1;
   padding: 40px 48px 96px;
-  max-width: calc(var(--content-max-width) + 2 * var(--spacing-6));
+  max-width: var(--content-ceiling);
   width: 100%;
   margin: 0 auto;
 }

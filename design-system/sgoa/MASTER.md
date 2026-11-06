@@ -117,9 +117,9 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
 | `.tabela` | th com bg canvas + upper-case; hairline `border-soft`; hover indigo .06 |
 | `.abas` | pílulas com border soft → border ink + shadow flat na ativa |
 | `.mensagem-balao` | clay bubble, border-2.5; "minha" = sky |
-| `.navbar` | **floating clay card** (sticky top 12px), bg card, border-3, nav items pill; ativo = primary-soft + border primary. **Teto de largura**: `calc(--content-max-width + 2×--spacing-6)`, centralizado — alinha com o conteúdo em vez de esticar até a tela |
-| `.conteudo` | coluna central limitada pelo mesmo teto. `--content-max-width` = soma dos componentes da linha mais larga do dashboard: 2 cartões de 480 + 1 gap de 16 = **976** (+ padding 2×48). Login fica fora do teto (split hero + caixa) |
-| `.pilula-flutuante` | pílula CTA **fixa à esquerda** (centro vertical; canto inferior em ≤767 px), ícone 24 + rótulo — o ícone nunca é o único portador de informação. Dimensões de token, sem px cru fora de `@media` |
+| `.navbar` | **floating clay card** (sticky top 12px), bg card, border-3, nav items pill; ativo = primary-soft + border primary. **Teto de largura**: `--content-ceiling`, centralizado — alinha com o conteúdo em vez de esticar até a tela |
+| `.conteudo` | coluna central limitada pelo mesmo teto (`--content-ceiling`) — o **teto compartilhado de 1080 px** com sgrf e sgtu, que é a largura total máxima da interface. `--content-max-width` é o teto menos o padding lateral 2×48 = **984**; a linha mais larga do dashboard (2 cartões de 480 + 1 gap de 16 = 976) cabe nessa coluna. Login fica fora do teto (split hero + caixa) |
+| `.pilula-flutuante` | pílula CTA fixa, **dentro do teto**: o lado direito encosta na coluna de conteúdo (centro vertical), ícone 24 + rótulo — o ícone nunca é o único portador de informação. Quando a calha esquerda não comporta a pílula (≤1287 px), desce para o canto inferior da coluna, onde não cobre texto. Dimensões de token, sem px cru fora de `@media` |
 | `.linha-tempo` | diamantes primário com border ink |
 | `.medidores` | bullet bar clay: trilha 16px border-2 ink + fill do token de status; **valor numérico sempre ao lado** (cor nunca é o único portador); trilha com `role="meter"` + `aria-valuenow/max`. Largura do fill vem de `:style` dinâmico (percentual de dados) — única exceção aceita a style inline |
 | `.pagina-login` | split: hero com trama weave decorativa + `caixa-login` clay |
@@ -130,7 +130,7 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
 
 - [x] Nenhum hex fora de `tokens.css` (verificado: zero ocorrências em `src/`).
       Exceções aceitas e registradas: constantes de layout não-tokens — breakpoints
-      (767/1023px), container `max-width: 1280px`, paddings de nav/célula (10/12/16px),
+      (767/1023px), teto `--content-ceiling` 1080px, paddings de nav/célula (10/12/16px),
       micro-radios de detalhes (3/4/6px), larguras de hero/caixa (520/480/380/560px) e
       `:style` dinâmico de percentual nos medidores. Dimensões de componente foram
       promovidas a tokens (`spinner.size`, `meter.height`, `checkbox.*`, `clear.size`,
@@ -143,13 +143,13 @@ Bounce/clay-easing apenas onde agrega (botões, menu mobile, KPIs). **Regra:** t
       secundários de listas densas): `.botao-mini` 32px, `.limpar-data` 32px,
       checkbox 20px/18px, `.caixa-check` 22px, pílula 26px.
 - [x] Ícones Phosphor; nenhum emoji estrutural (verificado em `src/`).
-- [ ] Testado visualmente em 375 / 768 / 1024 / 1440 px — cobertura de breakpoints
-      verificada estaticamente (767, 1023, container 1280); falta o teste visual em
-      navegador, que não há ambiente headless aqui.
+- [x] Testado visualmente em 375 / 768 / 1024 / 1440 px — medido em navegador real por
+      `sa/scripts/headless` (Playwright): `.navbar-inner` e `.conteudo` medem o teto de
+      1080 em 1440 e o viewport em 375/768/1024. Breakpoints 767, 1023 e calha 1287 cobertos.
 - [x] States disabled/loading/empty estilizados (`:disabled`, `.spinner`, `.linha-vazia`).
 
-Pendência de ambiente: verificação visual por navegador (browser-qa) quando houver
-Playwright/chromium disponível — o checklist acima é a lista a confirmar visualmente.
+Pendência de ambiente: os itens acima foram confirmados em navegador real por
+`sa/scripts/headless` (Playwright/chromium), o harness compartilhado dos três sistemas.
 
 ---
 
