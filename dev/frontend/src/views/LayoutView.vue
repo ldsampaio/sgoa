@@ -147,10 +147,11 @@ function sair() {
   background: var(--button-primary-bg-hover);
 }
 
-/* Calha estreita: abaixo de 1280 px a calha esquerda não comporta a pílula
-   (~100 px + folga), então ela desce para o canto inferior da coluna, onde não
-   cobre texto. O lado esquerdo continua o teto, nunca o extremo da tela. */
-@media (max-width: 1279px) {
+/* Calha estreita: abaixo de 1288 px a calha esquerda não comporta a pílula
+   (~100 px + folga sobre o teto de 1080), então ela desce para o canto inferior da
+   coluna, onde não cobre texto. O lado esquerdo continua o teto, nunca o extremo
+   da tela. */
+@media (max-width: 1287px) {
   .pilula-flutuante {
     left: max(var(--spacing-4), calc((100vw - var(--content-ceiling)) / 2));
     top: auto;
